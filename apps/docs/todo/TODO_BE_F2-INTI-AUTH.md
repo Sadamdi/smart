@@ -23,9 +23,10 @@
 
 ### T1. Migrasi skema
 Kartu Kaneo: 4.2 `[BE] Basis data dan fitur login`
-- [ ] Putuskan O-03, O-04, O-05 (tabel tambahan dan kolom profil opsional)
-- [ ] Alembic: 11 tabel sesuai `02-SKEMA-DATABASE.md`, ekstensi `vector`, indeks
-- [ ] Migrasi naik dan turun teruji di basis data uji
+- [x] O-03, O-04, O-05 diputuskan (27 Okt): `tugas_pribadi` dan `perangkat_push` ditambahkan, kolom profil opsional dipakai
+- [x] Model SQLAlchemy 13 tabel dan migrasi Alembic 0001 (ekstensi `vector`, indeks HNSW, batasan unik pengingat); uji skema tanpa basis data lolos (13 uji)
+- [x] Skrip `scripts/seed_sumber.py` (sembilan sumber, upsert) dan `scripts/cleanup.py` (dijaga `pastikan_boleh_hapus`)
+- [ ] Migrasi naik dan turun dijalankan di proyek Supabase uji (menunggu connection string)
 Penerimaan: skema di basis data sama dengan dokumen.
 
 ### T2. Fondasi backend

@@ -4,9 +4,9 @@
 | --- | --- |
 | **Versi** | 1.0 |
 | **Tanggal** | 2026-10-26 |
-| **Status** | Draft (ERD final menunggu O-03, O-04, O-05) |
+| **Status** | Final (ERD final 27 Oktober 2026) |
 | **Author** | Tim SMART |
-| **Sumber bisnis** | DP-SM-001 bagian 2 (11 tabel), Laporan Inisiasi bagian 5.3 |
+| **Sumber bisnis** | DP-SM-001 bagian 2 (13 tabel), Laporan Inisiasi bagian 5.3 |
 
 PostgreSQL dengan ekstensi `vector` (pgvector). Nama tabel dan kolom memakai bahasa Indonesia sesuai dokumen kelas. Kunci utama `id` bertipe UUID, `dibuat_pada` dan `diubah_pada` bertipe `timestamptz` di setiap tabel. Enumerasi disimpan sebagai `text` dengan batasan `CHECK`, bukan tipe enum, supaya migrasi nilai baru mudah.
 
@@ -27,6 +27,8 @@ erDiagram
   pengguna ||--o{ notifikasi : diberi
   beasiswa ||--o{ notifikasi : tentang
   pengguna ||--o{ percakapan : bertanya
+  pengguna ||--o{ tugas_pribadi : mencatat
+  pengguna ||--o{ perangkat_push : memakai
 ```
 
 Fallback:
@@ -37,6 +39,8 @@ sumber 1---* beasiswa 1---* persyaratan
 pengguna 1---* dokumen_pengguna
 pengguna *---* beasiswa melalui: rekomendasi, interaksi, notifikasi
 pengguna 1---* percakapan
+pengguna 1---* tugas_pribadi
+pengguna 1---* perangkat_push
 ```
 
 ## Tabel
@@ -158,14 +162,15 @@ Indeks: `(status, tenggat)`, `(sumber_id)`, indeks vektor HNSW atau IVFFlat pada
 
 `id`, `pengguna_id`, `pesan` (maksimal 2000 karakter), `jawaban`, `rujukan_beasiswa_id` (array uuid), `waktu`.
 
-## Tabel tambahan yang diusulkan
+### tugas_pribadi
 
-Menunggu keputusan di `00-Cross-Context/05-PERTANYAAN-TERBUKA.md`.
+`id`, `pengguna_id` (FK), `judul`, `tanggal` (date), `selesai` (boolean). Kegiatan pribadi mahasiswa pada layar Kalender dan Checklist. Indeks `(pengguna_id, tanggal)`.
 
-| Tabel | Kolom | Alasan | Butir |
-| --- | --- | --- | --- |
-| tugas_pribadi | id, pengguna_id, judul, tanggal, selesai | Layar Kalender dan Checklist memuat tugas pribadi | O-03 |
-| perangkat_push | id, pengguna_id, token, platform, aktif | Penyimpanan token FCM per perangkat | O-04 |
+### perangkat_push
+
+`id`, `pengguna_id` (FK), `token` (unik), `platform` (`android`, `ios`, `web`), `aktif` (boolean). Token FCM per perangkat; satu pengguna dapat memiliki beberapa perangkat.
+
+Kedua tabel ditambahkan pada penyelesaian rancangan (keputusan Adam 27 Oktober 2026: Figma dan ERD final). Kode model dan migrasi: `apps/backend/app/models/tables.py` dan `apps/backend/migrations/versions/0001_skema_awal.py`.
 
 ## Aturan migrasi
 
@@ -173,4 +178,4 @@ Menunggu keputusan di `00-Cross-Context/05-PERTANYAAN-TERBUKA.md`.
 2. Migrasi harus dapat naik dan turun. Uji keduanya pada basis data uji.
 3. Nama berkas migrasi: `NNN_deskripsi_singkat.py`. Catat migrasi di entri `apps/docs/version/`.
 4. Skrip `seed` hanya `insert` atau `upsert`. Skrip `cleanup` terpisah dan menolak jalan kecuali `APP_ENV` dan daftar putih host terpenuhi (lihat `04-Infra/01-LINGKUNGAN-DAN-RAHASIA.md`).
-5. Perubahan tabel yang sudah dipakai kode wajib diikuti penyesuaian dokumen ini dan DP-SM-001 (angka 11 tabel di `docs/` ikut berubah bila tabel bertambah).
+5. Perubahan tabel yang sudah dipakai kode wajib diikuti penyesuaian dokumen ini dan DP-SM-001 (angka 13 tabel di `docs/` ikut berubah bila tabel bertambah).
