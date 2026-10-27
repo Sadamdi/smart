@@ -1,0 +1,31 @@
+[project]
+name = "smart-ml"
+version = "0.1.0"
+description = "Mesin rekomendasi SMART"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "numpy>=2",
+    "pydantic>=2.8",
+    "pyyaml>=6",
+    "scikit-learn>=1.5",
+]
+
+[project.optional-dependencies]
+# Dipasang saat fase F5 (berat): embedding dan pemeringkatan lanjutan.
+embed = ["sentence-transformers>=3"]
+rank = ["lightgbm>=4.5", "shap>=0.46"]
+
+[dependency-groups]
+dev = ["pytest>=8.3", "ruff>=0.6"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = ["S101"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
