@@ -1,0 +1,13 @@
+[Unit]
+Description=SMART pemantau beasiswa
+After=network.target
+
+[Service]
+User=<PENGGUNA_LAYANAN>
+WorkingDirectory=<JALUR_REPO>/apps/crawler
+EnvironmentFile=<JALUR_REPO>/apps/crawler/.env
+ExecStart=<JALUR_REPO>/apps/crawler/.venv/bin/python -m smart_crawler.scheduler
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,16 @@
+---
+description: Batas domain SMART yang tidak boleh dilanggar kode maupun dokumen
+alwaysApply: true
+---
+# Domain SMART
+
+1. Rekomendasi dihasilkan mesin berbasis machine learning tiga lapis: kelayakan dengan toleransi, kemiripan embedding, pemeringkatan. Jangan memakai Simple Additive Weighting dan jangan memakai kata "pencocokan" di kode, teks tampilan, atau dokumen.
+2. Tiga kategori: memenuhi, hampir memenuhi, belum memenuhi. Batas toleransi ada di konfigurasi, bukan tertanam di logika.
+3. Sistem tidak pernah menyatakan mahasiswa pasti diterima atau ditolak, dan tidak menampilkan persen peluang atau persen kecocokan.
+4. Layanan AI hanya membaca dokumen, ekstraksi cadangan, dan chatbot dari data basis data. Tidak menentukan peringkat. Rekomendasi tetap jalan saat layanan AI mati.
+5. Crawler hanya mengambil laman publik resmi yang terdaftar, mematuhi `robots.txt`, memberi jeda, dan tidak melewati login, captcha, atau batas laju. Data ambigu ditandai untuk admin, tidak ditebak.
+6. Hanya beasiswa bertenggat paling cepat tiga hari ke depan yang diterbitkan. Setiap beasiswa menyimpan tautan resmi dan tanggal diperiksa.
+7. SMART bukan sistem pendaftaran, tidak memverifikasi keaslian dokumen, dan tidak memakai perangkat keras.
+8. Teks tampilan berbahasa Indonesia dengan istilah "Mesin Rekomendasi".
+9. Tidak membangun fitur di luar rencana: SSO dan SIAK, asisten esai, WhatsApp, sinkron kalender eksternal, profil ke kemitraan.
+10. Jadwal dan WBS dikelola di Kaneo; jangan menyebut MS Project sebagai alat tim.

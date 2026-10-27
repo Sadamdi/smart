@@ -1,0 +1,22 @@
+---
+description: Daftar periksa wajib sebelum menyatakan tugas selesai
+alwaysApply: true
+---
+# Gerbang penutupan tugas
+
+Sebelum menyatakan selesai, semua butir berlaku harus terpenuhi:
+
+1. **Build dan lint** komponen yang diubah lolos (padanan CI lokal).
+2. **Uji otomatis** lolos di basis data uji (proyek Supabase khusus uji, bukan dev atau prod). Uji hijau bukan bukti fitur jalan.
+3. **Coba sungguhan.** Backend: jalankan layanan dan panggil endpoint dengan curl (dua pengguna berbeda untuk data pengguna, serta jalur gagal: tanpa token, peran tidak berhak). Frontend: buka di peramban atau emulator, periksa tab Network dan Console. Crawler: jalankan terhadap HTML tersimpan, bukan laman sumber sungguhan, kecuali Adam menyuruh.
+4. **Migrasi:** bila ada, naik dan turun diuji, dan dicatat di entri version.
+5. **Kontrak:** `Dokument/02-Backend/02-API-CONTRACT.md` dan OpenAPI sesuai kode.
+6. **Dokumen:** version (Released, file diubah, sebelum dan sesudah, bukti verifikasi), TODO, feature doc, flows bila alur berubah, indeks diperbarui, dokumen hidup yang menyebut perilaku lama disapu.
+7. **Frontmatter:** `scripts/verify-frontmatter.ps1` lulus.
+8. **Pemetaan galat:** kesalahan domain menjadi 401, 403, 404, 409, atau 422, bukan 500.
+9. **Aturan produk:** tidak ada klaim pasti diterima atau ditolak, tidak ada persen peluang, nama dan tanggal lahir tidak ke layanan AI, tidak ada kata "pencocokan".
+10. **Rahasia:** tidak ada kunci, token, kata sandi, atau data pengguna nyata di kode, dokumen, atau komit.
+11. **Kaneo:** kartu diperbarui, status sesuai PR (In Review saat PR, Done saat Released).
+12. **Git:** PR ke `testing`, komit tanpa baris atribusi AI.
+
+Bukti verifikasi ditulis di entri version: endpoint, status code, peran akun yang dipakai. Bukan nilai kredensialnya. Laporkan hasil apa adanya, termasuk yang gagal atau dilewati.

@@ -1,0 +1,14 @@
+[Unit]
+Description=SMART web
+After=network.target
+
+[Service]
+User=<PENGGUNA_LAYANAN>
+WorkingDirectory=<JALUR_REPO>/apps/web
+Environment=PORT=3000
+EnvironmentFile=<JALUR_REPO>/apps/web/.env.production
+ExecStart=/usr/bin/npm run start
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

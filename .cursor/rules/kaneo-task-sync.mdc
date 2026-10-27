@@ -1,0 +1,21 @@
+---
+description: Sinkron papan Kaneo SMART di setiap tugas
+alwaysApply: true
+---
+# Sinkron Kaneo
+
+Papan: workspace SMART, project SMT (id dan label di `agents/KANEO.md`). Aturan pengisian kartu: `agents/KANEO-ATURAN.md`. Konteks: `.kaneo/context.md`.
+
+| Kejadian | Tindakan di Kaneo |
+|----------|-------------------|
+| Mulai tugas | Cari kartu (search dulu, jangan duplikat); geser In Progress; assign sesuai peran |
+| Buka PR | Geser In Review; tulis komentar berisi tautan PR dan cara uji |
+| Rilis (version Released) | Geser Done; komentar berisi ringkasan, bukti uji, dan tautan |
+| Terhalang | Beri tahu Adam; tulis penyebab di komentar |
+
+- Tugas pembangunan baru memakai judul `[BE]`, `[FE]`, `[ML]`, `[CRAWLER]`, `[INFRA]`, `[DOC]` diikuti nama tugas, dan merujuk kode WBS (4.x sampai 7.x).
+- Baca kartu sebelum mengubahnya; tulis catatan perkembangan sebagai komentar, jangan menimpa deskripsi.
+- Tulis hanya hal yang terverifikasi di kode (jalur berkas, endpoint, tabel). Yang belum pasti ditulis "TBD (verify)".
+- Tugas orang lain tidak diubah. Pembagian (27 Okt 2026): Adam backend, mobile, ML, dan chatbot; Riska UI/UX dan frontend web; Devan data (crawler, pengisian dan validasi data).
+- Bila MCP Kaneo terputus: `node tools/kaneo/sinkron.js --status` (key dari konfigurasi MCP lokal, jangan ditulis ke repo).
+- Status Kaneo harus cocok dengan PR yang digabung dan entri version Released.

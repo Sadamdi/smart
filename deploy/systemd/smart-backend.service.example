@@ -1,0 +1,13 @@
+[Unit]
+Description=SMART backend
+After=network.target
+
+[Service]
+User=<PENGGUNA_LAYANAN>
+WorkingDirectory=<JALUR_REPO>/apps/backend
+EnvironmentFile=<JALUR_REPO>/apps/backend/.env
+ExecStart=<JALUR_REPO>/apps/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 2
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

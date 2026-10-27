@@ -1,0 +1,34 @@
+---
+description: Peta komponen SMART, batas tanggung jawab, dan dampak lintas komponen
+alwaysApply: true
+---
+# Workspace SMART: peta dan dampak lintas komponen
+
+Buka workspace di folder `SMART/`. Baca `AGENTS.md`, `Dokument/README.md`, lalu dokumen kategori yang relevan.
+
+| Komponen | Folder | Teknologi | Boleh | Tidak boleh |
+|----------|--------|-----------|-------|-------------|
+| Backend | `apps/backend` | FastAPI | Auth, aturan bisnis, orkestrasi | Mengambil laman sumber |
+| Crawler | `apps/crawler` | Crawl4AI | Ambil laman terdaftar, ekstrak, validasi | Menerbitkan data meragukan, melewati login atau captcha |
+| ML | `apps/ml` | embedding, LightGBM, SHAP | Kelayakan, kemiripan, peringkat, alasan | Memanggil layanan AI untuk peringkat |
+| Web | `apps/web` | Next.js | Menampilkan dan mengirim input | Menghitung rekomendasi |
+| Mobile | `apps/mobile` | Flutter | Sama dengan web (Android) | Sama dengan web |
+
+## Dampak lintas komponen
+
+- Ubah skema tabel: `Dokument/01-Arsitektur/02-SKEMA-DATABASE.md`, migrasi Alembic, model, skema Pydantic, crawler, ml, kontrak API, klien web dan mobile.
+- Ubah endpoint: `Dokument/02-Backend/02-API-CONTRACT.md`, OpenAPI, `Dokument/03-Frontend/02-PETA-LAYAR-KE-ENDPOINT.md`, klien web dan mobile.
+- Ubah aturan kelayakan atau batas toleransi: `Dokument/01-Arsitektur/03-ATURAN-KELAYAKAN-DAN-MODEL.md`, konfigurasi ml, gold set, dokumen kelas yang menyebut angka itu (`tools/build_perancangan_pdf.py`, `tools/build_laporan_inisiasi.js`).
+- Ubah sumber atau cara pantau: `Dokument/01-Arsitektur/04-PEMANTAUAN-SUMBER.md`, tabel `sumber`, uji crawler.
+
+## Sumber kebenaran (urutan baca)
+
+1. OpenAPI hasil generate backend (setelah ada), lalu `02-API-CONTRACT.md`
+2. `Dokument/01-Arsitektur/`
+3. `apps/docs/features/` dan `FEATURE_INDEX.md`
+4. `apps/docs/todo/` dan `TODO_INDEX.md`
+5. Dokumen kelas di `docs/` (hasil generator, jangan diedit langsung)
+
+## Konsistensi dengan dokumen kelas
+
+Angka dan istilah (periode 15/09 sampai 08/12/2026, 11 tabel, tiga kategori kelayakan, batas toleransi, skor 0,6 dan 0,4, Rp37.000.000, 45 tugas WBS) harus sama dengan `docs/`. Bila kode memaksa perubahan, ubah sumber di `tools/`, bangun ulang dokumen, dan catat di `agents/KEPUTUSAN.md`.

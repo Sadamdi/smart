@@ -1,0 +1,43 @@
+# Dependensi dan keluaran antara
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+tools/out/
+
+# Rahasia
+.env
+.env.*
+!.env.example
+.mcp.json
+*.pem
+*.key
+
+# Berkas sementara Word dan editor
+~$*.docx
+*.tmp
+.vscode/
+.idea/
+
+# Unduhan perbandingan dari Drive (bahan sementara)
+docs/drive-terbaru/
+
+# Akun uji dan rahasia lokal (aturan keamanan di .cursor/rules/local-testing-secrets.mdc)
+Dokument/local/*
+!Dokument/local/TESTING_ACCOUNTS.example.md
+apps/**/uploads/
+apps/**/storage/
+*.dump
+
+# Tidak dipublikasikan selama repositori ini publik (berisi data pribadi tim, tautan Drive internal,
+# keluaran dokumen kelas, dan dokumen kelompok lain). Tetap ada di folder lokal dan Drive tim.
+/docs/
+/tools/
+/agents/
+/referensi/
+/.claude/
+/.kaneo/
+/.mcp.example.json
+/AGENTS.md
+/CLAUDE.md
+/README.md

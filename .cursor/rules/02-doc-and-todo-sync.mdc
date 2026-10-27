@@ -1,0 +1,66 @@
+---
+description: Aturan penulisan dokumen teknis, frontmatter, indeks, dan penamaan
+globs:
+  - "Dokument/**/*.md"
+  - "apps/docs/**/*.md"
+alwaysApply: true
+---
+# Dokumentasi teknis SMART
+
+## Hierarki
+
+```text
+Dokument/                 dokumen teknis hidup (ditulis tangan)
+  00-Cross-Context/  01-Arsitektur/  02-Backend/  03-Frontend/  04-Infra/  05-Pengujian/  Probis/  local/ (diabaikan git)
+apps/docs/                jejak pengerjaan per tugas
+  version/ + VERSION_INDEX.md    rencana dan riwayat perubahan
+  todo/    + TODO_INDEX.md       backlog per inisiatif
+  features/<area>/ + FEATURE_INDEX.md   dokumen fitur
+  flows/   + FLOWS_INDEX.md      diagram alur
+docs/                     hasil generator untuk kelas (jangan diedit langsung)
+```
+
+## Tabel atribut wajib
+
+Setiap berkas di `apps/docs/todo/`, `apps/docs/features/<area>/`, `apps/docs/version/`, dan `Dokument/` (selain README) diawali judul dan tabel:
+
+| Atribut | Nilai |
+|---------|-------|
+| **Versi** | 1.x |
+| **Tanggal** | YYYY-MM-DD |
+| **Status** | Draft / Active / Completed / Deprecated (version: Plan / In Progress / Released / Rolled Back) |
+| **Author** | Tim SMART |
+| **Sumber bisnis** | rujukan dokumen atau keputusan |
+
+TODO menambah `Module`, `Priority` (P0 sampai P2), `Progress`, `Last Updated`. Version menambah `Tipe`, `Module`, `Branch`, `PR / Commit`, `Last Updated`.
+
+Periksa dengan `scripts/verify-frontmatter.ps1`.
+
+## Penamaan
+
+- Version: `vYYYYMMDD-<slug>.md`
+- TODO: `TODO_<MODUL>_<SLUG>.md`
+- Feature: `<N>. <nama-kebab>.md` di `apps/docs/features/<NN-area>/`
+- Area: kebab-case berurut (`01-auth`, `02-profil-dokumen`, `03-beasiswa-pemantauan`, `04-rekomendasi`, `05-interaksi-checklist`, `06-chatbot`, `07-notifikasi`, `08-admin`)
+- Indeks: `VERSION_INDEX.md`, `TODO_INDEX.md`, `FEATURE_INDEX.md`, `FLOWS_INDEX.md`
+
+## Feature doc
+
+Wajib memuat bagian Alur kerja fitur: satu diagram Mermaid dan fallback teks di bawahnya, tanpa gaya warna. Bagian lain: deskripsi, aturan bisnis (`BR-xx` yang merujuk BR-SM di Probis), endpoint dan tabel yang dipakai, cara uji, keterbatasan.
+
+## Trigger pembaruan
+
+| Kejadian | Tindakan |
+|----------|----------|
+| Mulai tugas | Entri version (Plan) + baris indeks |
+| Kontrak berubah | `Dokument/` terkait + OpenAPI + sapu semua dokumen hidup untuk frasa lama |
+| Fitur baru | Feature doc + indeks + TODO |
+| Selesai | Centang TODO, log eksekusi, version Released |
+| Keputusan arsitektur | Baris baru di `03-ADR-KEPUTUSAN-ARSITEKTUR.md` dan `agents/KEPUTUSAN.md` |
+| Pertanyaan terjawab | Isi kolom keputusan di `05-PERTANYAAN-TERBUKA.md` |
+
+Entri version dan TODO yang sudah Released atau Completed adalah arsip; jangan menulis ulang isinya, tambahkan baris baru.
+
+## Gaya tulisan
+
+Bahasa Indonesia baku. Tanpa tanda panah, tanda pisah panjang, dan emoji di prosa. Istilah teknis boleh bahasa Inggris. Tanpa kesan tulisan AI: tidak ada pembuka basa-basi, tidak ada cetak tebal berlebihan. Jangan menulis tebakan sebagai fakta; tandai "belum diputuskan" dan catat di pertanyaan terbuka.

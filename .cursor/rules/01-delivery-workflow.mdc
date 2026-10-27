@@ -1,0 +1,37 @@
+---
+description: SOP pengerjaan setiap tugas SMART dari plan sampai tutup
+alwaysApply: true
+---
+# Alur pengerjaan tugas
+
+## Sebelum kode
+
+1. Baca `AGENTS.md` dan `Dokument/` yang relevan. Tugas yang menyentuh kontrak (skema, API, aturan) mulai dari dokumennya.
+2. Cari atau buat kartu Kaneo (`agents/KANEO-ATURAN.md`). Judul berawalan `[BE]`, `[FE]`, `[ML]`, `[CRAWLER]`, `[INFRA]`, `[DOC]`. Geser ke In Progress.
+3. Buat entri plan di `apps/docs/version/` dari `_VERSION_TEMPLATE.md` (Status `Plan`) dan tambah baris di `VERSION_INDEX.md`.
+4. Cari atau buat TODO di `apps/docs/todo/` dari `_TODO_TEMPLATE.md` dan tambah baris di `TODO_INDEX.md`.
+5. Cari atau buat feature doc di `apps/docs/features/<area>/` dari `_FEATURE_TEMPLATE.md` dan tambah baris di `FEATURE_INDEX.md`.
+6. Buat cabang `<inisial>/<slug>`.
+
+## Selama kode
+
+- Lapisan backend: rute, servis, repositori. Rute tidak menyentuh basis data.
+- Validasi masukan di setiap rute (Pydantic). Periksa kepemilikan data pengguna di servis.
+- Skema berubah: migrasi Alembic naik dan turun, perbarui `02-SKEMA-DATABASE.md`.
+- Endpoint berubah: perbarui `02-API-CONTRACT.md` dan OpenAPI di komit yang sama.
+- Prefer reuse: jangan menambah tabel atau kolom bila yang ada cukup; bila perlu, tulis alasannya di entri version.
+- Tidak ada kode mati, tidak ada endpoint ganda.
+- Komentar menjelaskan alasan, bukan mengulang kode.
+
+## Sesudah kode
+
+1. Jalankan padanan CI lokal komponen (`Dokument/04-Infra/02-CICD-CABANG-DAN-PR.md`).
+2. Coba fungsinya sungguhan (lihat `task-completion-gate.mdc`).
+3. Perbarui TODO (centang, ringkasan progres, log eksekusi), feature doc (alur kerja, aturan bisnis), flows bila alur berubah, entri version menjadi `Released` dengan "File yang Diubah" dan bukti verifikasi.
+4. Sapu dokumen: cari frasa lama di `Dokument/` dan `apps/docs/`, perbaiki semua yang menyebut perilaku lama.
+5. PR ke `testing`. Tutup kartu Kaneo (Done) dengan tautan PR dan daftar periksa.
+6. Setelah satu fase selesai: perbarui `tools/build_kemajuan_pdf.py`, bangun, unggah ke folder K8 (`agents/DRIVE.md`).
+
+## Komit dan PR
+
+Conventional Commits, subjek di bawah 72 karakter, satu perhatian per komit, tanpa baris atribusi AI. PR ke `testing`, tidak pernah langsung ke `main`. Merge ke `main` hanya dengan konfirmasi Adam.

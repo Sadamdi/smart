@@ -1,0 +1,26 @@
+---
+description: PR dan serah terima untuk perubahan web dan mobile
+globs:
+  - "apps/web/**"
+  - "apps/mobile/**"
+alwaysApply: false
+---
+# Serah terima perubahan frontend
+
+1. Cabang `<inisial>/<slug>`, PR ke `testing`. Jangan push langsung.
+2. Jalankan padanan CI lokal: web `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`; mobile `flutter analyze`, `flutter test`.
+3. Coba di peramban atau emulator, periksa tab Network dan Console.
+4. Setelah PR dibuka, beri tahu Adam dengan format:
+
+```
+[FE PR] <judul singkat>
+PR: <url>
+Target: testing
+Ringkasan: <1-2 kalimat>
+Test: <halaman dan skenario>
+Catatan: <penyimpangan dari Figma, ketergantungan backend, jika ada>
+```
+
+5. Perubahan lintas backend dan frontend: dua PR terpisah, sebut ketergantungan di masing-masing.
+6. Penyimpangan dari desain Figma dicatat agar diteruskan ke tim UI/UX.
+7. Tugas frontend belum selesai sebelum PR dan pesan serah terima terkirim.
