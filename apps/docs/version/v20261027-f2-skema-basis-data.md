@@ -28,8 +28,9 @@ Mewujudkan ERD final (13 tabel) sebagai model dan migrasi sehingga autentikasi, 
 - [x] Model dan migrasi
 - [x] Seed dan cleanup
 - [x] Uji skema tanpa basis data (13 tabel, ekstensi vector, indeks, batasan pengingat)
-- [ ] Menjalankan migrasi naik dan turun di proyek Supabase uji (menunggu connection string)
-- [ ] Menjalankan seed di proyek Supabase dev
+- [x] Migrasi naik dijalankan di proyek Supabase SMART (dipakai sebagai dev)
+- [ ] Migrasi naik dan turun di proyek Supabase uji terpisah
+- [ ] Seed sumber (belum dijalankan)
 
 ## 4. File yang diubah
 
@@ -48,7 +49,8 @@ Mewujudkan ERD final (13 tabel) sebagai model dan migrasi sehingga autentikasi, 
 | --- | --- | --- |
 | Lint dan uji backend | `uv run ruff check .`, `ruff format --check .`, `pytest -q` | Lolos, 13 uji |
 | SQL migrasi | `alembic upgrade head --sql` | 13 tabel, ekstensi vector, indeks HNSW |
-| Basis data nyata | `alembic upgrade head` lalu `downgrade base` di Supabase uji | Belum dijalankan (menunggu connection string) |
+| Basis data nyata | `alembic upgrade head` di Supabase SMART (basis data kosong sebelumnya) | Lolos: 13 tabel, `alembic_version` = 0001, ekstensi vector terpasang, indeks `ix_beasiswa_vektor` (hnsw) ada, kolom vector pada `beasiswa` dan `pengguna` |
+| Pengaman hapus data | `pytest` | Lolos, 14 uji, termasuk pembeda proyek lewat nama pengguna pada pooler bersama |
 
 ## 7. Cara mundur
 
