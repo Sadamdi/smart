@@ -26,7 +26,7 @@ Setiap komponen punya `.env.example` yang masuk repo (tanpa nilai rahasia) dan `
 | --- | --- | --- |
 | DATABASE_URL | backend, crawler | `postgresql+psycopg://...` ke proyek Supabase sesuai lingkungan (kata sandi basis data dari dasbor Supabase, tidak masuk repo) |
 | APP_ENV | backend, crawler, ml | `dev`, `test`, atau `prod` |
-| DESTRUCTIVE_DB_HOSTS | backend, crawler | Daftar putih host untuk uji dan skrip yang menghapus data; kosong di prod |
+| DESTRUCTIVE_DB_HOSTS | backend, crawler | Daftar putih untuk uji dan skrip yang menghapus data; kosong di prod. Pooler Supabase memakai host yang sama untuk semua proyek satu wilayah, jadi isi dengan `pengguna@host` (mis. `postgres.<ref>@aws-0-....pooler.supabase.com`), bukan host saja |
 | JWT_SECRET | backend | Acak panjang; berbeda per lingkungan |
 | JWT_ACCESS_MENIT, JWT_REFRESH_HARI | backend | Umur token |
 | ENCRYPTION_KEY | backend | Kunci enkripsi dokumen |
