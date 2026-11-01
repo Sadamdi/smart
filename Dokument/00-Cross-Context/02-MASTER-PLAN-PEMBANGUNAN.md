@@ -50,7 +50,7 @@ Rencana ini membagi pembangunan menjadi fase kecil yang dapat dicicil. Setiap fa
 ### F2. Basis data, backend inti, autentikasi (4.2)
 
 - **Masukan:** `01-Arsitektur/02-SKEMA-DATABASE.md`, `02-Backend/02-API-CONTRACT.md` bagian auth dan profil.
-- **Keluaran:** migrasi Alembic untuk 11 tabel; registrasi, login, penyegaran token, hapus akun, ekspor data; lapisan rute, servis, repositori; format respons dan kode galat baku.
+- **Keluaran:** migrasi Alembic untuk 13 tabel; registrasi, login, penyegaran token, hapus akun, ekspor data; lapisan rute, servis, repositori; format respons dan kode galat baku.
 - **Gerbang selesai:** uji otomatis auth lolos; pengguna dapat register, login, dan membaca profil lewat API; cakupan uji servis auth minimal 80%.
 
 ### F3. Pemantau beasiswa dan dataset (4.3)

@@ -1,0 +1,35 @@
+from app.models.base import Base
+from app.models.tables import (
+    TABEL_SMART,
+    Beasiswa,
+    BerkasWajib,
+    ChecklistPengguna,
+    DokumenPengguna,
+    Interaksi,
+    Notifikasi,
+    Pengguna,
+    PerangkatPush,
+    Percakapan,
+    Persyaratan,
+    Rekomendasi,
+    Sumber,
+    TugasPribadi,
+)
+
+__all__ = [
+    "Base",
+    "TABEL_SMART",
+    "Beasiswa",
+    "BerkasWajib",
+    "ChecklistPengguna",
+    "DokumenPengguna",
+    "Interaksi",
+    "Notifikasi",
+    "PerangkatPush",
+    "Pengguna",
+    "Percakapan",
+    "Persyaratan",
+    "Rekomendasi",
+    "Sumber",
+    "TugasPribadi",
+]

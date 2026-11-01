@@ -34,6 +34,7 @@ Modul sistem (M1 sampai M5) dan paket kerja WBS yang menjadi dasarnya ada di `..
 backend   cd apps/backend && uv sync --python 3.12 && uv run uvicorn app.main:app --reload --port 8000   (Swagger di /docs)
 web       cd apps/web && npm install && npm run dev
 mobile    cd apps/mobile && flutter pub get && flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000/api/v1
+basis data cd apps/backend && uv run alembic upgrade head && uv run python -m scripts.seed_sumber   (butuh DATABASE_URL Supabase)
 crawler   cd apps/crawler && uv sync --python 3.12 && uv run pytest
 ml        cd apps/ml && uv sync --python 3.12 && uv run pytest
 ```

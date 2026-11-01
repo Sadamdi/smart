@@ -26,6 +26,7 @@ Kartu Kaneo: 4.1 `[INFRA] Repositori proyek`
 - [x] O-01 diputuskan: monorepo, cabang `main` dan `testing` (host GitHub belum dipilih)
 - [x] `git init -b main`, `.gitignore` (aturan rahasia)
 - [ ] Komit awal dan cabang `testing` (menunggu identitas git dan keputusan isi repositori)
+- [x] Repositori github.com/Sadamdi/smart, cabang main dan testing (27 Okt)
 - [ ] Undang anggota tim, atur perlindungan cabang
 Penerimaan: tiga anggota dapat clone dan membuat cabang.
 
