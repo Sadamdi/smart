@@ -10,7 +10,7 @@ Folder ini berisi dokumen teknis yang dipakai saat membangun aplikasi. Strukturn
 | `Dokument/` (folder ini) | Dokumen teknis hidup untuk pembangunan (arsitektur, skema, kontrak API, rencana) | Ditulis dan dirawat tangan. Wajib diselaraskan ke kode |
 | `apps/docs/` | Catatan pengerjaan per tugas: version, todo, features, flows | Diisi setiap tugas, sesuai `.cursor/rules/` |
 
-Angka dan istilah di sini harus sama dengan dokumen di `docs/` (periode proyek, 11 tabel, tiga kategori kelayakan, batas toleransi). Bila berbeda, perbaiki salah satunya dan catat di `00-Cross-Context/03-ADR-KEPUTUSAN-ARSITEKTUR.md`.
+Angka dan istilah di sini harus sama dengan dokumen di `docs/` (periode proyek, 13 tabel, tiga kategori kelayakan, batas toleransi). Bila berbeda, perbaiki salah satunya dan catat di `00-Cross-Context/03-ADR-KEPUTUSAN-ARSITEKTUR.md`.
 
 ## Isi
 

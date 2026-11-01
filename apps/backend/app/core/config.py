@@ -1,8 +1,8 @@
 from functools import lru_cache
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -11,9 +11,9 @@ class Settings(BaseSettings):
     app_env: Literal["dev", "test", "prod"] = "dev"
     database_url: str | None = None
     # Daftar putih host basis data yang boleh dihapus isinya (uji dan skrip cleanup). Kosong di prod.
-    destructive_db_hosts: list[str] = []
+    destructive_db_hosts: Annotated[list[str], NoDecode] = []
 
-    cors_origins: list[str] = ["http://localhost:3000"]
+    cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
 
     jwt_secret: str = ""
     jwt_access_menit: int = 15
