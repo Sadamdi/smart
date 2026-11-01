@@ -14,7 +14,20 @@ Biaya hosting dan layanan AI tercantum di RAB dan bersumber dari `tools/build_sd
 
 Templat Nginx dan systemd ada di `deploy/` (placeholder, menunggu detail server dan domain dari Adam). Keputusan 26 Okt 2026: produksi memakai server dan domain milik Adam.
 
-## Susunan usulan (satu server Linux)
+## Susunan yang berjalan (27 Oktober 2026)
+
+Belum ada domain, sehingga alamat publik dibuat tanpa domain:
+
+| Bagian | Tempat | Cara |
+| --- | --- | --- |
+| Web (Next.js) | Vercel, proyek `smart-web` | Meneruskan `/backend/...` ke backend lewat `rewrites` dengan variabel `BACKEND_ORIGIN` |
+| Backend (FastAPI) | Server milik Adam, layanan systemd satu pekerja | Alamat HTTPS dari Cloudflare Quick Tunnel (tanpa membuka port) |
+| Basis data | Supabase | Proyek terpisah untuk SMART dan untuk Kaneo |
+| Kaneo | Server yang sama, API Node dan Caddy lokal | Alamat HTTPS dari Cloudflare Quick Tunnel |
+
+Server berukuran kecil (RAM 1 GB, tanpa swap) dan dipakai bersama aplikasi lain, jadi hanya komponen ringan yang berjalan di sana: model embedding (ML) dan pemantau berat harus menunggu server yang lebih besar atau layanan terpisah. Alamat Quick Tunnel berubah setiap tunnel dimulai ulang; alamat permanen membutuhkan domain di Cloudflare. Catatan operasional lengkap ada di panduan internal tim.
+
+## Susunan usulan awal (satu server Linux)
 
 | Layanan | Cara jalan | Catatan |
 | --- | --- | --- |
