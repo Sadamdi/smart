@@ -47,3 +47,13 @@ def test_daftar_putih_dari_string_dipisah_koma():
         destructive_db_hosts="db.devref.supabase.co, db.lain.supabase.co",
     )
     assert s.destructive_db_hosts == ["db.devref.supabase.co", "db.lain.supabase.co"]
+
+
+def test_pooler_bersama_dibedakan_lewat_nama_pengguna():
+    pooler = "aws-0-ap-southeast-1.pooler.supabase.com"
+    dev = f"postgresql+psycopg://postgres.devref:p@{pooler}:5432/postgres"
+    prod = f"postgresql+psycopg://postgres.prodref:p@{pooler}:5432/postgres"
+    izin = [f"postgres.devref@{pooler}"]
+    pastikan_boleh_hapus(_s(app_env="dev", database_url=dev, destructive_db_hosts=izin))
+    with pytest.raises(DestructiveOperationRefused):
+        pastikan_boleh_hapus(_s(app_env="dev", database_url=prod, destructive_db_hosts=izin))
