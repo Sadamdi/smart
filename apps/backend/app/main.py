@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import health
+from app.api.v1 import auth, beasiswa, health, me
 from app.core.config import get_settings
 from app.core.errors import pasang_penangan_galat
 
@@ -30,6 +30,9 @@ def buat_app() -> FastAPI:
     )
     pasang_penangan_galat(app)
     app.include_router(health.router, prefix=API_PREFIX)
+    app.include_router(auth.router, prefix=API_PREFIX)
+    app.include_router(me.router, prefix=API_PREFIX)
+    app.include_router(beasiswa.router, prefix=API_PREFIX)
     return app
 
 

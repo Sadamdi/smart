@@ -15,6 +15,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     Numeric,
     SmallInteger,
     Text,
@@ -63,6 +64,8 @@ class Pengguna(IdMixin, WaktuMixin, Base):
     skor_bahasa: Mapped[dict | None] = mapped_column(JSONB)
     kewarganegaraan: Mapped[str | None] = mapped_column(Text)
     vektor_profil = mapped_column(Vector(DIMENSI_VEKTOR))
+    # dinaikkan saat logout atau ganti kata sandi sehingga semua token lama tidak berlaku lagi
+    versi_token: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
     preferensi_notifikasi: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=text('\'{"email": true, "push": true}\'::jsonb')
     )
