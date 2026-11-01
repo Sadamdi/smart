@@ -15,7 +15,8 @@ export class ApiError extends Error {
   }
 }
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+// Di produksi (Vercel) default-nya lewat proxy /backend; lokal memakai NEXT_PUBLIC_API_URL ke backend langsung.
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/backend/api/v1";
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}, token?: string): Promise<ApiSuccess<T>> {
   const headers = new Headers(init.headers);
