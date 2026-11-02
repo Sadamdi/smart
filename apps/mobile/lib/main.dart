@@ -1,29 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/router.dart';
+import 'core/theme/app_theme.dart';
+
 void main() {
-  runApp(const ProviderScope(child: SmartApp()));
+  runApp(
+    // Galat dimuat ulang manual lewat tombol "Coba lagi", bukan otomatis.
+    ProviderScope(retry: (_, _) => null, child: const SmartApp()),
+  );
 }
 
-class SmartApp extends StatelessWidget {
-  const SmartApp({super.key});
+class SmartApp extends ConsumerWidget {
+  const SmartApp({super.key, this.googleFonts = true});
+
+  final bool googleFonts;
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return MaterialApp.router(
       title: 'SMART',
-      theme: ThemeData(colorSchemeSeed: const Color(0xFF2563A8), useMaterial3: true),
-      home: const Scaffold(
-        body: Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Text(
-              'SMART\nAplikasi sedang dibangun; layar ini hanya kerangka awal.',
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-      ),
+      debugShowCheckedModeBanner: false,
+      theme: buatTema(googleFonts: googleFonts),
+      routerConfig: ref.watch(routerProvider),
     );
   }
 }
