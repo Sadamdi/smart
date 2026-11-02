@@ -31,25 +31,25 @@ Kartu Kaneo: 4.2 `[BE] Basis data dan fitur login`
 Penerimaan: skema di basis data sama dengan dokumen.
 
 ### T2. Fondasi backend
-- [ ] `core`: konfigurasi, keamanan (hash, JWT), galat domain dan pemetaannya, logging
-- [ ] Format respons dan kode galat baku
-- [ ] Lapisan rute, servis, repositori dengan contoh modul
+- [x] `core`: konfigurasi, keamanan (hash, JWT), galat domain dan pemetaannya, logging
+- [x] Format respons dan kode galat baku
+- [x] Lapisan rute, servis, repositori dengan contoh modul
 Penerimaan: galat domain menjadi 401, 403, 404, 409, 422.
 
 ### T3. Auth
-- [ ] register, login, refresh, logout, ganti kata sandi
-- [ ] Batas laju login
+- [x] register, login, refresh, logout, ganti kata sandi
+- [x] Batas laju login
 Penerimaan: jalur gagal diuji (kata sandi salah, token kedaluwarsa).
 
 ### T4. Profil dan akun
-- [ ] `GET /me`, `PUT /me/profil`, `PUT /me/preferensi-notifikasi`, `GET /me/ekspor`, `DELETE /me`
-- [ ] Validasi: IPK 0 sampai 4, semester 1 sampai 14, jenjang valid
+- [x] `GET /me`, `PUT /me/profil`, `PUT /me/preferensi-notifikasi`, `GET /me/ekspor`, `DELETE /me`
+- [x] Validasi: IPK 0 sampai 4, semester 1 sampai 14, jenjang valid
 Penerimaan: pengguna A tidak dapat membaca atau mengubah pengguna B.
 
 ### T5. Beasiswa (baca)
-- [ ] `GET /beasiswa` (filter, paginasi kursor), `GET /beasiswa/{id}`
-- [ ] Hanya `terbit` dan tenggat belum lewat bagi mahasiswa
-- [ ] Seed data uji (`seed` aman diulang)
+- [x] `GET /beasiswa` (filter, paginasi kursor), `GET /beasiswa/{id}`
+- [x] Hanya `terbit` dan tenggat belum lewat bagi mahasiswa
+- [x] Seed data uji (`seed` aman diulang)
 Penerimaan: irisan vertikal pertama dapat dipanggil web.
 
 ### T6. OpenAPI dan dokumen
@@ -65,3 +65,4 @@ O-03, O-04, O-05.
 
 | Tanggal | Tindakan | Hasil |
 | --- | --- | --- |
+| 2026-11-02 | T2 sampai T5 diselesaikan; migrasi 0002 dijalankan di Supabase SMART; 41 uji lulus (4 uji integrasi dengan rollback) | Lulus |

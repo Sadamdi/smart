@@ -15,6 +15,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     Numeric,
     SmallInteger,
     Text,
@@ -28,9 +29,7 @@ from app.models.base import DIMENSI_VEKTOR, Base, IdMixin, WaktuMixin
 
 
 def _fk(tabel: str, **kw):
-    return mapped_column(
-        UUID(as_uuid=True), ForeignKey(f"{tabel}.id", ondelete="CASCADE"), nullable=False, **kw
-    )
+    return mapped_column(UUID(as_uuid=True), ForeignKey(f"{tabel}.id", ondelete="CASCADE"), nullable=False, **kw)
 
 
 class Pengguna(IdMixin, WaktuMixin, Base):
@@ -63,6 +62,8 @@ class Pengguna(IdMixin, WaktuMixin, Base):
     skor_bahasa: Mapped[dict | None] = mapped_column(JSONB)
     kewarganegaraan: Mapped[str | None] = mapped_column(Text)
     vektor_profil = mapped_column(Vector(DIMENSI_VEKTOR))
+    # dinaikkan saat logout atau ganti kata sandi sehingga semua token lama tidak berlaku lagi
+    versi_token: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
     preferensi_notifikasi: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=text('\'{"email": true, "push": true}\'::jsonb')
     )
@@ -82,17 +83,13 @@ class DokumenPengguna(IdMixin, WaktuMixin, Base):
     lokasi_penyimpanan: Mapped[str] = mapped_column(Text, nullable=False)
     hasil_baca: Mapped[dict | None] = mapped_column(JSONB)
     status_baca: Mapped[str] = mapped_column(Text, nullable=False, server_default="menunggu")
-    tanggal_unggah: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    tanggal_unggah: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
 
 
 class Sumber(IdMixin, WaktuMixin, Base):
     __tablename__ = "sumber"
     __table_args__ = (
-        CheckConstraint(
-            "jenis in ('pantau_otomatis','tautan_keluar','input_manual','rujukan')", name="jenis"
-        ),
+        CheckConstraint("jenis in ('pantau_otomatis','tautan_keluar','input_manual','rujukan')", name="jenis"),
         CheckConstraint("status_terakhir in ('berhasil','gagal','belum_pernah')", name="status_terakhir"),
     )
 
@@ -163,9 +160,7 @@ class BerkasWajib(IdMixin, WaktuMixin, Base):
 
 class ChecklistPengguna(IdMixin, WaktuMixin, Base):
     __tablename__ = "checklist_pengguna"
-    __table_args__ = (
-        UniqueConstraint("pengguna_id", "berkas_wajib_id", name="uq_checklist_pengguna_pengguna_berkas"),
-    )
+    __table_args__ = (UniqueConstraint("pengguna_id", "berkas_wajib_id", name="uq_checklist_pengguna_pengguna_berkas"),)
 
     pengguna_id: Mapped[uuid.UUID] = _fk("pengguna")
     berkas_wajib_id: Mapped[uuid.UUID] = _fk("berkas_wajib")
@@ -207,9 +202,7 @@ class Interaksi(IdMixin, WaktuMixin, Base):
     beasiswa_id: Mapped[uuid.UUID] = _fk("beasiswa")
     aksi: Mapped[str] = mapped_column(Text, nullable=False)
     status_rencana: Mapped[str | None] = mapped_column(Text)
-    waktu: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    waktu: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
 
 
 class Notifikasi(IdMixin, WaktuMixin, Base):
@@ -218,9 +211,7 @@ class Notifikasi(IdMixin, WaktuMixin, Base):
         CheckConstraint("jenis in ('tenggat','beasiswa_baru')", name="jenis"),
         CheckConstraint("kanal in ('email','push')", name="kanal"),
         # satu pengingat per pengguna, beasiswa, jenis, kanal, dan tanggal acuan agar tidak terkirim ganda
-        UniqueConstraint(
-            "pengguna_id", "beasiswa_id", "jenis", "kanal", "tanggal_acuan", name="uq_notifikasi_pengingat"
-        ),
+        UniqueConstraint("pengguna_id", "beasiswa_id", "jenis", "kanal", "tanggal_acuan", name="uq_notifikasi_pengingat"),
         Index("ix_notifikasi_pengguna_dibaca", "pengguna_id", "dibaca"),
     )
 
@@ -244,9 +235,7 @@ class Percakapan(IdMixin, WaktuMixin, Base):
     pesan: Mapped[str] = mapped_column(Text, nullable=False)
     jawaban: Mapped[str | None] = mapped_column(Text)
     rujukan_beasiswa_id: Mapped[list[uuid.UUID] | None] = mapped_column(ARRAY(UUID(as_uuid=True)))
-    waktu: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    waktu: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
 
 
 class TugasPribadi(IdMixin, WaktuMixin, Base):
