@@ -22,9 +22,7 @@ class HasilDaftar(TokenOut):
     pengguna: PenggunaOut
 
 
-@router.post(
-    "/register", status_code=201, summary="Daftar akun mahasiswa", response_model=Amplop[HasilDaftar]
-)
+@router.post("/register", status_code=201, summary="Daftar akun mahasiswa", response_model=Amplop[HasilDaftar])
 def daftar(data: DaftarIn, repo: RepoDep, settings: SettingsDep) -> Amplop[HasilDaftar]:
     pengguna, token = layanan.daftar(repo, data, settings)
     return Amplop(data=HasilDaftar(**token.model_dump(), pengguna=PenggunaOut.model_validate(pengguna)))
@@ -51,7 +49,5 @@ def keluar(pengguna: SaatIni, repo: RepoDep) -> Amplop[Kosong]:
     summary="Ganti kata sandi; token lama dicabut dan token baru dikembalikan",
     response_model=Amplop[TokenOut],
 )
-def ganti_kata_sandi(
-    data: GantiSandiIn, pengguna: SaatIni, repo: RepoDep, settings: SettingsDep
-) -> Amplop[TokenOut]:
+def ganti_kata_sandi(data: GantiSandiIn, pengguna: SaatIni, repo: RepoDep, settings: SettingsDep) -> Amplop[TokenOut]:
     return Amplop(data=layanan.ganti_kata_sandi(repo, pengguna, data, settings))

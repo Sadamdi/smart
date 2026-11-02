@@ -30,9 +30,7 @@ def test_hanya_terbit_dan_belum_lewat_yang_tampil(klien, beasiswa_repo):
 
 def test_filter_dan_pencarian(klien, beasiswa_repo):
     beasiswa_repo.semua += [
-        buat_beasiswa(
-            "Beasiswa Unggulan", HARI_INI + timedelta(days=3), jenjang=["S1"], penyelenggara="Kemendikdasmen"
-        ),
+        buat_beasiswa("Beasiswa Unggulan", HARI_INI + timedelta(days=3), jenjang=["S1"], penyelenggara="Kemendikdasmen"),
         buat_beasiswa("LPDP Magister", HARI_INI + timedelta(days=4), jenjang=["S2"], penyelenggara="LPDP"),
         buat_beasiswa("Beasiswa Luar Negeri", HARI_INI + timedelta(days=5), jenjang=["S2"], negara="Jepang"),
     ]
@@ -41,9 +39,7 @@ def test_filter_dan_pencarian(klien, beasiswa_repo):
         "LPDP Magister",
         "Beasiswa Luar Negeri",
     ]
-    assert [b["nama"] for b in klien.get(f"{B}/beasiswa?q=lpdp", headers=h).json()["data"]] == [
-        "LPDP Magister"
-    ]
+    assert [b["nama"] for b in klien.get(f"{B}/beasiswa?q=lpdp", headers=h).json()["data"]] == ["LPDP Magister"]
     assert [b["nama"] for b in klien.get(f"{B}/beasiswa?negara=Jepang", headers=h).json()["data"]] == [
         "Beasiswa Luar Negeri"
     ]
@@ -51,9 +47,7 @@ def test_filter_dan_pencarian(klien, beasiswa_repo):
 
 
 def test_paginasi_kursor_tanpa_duplikat(klien, beasiswa_repo):
-    beasiswa_repo.semua += [
-        buat_beasiswa(f"Beasiswa {i}", HARI_INI + timedelta(days=i + 1)) for i in range(5)
-    ]
+    beasiswa_repo.semua += [buat_beasiswa(f"Beasiswa {i}", HARI_INI + timedelta(days=i + 1)) for i in range(5)]
     h = _masuk(klien)
     r1 = klien.get(f"{B}/beasiswa?batas=2", headers=h).json()
     assert len(r1["data"]) == 2 and r1["meta"]["kursor_berikut"]

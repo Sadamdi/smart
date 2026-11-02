@@ -15,9 +15,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "pengguna", sa.Column("versi_token", sa.Integer(), server_default=sa.text("0"), nullable=False)
-    )
+    op.add_column("pengguna", sa.Column("versi_token", sa.Integer(), server_default=sa.text("0"), nullable=False))
 
 
 def downgrade() -> None:

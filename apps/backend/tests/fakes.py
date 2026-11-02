@@ -100,6 +100,4 @@ class BeasiswaRepoPalsu:
         b = next((x for x in self._terlihat(hari_ini) if x.id == beasiswa_id), None)
         if b is None:
             return None
-        return DetailBeasiswa(
-            beasiswa=b, persyaratan=self.syarat.get(b.id, []), berkas_wajib=self.berkas.get(b.id, [])
-        )
+        return DetailBeasiswa(beasiswa=b, persyaratan=self.syarat.get(b.id, []), berkas_wajib=self.berkas.get(b.id, []))
