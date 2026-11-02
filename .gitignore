@@ -41,3 +41,4 @@ apps/**/storage/
 /AGENTS.md
 /CLAUDE.md
 /README.md
+apps/backend/data/
