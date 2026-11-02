@@ -5,7 +5,7 @@ Satu baris per dokumen fitur. Area berurutan; nomor fitur berurutan di dalam are
 | Area | Fitur | Berkas | Status | FR | Fase |
 | --- | --- | --- | --- | --- | --- |
 | 01-auth | Registrasi, login, akun | `01-auth/1. registrasi-login.md` | Planned | FR-SM-05 | F2 |
-| 02-profil-dokumen | Unggah dan baca dokumen, profil | `02-profil-dokumen/1. unggah-dan-baca-dokumen.md` | Planned | FR-SM-05, 06 | F4 |
+| 02-profil-dokumen | Unggah dan baca dokumen, profil | `02-profil-dokumen/1. unggah-dan-baca-dokumen.md` | Implemented (backend) | FR-SM-05, 06 | F4 |
 | 03-beasiswa-pemantauan | Pemantau beasiswa dan dataset | `03-beasiswa-pemantauan/1. pemantau-beasiswa.md` | Planned | FR-SM-01 sampai 03 | F3 |
 | 04-rekomendasi | Mesin rekomendasi | `04-rekomendasi/1. mesin-rekomendasi.md` | Planned | FR-SM-07 sampai 09 | F5 |
 | 05-interaksi-checklist | Tersimpan, checklist, kalender | `05-interaksi-checklist/1. tersimpan-checklist-kalender.md` | Planned | FR-SM-12 | F8 |
@@ -13,5 +13,11 @@ Satu baris per dokumen fitur. Area berurutan; nomor fitur berurutan di dalam are
 | 07-notifikasi | Pengingat tenggat dan beasiswa baru | `07-notifikasi/1. pengingat-notifikasi.md` | Planned | FR-SM-13 | F8 |
 | 08-admin | Validasi data, kelola sumber, laporan | `08-admin/1. validasi-dan-sumber.md` | Planned | FR-SM-04, 14 | F9 |
 | 09-mobile | Aplikasi mobile mahasiswa | `09-mobile/1. aplikasi-mobile-mahasiswa.md` | Implemented (mobile) | FR-SM-05, 09, 10, 12, 13 | F6 |
+| 09-antarmuka-web | Antarmuka web mahasiswa dan admin | `09-antarmuka-web/1. antarmuka-web.md` | Active | FR-SM-05 sampai 14 | F6, F9 |
+| 04-rekomendasi | Mesin rekomendasi | `04-rekomendasi/1. mesin-rekomendasi.md` | Implemented (backend) | FR-SM-07 sampai 09 | F5 |
+| 05-interaksi-checklist | Tersimpan, checklist, kalender | `05-interaksi-checklist/1. tersimpan-checklist-kalender.md` | Implemented (backend) | FR-SM-12 | F8 |
+| 06-chatbot | Chatbot berbasis data | `06-chatbot/1. chatbot-berbasis-data.md` | Implemented (backend) | FR-SM-11 | F7 |
+| 07-notifikasi | Pengingat tenggat dan beasiswa baru | `07-notifikasi/1. pengingat-notifikasi.md` | Implemented (backend) | FR-SM-13 | F8 |
+| 08-admin | Validasi data, kelola sumber, laporan | `08-admin/1. validasi-dan-sumber.md` | Implemented (backend) | FR-SM-04, 14 | F9 |
 
 Berkas berstatus Planned belum ada; dibuat saat tugasnya dimulai. Mengubah status di sini dilakukan bersamaan dengan membuat berkasnya.
