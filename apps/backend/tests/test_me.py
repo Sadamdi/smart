@@ -19,12 +19,7 @@ def test_ubah_profil_hanya_kolom_yang_dikirim(klien):
     )
     assert r.status_code == 200
     p = r.json()["data"]
-    assert (
-        p["kampus"] == "UIN Malang"
-        and p["semester"] == 5
-        and p["ipk"] == "3.60"
-        and p["minat"] == ["teknologi", "data"]
-    )
+    assert p["kampus"] == "UIN Malang" and p["semester"] == 5 and p["ipk"] == "3.60" and p["minat"] == ["teknologi", "data"]
     r2 = klien.put(f"{B}/me/profil", headers=h, json={"ips_terakhir": "3.75"})
     p2 = r2.json()["data"]
     assert p2["ips_terakhir"] == "3.75" and p2["kampus"] == "UIN Malang"  # kolom lain tidak berubah

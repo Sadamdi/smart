@@ -32,9 +32,7 @@ class DetailBeasiswa:
 
 
 class BeasiswaRepo(Protocol):
-    def daftar(
-        self, filter_: FilterBeasiswa, kursor: str | None, batas: int, hari_ini: date
-    ) -> HalamanBeasiswa: ...
+    def daftar(self, filter_: FilterBeasiswa, kursor: str | None, batas: int, hari_ini: date) -> HalamanBeasiswa: ...
     def detail(self, beasiswa_id: uuid.UUID, hari_ini: date) -> DetailBeasiswa | None: ...
 
 
@@ -60,17 +58,13 @@ class BeasiswaRepoSql:
     def __init__(self, sesi: Session) -> None:
         self.sesi = sesi
 
-    def daftar(
-        self, filter_: FilterBeasiswa, kursor: str | None, batas: int, hari_ini: date
-    ) -> HalamanBeasiswa:
+    def daftar(self, filter_: FilterBeasiswa, kursor: str | None, batas: int, hari_ini: date) -> HalamanBeasiswa:
         stmt = select(Beasiswa).where(
             Beasiswa.status == "terbit", Beasiswa.tenggat.is_not(None), Beasiswa.tenggat >= hari_ini
         )
         if filter_.q:
             pola = f"%{_escape_like(filter_.q)}%"
-            stmt = stmt.where(
-                Beasiswa.nama.ilike(pola, escape="\\") | Beasiswa.penyelenggara.ilike(pola, escape="\\")
-            )
+            stmt = stmt.where(Beasiswa.nama.ilike(pola, escape="\\") | Beasiswa.penyelenggara.ilike(pola, escape="\\"))
         if filter_.jenjang:
             stmt = stmt.where(Beasiswa.jenjang.contains([filter_.jenjang]))
         if filter_.negara:
@@ -89,9 +83,7 @@ class BeasiswaRepoSql:
 
     def detail(self, beasiswa_id: uuid.UUID, hari_ini: date) -> DetailBeasiswa | None:
         b = self.sesi.scalar(
-            select(Beasiswa).where(
-                Beasiswa.id == beasiswa_id, Beasiswa.status == "terbit", Beasiswa.tenggat >= hari_ini
-            )
+            select(Beasiswa).where(Beasiswa.id == beasiswa_id, Beasiswa.status == "terbit", Beasiswa.tenggat >= hari_ini)
         )
         if b is None:
             return None

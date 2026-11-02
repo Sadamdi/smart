@@ -35,12 +35,8 @@ def pastikan_boleh_hapus(settings: Settings) -> None:
     identitas = identitas_dari_url(settings.database_url)
     daftar_putih = {h.lower() for h in settings.destructive_db_hosts}
     if not daftar_putih:
-        raise DestructiveOperationRefused(
-            "DESTRUCTIVE_DB_HOSTS kosong: tidak ada basis data yang boleh dihapus isinya."
-        )
+        raise DestructiveOperationRefused("DESTRUCTIVE_DB_HOSTS kosong: tidak ada basis data yang boleh dihapus isinya.")
     # Entri `pengguna@host` cocok dengan satu proyek. Entri `host` saja cocok dengan semua proyek di host itu,
     # jadi untuk pooler Supabase pakai `pengguna@host`.
     if host not in daftar_putih and identitas not in daftar_putih:
-        raise DestructiveOperationRefused(
-            f"Basis data '{host}' tidak ada di DESTRUCTIVE_DB_HOSTS. Operasi dihentikan."
-        )
+        raise DestructiveOperationRefused(f"Basis data '{host}' tidak ada di DESTRUCTIVE_DB_HOSTS. Operasi dihentikan.")

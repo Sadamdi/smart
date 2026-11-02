@@ -66,9 +66,7 @@ def keluar(repo: PenggunaRepo, pengguna: Pengguna) -> None:
     repo.naikkan_versi(pengguna)
 
 
-def ganti_kata_sandi(
-    repo: PenggunaRepo, pengguna: Pengguna, data: GantiSandiIn, settings: Settings
-) -> TokenOut:
+def ganti_kata_sandi(repo: PenggunaRepo, pengguna: Pengguna, data: GantiSandiIn, settings: Settings) -> TokenOut:
     if not cek_sandi(pengguna.kata_sandi, data.kata_sandi_lama):
         raise Forbidden("Kata sandi lama salah")
     pengguna.kata_sandi = hash_sandi(data.kata_sandi_baru)

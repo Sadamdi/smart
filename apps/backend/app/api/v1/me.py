@@ -26,9 +26,7 @@ def ubah_profil(data: ProfilIn, pengguna: SaatIni, repo: RepoDep) -> Amplop[Peng
     return Amplop(data=PenggunaOut.model_validate(layanan.ubah_profil(repo, pengguna, data)))
 
 
-@router.put(
-    "/preferensi-notifikasi", summary="Ubah preferensi surel dan push", response_model=Amplop[PenggunaOut]
-)
+@router.put("/preferensi-notifikasi", summary="Ubah preferensi surel dan push", response_model=Amplop[PenggunaOut])
 def ubah_preferensi(data: PreferensiNotifikasiIn, pengguna: SaatIni, repo: RepoDep) -> Amplop[PenggunaOut]:
     return Amplop(data=PenggunaOut.model_validate(layanan.ubah_preferensi(repo, pengguna, data)))
 
