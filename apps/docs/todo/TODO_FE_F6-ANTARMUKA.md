@@ -23,8 +23,8 @@
 
 ### T1. Kerangka web dan mobile
 Kartu Kaneo: 4.6 `[FE] Aplikasi web dan mobile`
-- [x] Klien API (web: fetch terpusat; mobile: Dio), penyimpanan token, penyegaran token otomatis (web)
-- [x] Tema, komponen dasar sesuai Figma, layout responsif (web)
+- [x] Klien API (web: fetch terpusat; mobile: Dio), penyimpanan token, penyegaran token otomatis
+- [x] Tema dan komponen dasar sesuai Figma (web dan mobile), layout responsif
 Penerimaan: halaman kosong memanggil `/health` dan menampilkan hasilnya.
 
 ### T2. Jelajah Beasiswa (irisan pertama)
@@ -60,4 +60,5 @@ O-08.
 
 | Tanggal | Tindakan | Hasil |
 | --- | --- | --- |
+| 2026-11-03 | Mobile: tema, klien API, sembilan layar, uji, analyze bersih (T1 sampai T4, T6 untuk mobile) | Lihat `version/v20261103-mobile-aplikasi.md` |
 | 2026-11-03 | Antarmuka web dibangun (v20261103-f6-antarmuka-web.md) | Web selesai; mobile dan perbandingan Figma menyusul |
