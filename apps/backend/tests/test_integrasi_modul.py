@@ -9,13 +9,17 @@ from datetime import date, timedelta
 import pytest
 from sqlalchemy import update
 
-from app.core.config import Settings
+from app.core.config import Settings, get_settings
 from app.core.errors import UpstreamUnavailable
 from app.models import Beasiswa, BerkasWajib, Pengguna, Persyaratan, Sumber
 from tests.conftest import SETTINGS_UJI, kepala
 from tests.test_integrasi_db import B, _daftar, klien_db, sesi  # noqa: F401 (fixture)
 
-pytestmark = pytest.mark.usefixtures("klien_db")
+_S = get_settings()
+pytestmark = [
+    pytest.mark.usefixtures("klien_db"),
+    pytest.mark.skipif(not _S.database_url or _S.app_env == "prod", reason="butuh DATABASE_URL pengembangan atau uji"),
+]
 
 HARI = date.today()
 
