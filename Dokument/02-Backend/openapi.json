@@ -1,0 +1,5004 @@
+{
+ "openapi": "3.1.0",
+ "info": {
+  "title": "SMART API",
+  "description": "API SMART (Scholarship Monitoring and Recommendation Tool). Kontrak rancangan: Dokument/02-Backend/02-API-CONTRACT.md.",
+  "version": "0.1.0"
+ },
+ "paths": {
+  "/api/v1/health": {
+   "get": {
+    "tags": [
+     "infrastruktur"
+    ],
+    "summary": "Pemeriksaan hidup",
+    "operationId": "hidup_api_v1_health_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Hidup Api V1 Health Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/health/siap": {
+   "get": {
+    "tags": [
+     "infrastruktur"
+    ],
+    "summary": "Pemeriksaan siap (basis data terhubung)",
+    "operationId": "siap_api_v1_health_siap_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Siap Api V1 Health Siap Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/auth/register": {
+   "post": {
+    "tags": [
+     "autentikasi"
+    ],
+    "summary": "Daftar akun mahasiswa",
+    "operationId": "daftar_api_v1_auth_register_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DaftarIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_HasilDaftar_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/auth/login": {
+   "post": {
+    "tags": [
+     "autentikasi"
+    ],
+    "summary": "Masuk dan menerima token",
+    "operationId": "masuk_api_v1_auth_login_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MasukIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_TokenOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/auth/refresh": {
+   "post": {
+    "tags": [
+     "autentikasi"
+    ],
+    "summary": "Tukar token penyegar dengan token baru",
+    "operationId": "segarkan_api_v1_auth_refresh_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SegarkanIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_TokenOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/auth/logout": {
+   "post": {
+    "tags": [
+     "autentikasi"
+    ],
+    "summary": "Keluar: semua token pengguna ini dicabut",
+    "operationId": "keluar_api_v1_auth_logout_post",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_Kosong_"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/auth/ganti-kata-sandi": {
+   "post": {
+    "tags": [
+     "autentikasi"
+    ],
+    "summary": "Ganti kata sandi; token lama dicabut dan token baru dikembalikan",
+    "operationId": "ganti_kata_sandi_api_v1_auth_ganti_kata_sandi_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GantiSandiIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_TokenOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/me": {
+   "get": {
+    "tags": [
+     "akun dan profil"
+    ],
+    "summary": "Akun dan profil pengguna yang masuk",
+    "operationId": "akun_api_v1_me_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_PenggunaOut_"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   },
+   "delete": {
+    "tags": [
+     "akun dan profil"
+    ],
+    "summary": "Hapus akun beserta datanya",
+    "operationId": "hapus_api_v1_me_delete",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_Kosong_"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/me/profil": {
+   "put": {
+    "tags": [
+     "akun dan profil"
+    ],
+    "summary": "Ubah profil (hanya kolom yang dikirim)",
+    "operationId": "ubah_profil_api_v1_me_profil_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ProfilIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_PenggunaOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/me/preferensi-notifikasi": {
+   "put": {
+    "tags": [
+     "akun dan profil"
+    ],
+    "summary": "Ubah preferensi surel dan push",
+    "operationId": "ubah_preferensi_api_v1_me_preferensi_notifikasi_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PreferensiNotifikasiIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_PenggunaOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/me/ekspor": {
+   "get": {
+    "tags": [
+     "akun dan profil"
+    ],
+    "summary": "Ekspor data milik pengguna",
+    "operationId": "ekspor_api_v1_me_ekspor_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_dict_"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/beasiswa": {
+   "get": {
+    "tags": [
+     "beasiswa"
+    ],
+    "summary": "Daftar beasiswa terbit yang tenggatnya belum lewat",
+    "operationId": "daftar_api_v1_beasiswa_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "q",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 100
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Cari pada nama atau penyelenggara",
+       "title": "Q"
+      },
+      "description": "Cari pada nama atau penyelenggara"
+     },
+     {
+      "name": "jenjang",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "pattern": "^(D3|D4|S1|S2|S3)$"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Jenjang"
+      }
+     },
+     {
+      "name": "negara",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 80
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Negara"
+      }
+     },
+     {
+      "name": "kursor",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 200
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Kursor"
+      }
+     },
+     {
+      "name": "batas",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 50,
+       "minimum": 1,
+       "default": 20,
+       "title": "Batas"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_list_BeasiswaRingkas__"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/beasiswa/{beasiswa_id}": {
+   "get": {
+    "tags": [
+     "beasiswa"
+    ],
+    "summary": "Detail beasiswa beserta persyaratan dan berkas wajib",
+    "operationId": "detail_api_v1_beasiswa__beasiswa_id__get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "beasiswa_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Beasiswa Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_BeasiswaDetail_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/rekomendasi": {
+   "get": {
+    "tags": [
+     "rekomendasi"
+    ],
+    "summary": "Rekomendasi beasiswa per kategori",
+    "operationId": "daftar_api_v1_rekomendasi_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "kategori",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "enum": [
+          "memenuhi",
+          "hampir_memenuhi",
+          "belum_memenuhi"
+         ],
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Kategori"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_list_RekomendasiOut__"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/rekomendasi/ringkasan": {
+   "get": {
+    "tags": [
+     "rekomendasi"
+    ],
+    "summary": "Jumlah rekomendasi per kategori",
+    "operationId": "ringkasan_api_v1_rekomendasi_ringkasan_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_RingkasanOut_"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/rekomendasi/hitung-ulang": {
+   "post": {
+    "tags": [
+     "rekomendasi"
+    ],
+    "summary": "Hitung ulang rekomendasi",
+    "operationId": "hitung_ulang_api_v1_rekomendasi_hitung_ulang_post",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_list_RekomendasiOut__"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/me/dokumen": {
+   "get": {
+    "tags": [
+     "dokumen"
+    ],
+    "summary": "Daftar dokumen dan status baca",
+    "operationId": "daftar_api_v1_me_dokumen_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_list_DokumenOut__"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   },
+   "post": {
+    "tags": [
+     "dokumen"
+    ],
+    "summary": "Unggah dokumen (maksimal 5 MB)",
+    "operationId": "unggah_api_v1_me_dokumen_post",
+    "requestBody": {
+     "content": {
+      "multipart/form-data": {
+       "schema": {
+        "$ref": "#/components/schemas/Body_unggah_api_v1_me_dokumen_post"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_DokumenOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/me/dokumen/{dokumen_id}": {
+   "get": {
+    "tags": [
+     "dokumen"
+    ],
+    "summary": "Detail dan hasil baca",
+    "operationId": "detail_api_v1_me_dokumen__dokumen_id__get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "dokumen_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Dokumen Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_DokumenOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "dokumen"
+    ],
+    "summary": "Hapus dokumen",
+    "operationId": "hapus_api_v1_me_dokumen__dokumen_id__delete",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "dokumen_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Dokumen Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_Kosong_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/me/dokumen/{dokumen_id}/hasil-baca": {
+   "put": {
+    "tags": [
+     "dokumen"
+    ],
+    "summary": "Koreksi hasil baca",
+    "operationId": "koreksi_api_v1_me_dokumen__dokumen_id__hasil_baca_put",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "dokumen_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Dokumen Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/HasilBacaIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_DokumenOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/me/dokumen/{dokumen_id}/terapkan-ke-profil": {
+   "post": {
+    "tags": [
+     "dokumen"
+    ],
+    "summary": "Isi kolom profil yang masih kosong dari hasil baca",
+    "operationId": "terapkan_api_v1_me_dokumen__dokumen_id__terapkan_ke_profil_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "dokumen_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Dokumen Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_TerapkanOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/beasiswa/{beasiswa_id}/interaksi": {
+   "post": {
+    "tags": [
+     "interaksi dan kalender"
+    ],
+    "summary": "Catat klik, simpan, atau rencana daftar",
+    "operationId": "interaksi_api_v1_beasiswa__beasiswa_id__interaksi_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "beasiswa_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Beasiswa Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InteraksiIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_InteraksiOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/beasiswa/{beasiswa_id}/interaksi/simpan": {
+   "delete": {
+    "tags": [
+     "interaksi dan kalender"
+    ],
+    "summary": "Batalkan simpan",
+    "operationId": "batal_simpan_api_v1_beasiswa__beasiswa_id__interaksi_simpan_delete",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "beasiswa_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Beasiswa Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_Kosong_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/me/tersimpan": {
+   "get": {
+    "tags": [
+     "interaksi dan kalender"
+    ],
+    "summary": "Beasiswa tersimpan",
+    "operationId": "tersimpan_api_v1_me_tersimpan_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_list_TersimpanOut__"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/me/checklist": {
+   "get": {
+    "tags": [
+     "interaksi dan kalender"
+    ],
+    "summary": "Checklist berkas beasiswa tersimpan",
+    "operationId": "checklist_api_v1_me_checklist_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_list_ChecklistBeasiswaOut__"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/me/checklist/{berkas_wajib_id}": {
+   "put": {
+    "tags": [
+     "interaksi dan kalender"
+    ],
+    "summary": "Centang atau batalkan berkas",
+    "operationId": "centang_api_v1_me_checklist__berkas_wajib_id__put",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "berkas_wajib_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Berkas Wajib Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CentangIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_CentangIn_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/me/kalender": {
+   "get": {
+    "tags": [
+     "interaksi dan kalender"
+    ],
+    "summary": "Tenggat dan tugas pada rentang tanggal",
+    "operationId": "kalender_api_v1_me_kalender_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "dari",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Dari"
+      }
+     },
+     {
+      "name": "sampai",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Sampai"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_list_AcaraOut__"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/me/tugas": {
+   "post": {
+    "tags": [
+     "interaksi dan kalender"
+    ],
+    "summary": "Tambah tugas pribadi",
+    "operationId": "tambah_tugas_api_v1_me_tugas_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/TugasIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_TugasOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/me/tugas/{tugas_id}": {
+   "put": {
+    "tags": [
+     "interaksi dan kalender"
+    ],
+    "summary": "Ubah atau selesaikan tugas",
+    "operationId": "ubah_tugas_api_v1_me_tugas__tugas_id__put",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "tugas_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Tugas Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/TugasUbahIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_TugasOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "interaksi dan kalender"
+    ],
+    "summary": "Hapus tugas",
+    "operationId": "hapus_tugas_api_v1_me_tugas__tugas_id__delete",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "tugas_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Tugas Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_Kosong_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/notifikasi": {
+   "get": {
+    "tags": [
+     "interaksi dan kalender"
+    ],
+    "summary": "Daftar notifikasi",
+    "operationId": "notifikasi_api_v1_notifikasi_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_list_NotifikasiOut__"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/notifikasi/baca-semua": {
+   "put": {
+    "tags": [
+     "interaksi dan kalender"
+    ],
+    "summary": "Tandai semua dibaca",
+    "operationId": "baca_semua_api_v1_notifikasi_baca_semua_put",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_Kosong_"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/notifikasi/{notifikasi_id}/baca": {
+   "put": {
+    "tags": [
+     "interaksi dan kalender"
+    ],
+    "summary": "Tandai dibaca",
+    "operationId": "baca_api_v1_notifikasi__notifikasi_id__baca_put",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "notifikasi_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Notifikasi Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_Kosong_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/chat/status": {
+   "get": {
+    "tags": [
+     "chatbot"
+    ],
+    "summary": "Apakah layanan AI tersedia",
+    "operationId": "status_api_v1_chat_status_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_StatusOut_"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/chat": {
+   "post": {
+    "tags": [
+     "chatbot"
+    ],
+    "summary": "Kirim pesan ke chatbot",
+    "operationId": "kirim_api_v1_chat_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ChatIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_ChatOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/chat/riwayat": {
+   "get": {
+    "tags": [
+     "chatbot"
+    ],
+    "summary": "Riwayat percakapan",
+    "operationId": "riwayat_api_v1_chat_riwayat_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_list_ChatOut__"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   },
+   "delete": {
+    "tags": [
+     "chatbot"
+    ],
+    "summary": "Hapus riwayat percakapan",
+    "operationId": "hapus_api_v1_chat_riwayat_delete",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_Kosong_"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/admin/antrean-validasi": {
+   "get": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Beasiswa menunggu validasi",
+    "operationId": "antrean_api_v1_admin_antrean_validasi_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_list_AntreanItem__"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/admin/beasiswa/{beasiswa_id}": {
+   "get": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Detail beasiswa untuk validasi",
+    "operationId": "detail_api_v1_admin_beasiswa__beasiswa_id__get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "beasiswa_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Beasiswa Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_DetailAdmin_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Perbaiki data beasiswa",
+    "operationId": "perbaiki_api_v1_admin_beasiswa__beasiswa_id__put",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "beasiswa_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Beasiswa Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PerbaikiIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_DetailAdmin_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/admin/beasiswa/{beasiswa_id}/terbitkan": {
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Terbitkan beasiswa",
+    "operationId": "terbitkan_api_v1_admin_beasiswa__beasiswa_id__terbitkan_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "beasiswa_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Beasiswa Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_DetailAdmin_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/admin/beasiswa/{beasiswa_id}/tolak": {
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Tolak beasiswa dengan alasan",
+    "operationId": "tolak_api_v1_admin_beasiswa__beasiswa_id__tolak_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "beasiswa_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Beasiswa Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/TolakIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_DetailAdmin_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/admin/beasiswa": {
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Input beasiswa manual",
+    "operationId": "manual_api_v1_admin_beasiswa_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ManualIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_DetailAdmin_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/admin/sumber": {
+   "get": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Daftar sumber dan status terakhir",
+    "operationId": "daftar_sumber_api_v1_admin_sumber_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_list_SumberOut__"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   },
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Tambah sumber",
+    "operationId": "tambah_sumber_api_v1_admin_sumber_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SumberIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_SumberOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/admin/sumber/{sumber_id}": {
+   "put": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Ubah sumber",
+    "operationId": "ubah_sumber_api_v1_admin_sumber__sumber_id__put",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "sumber_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Sumber Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SumberUbahIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_SumberOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/admin/laporan": {
+   "get": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Ringkasan sistem",
+    "operationId": "laporan_api_v1_admin_laporan_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Amplop_dict_"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  }
+ },
+ "components": {
+  "schemas": {
+   "AcaraOut": {
+    "properties": {
+     "jenis": {
+      "type": "string",
+      "enum": [
+       "tenggat",
+       "tugas"
+      ],
+      "title": "Jenis"
+     },
+     "tanggal": {
+      "type": "string",
+      "format": "date",
+      "title": "Tanggal"
+     },
+     "judul": {
+      "type": "string",
+      "title": "Judul"
+     },
+     "ref_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Ref Id"
+     },
+     "selesai": {
+      "type": "boolean",
+      "title": "Selesai"
+     }
+    },
+    "type": "object",
+    "required": [
+     "jenis",
+     "tanggal",
+     "judul",
+     "ref_id",
+     "selesai"
+    ],
+    "title": "AcaraOut"
+   },
+   "Amplop_BeasiswaDetail_": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "$ref": "#/components/schemas/BeasiswaDetail"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[BeasiswaDetail]"
+   },
+   "Amplop_CentangIn_": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "$ref": "#/components/schemas/CentangIn"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[CentangIn]"
+   },
+   "Amplop_ChatOut_": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "$ref": "#/components/schemas/ChatOut"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[ChatOut]"
+   },
+   "Amplop_DetailAdmin_": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "$ref": "#/components/schemas/DetailAdmin"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[DetailAdmin]"
+   },
+   "Amplop_DokumenOut_": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "$ref": "#/components/schemas/DokumenOut"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[DokumenOut]"
+   },
+   "Amplop_HasilDaftar_": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "$ref": "#/components/schemas/HasilDaftar"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[HasilDaftar]"
+   },
+   "Amplop_InteraksiOut_": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "$ref": "#/components/schemas/InteraksiOut"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[InteraksiOut]"
+   },
+   "Amplop_Kosong_": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "$ref": "#/components/schemas/Kosong"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[Kosong]"
+   },
+   "Amplop_PenggunaOut_": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "$ref": "#/components/schemas/PenggunaOut"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[PenggunaOut]"
+   },
+   "Amplop_RingkasanOut_": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "$ref": "#/components/schemas/RingkasanOut"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[RingkasanOut]"
+   },
+   "Amplop_StatusOut_": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "$ref": "#/components/schemas/StatusOut"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[StatusOut]"
+   },
+   "Amplop_SumberOut_": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "$ref": "#/components/schemas/SumberOut"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[SumberOut]"
+   },
+   "Amplop_TerapkanOut_": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "$ref": "#/components/schemas/TerapkanOut"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[TerapkanOut]"
+   },
+   "Amplop_TokenOut_": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "$ref": "#/components/schemas/TokenOut"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[TokenOut]"
+   },
+   "Amplop_TugasOut_": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "$ref": "#/components/schemas/TugasOut"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[TugasOut]"
+   },
+   "Amplop_dict_": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Data"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[dict]"
+   },
+   "Amplop_list_AcaraOut__": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "items": {
+       "$ref": "#/components/schemas/AcaraOut"
+      },
+      "type": "array",
+      "title": "Data"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[list[AcaraOut]]"
+   },
+   "Amplop_list_AntreanItem__": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "items": {
+       "$ref": "#/components/schemas/AntreanItem"
+      },
+      "type": "array",
+      "title": "Data"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[list[AntreanItem]]"
+   },
+   "Amplop_list_BeasiswaRingkas__": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "items": {
+       "$ref": "#/components/schemas/BeasiswaRingkas"
+      },
+      "type": "array",
+      "title": "Data"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[list[BeasiswaRingkas]]"
+   },
+   "Amplop_list_ChatOut__": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "items": {
+       "$ref": "#/components/schemas/ChatOut"
+      },
+      "type": "array",
+      "title": "Data"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[list[ChatOut]]"
+   },
+   "Amplop_list_ChecklistBeasiswaOut__": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "items": {
+       "$ref": "#/components/schemas/ChecklistBeasiswaOut"
+      },
+      "type": "array",
+      "title": "Data"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[list[ChecklistBeasiswaOut]]"
+   },
+   "Amplop_list_DokumenOut__": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "items": {
+       "$ref": "#/components/schemas/DokumenOut"
+      },
+      "type": "array",
+      "title": "Data"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[list[DokumenOut]]"
+   },
+   "Amplop_list_NotifikasiOut__": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "items": {
+       "$ref": "#/components/schemas/NotifikasiOut"
+      },
+      "type": "array",
+      "title": "Data"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[list[NotifikasiOut]]"
+   },
+   "Amplop_list_RekomendasiOut__": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "items": {
+       "$ref": "#/components/schemas/RekomendasiOut"
+      },
+      "type": "array",
+      "title": "Data"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[list[RekomendasiOut]]"
+   },
+   "Amplop_list_SumberOut__": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "items": {
+       "$ref": "#/components/schemas/SumberOut"
+      },
+      "type": "array",
+      "title": "Data"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[list[SumberOut]]"
+   },
+   "Amplop_list_TersimpanOut__": {
+    "properties": {
+     "success": {
+      "type": "boolean",
+      "title": "Success",
+      "default": true
+     },
+     "data": {
+      "items": {
+       "$ref": "#/components/schemas/TersimpanOut"
+      },
+      "type": "array",
+      "title": "Data"
+     },
+     "meta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Meta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "data"
+    ],
+    "title": "Amplop[list[TersimpanOut]]"
+   },
+   "AntreanItem": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "nama": {
+      "type": "string",
+      "title": "Nama"
+     },
+     "penyelenggara": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Penyelenggara"
+     },
+     "negara": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Negara"
+     },
+     "jenjang": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Jenjang"
+     },
+     "tenggat": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tenggat"
+     },
+     "tautan_resmi": {
+      "type": "string",
+      "title": "Tautan Resmi"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "alasan_ditandai": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Alasan Ditandai"
+     },
+     "nama_sumber": {
+      "type": "string",
+      "title": "Nama Sumber"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "nama",
+     "tautan_resmi",
+     "status",
+     "nama_sumber"
+    ],
+    "title": "AntreanItem"
+   },
+   "BeasiswaDetail": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "nama": {
+      "type": "string",
+      "title": "Nama"
+     },
+     "penyelenggara": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Penyelenggara"
+     },
+     "negara": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Negara"
+     },
+     "jenjang": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Jenjang"
+     },
+     "tenggat": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tenggat"
+     },
+     "tautan_resmi": {
+      "type": "string",
+      "title": "Tautan Resmi"
+     },
+     "manfaat": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Manfaat"
+     },
+     "tanggal_diperiksa": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tanggal Diperiksa"
+     },
+     "persyaratan": {
+      "items": {
+       "$ref": "#/components/schemas/PersyaratanOut"
+      },
+      "type": "array",
+      "title": "Persyaratan",
+      "default": []
+     },
+     "berkas_wajib": {
+      "items": {
+       "$ref": "#/components/schemas/BerkasWajibOut"
+      },
+      "type": "array",
+      "title": "Berkas Wajib",
+      "default": []
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "nama",
+     "tautan_resmi"
+    ],
+    "title": "BeasiswaDetail"
+   },
+   "BeasiswaRingkas": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "nama": {
+      "type": "string",
+      "title": "Nama"
+     },
+     "penyelenggara": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Penyelenggara"
+     },
+     "negara": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Negara"
+     },
+     "jenjang": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Jenjang"
+     },
+     "tenggat": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tenggat"
+     },
+     "tautan_resmi": {
+      "type": "string",
+      "title": "Tautan Resmi"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "nama",
+     "tautan_resmi"
+    ],
+    "title": "BeasiswaRingkas"
+   },
+   "BerkasChecklistOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "nama_berkas": {
+      "type": "string",
+      "title": "Nama Berkas"
+     },
+     "selesai": {
+      "type": "boolean",
+      "title": "Selesai"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "nama_berkas",
+     "selesai"
+    ],
+    "title": "BerkasChecklistOut"
+   },
+   "BerkasWajibOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "nama_berkas": {
+      "type": "string",
+      "title": "Nama Berkas"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "nama_berkas"
+    ],
+    "title": "BerkasWajibOut"
+   },
+   "Body_unggah_api_v1_me_dokumen_post": {
+    "properties": {
+     "jenis": {
+      "type": "string",
+      "enum": [
+       "cv",
+       "sertifikat",
+       "pengalaman_organisasi"
+      ],
+      "title": "Jenis"
+     },
+     "berkas": {
+      "type": "string",
+      "contentMediaType": "application/octet-stream",
+      "title": "Berkas"
+     }
+    },
+    "type": "object",
+    "required": [
+     "jenis",
+     "berkas"
+    ],
+    "title": "Body_unggah_api_v1_me_dokumen_post"
+   },
+   "CentangIn": {
+    "properties": {
+     "selesai": {
+      "type": "boolean",
+      "title": "Selesai"
+     }
+    },
+    "type": "object",
+    "required": [
+     "selesai"
+    ],
+    "title": "CentangIn"
+   },
+   "ChatIn": {
+    "properties": {
+     "pesan": {
+      "type": "string",
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Pesan"
+     }
+    },
+    "type": "object",
+    "required": [
+     "pesan"
+    ],
+    "title": "ChatIn"
+   },
+   "ChatOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "pesan": {
+      "type": "string",
+      "title": "Pesan"
+     },
+     "jawaban": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Jawaban"
+     },
+     "waktu": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Waktu"
+     },
+     "rujukan": {
+      "items": {
+       "$ref": "#/components/schemas/RujukanOut"
+      },
+      "type": "array",
+      "title": "Rujukan"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "pesan",
+     "jawaban",
+     "waktu",
+     "rujukan"
+    ],
+    "title": "ChatOut"
+   },
+   "ChecklistBeasiswaOut": {
+    "properties": {
+     "beasiswa": {
+      "$ref": "#/components/schemas/BeasiswaRingkas"
+     },
+     "berkas": {
+      "items": {
+       "$ref": "#/components/schemas/BerkasChecklistOut"
+      },
+      "type": "array",
+      "title": "Berkas"
+     }
+    },
+    "type": "object",
+    "required": [
+     "beasiswa",
+     "berkas"
+    ],
+    "title": "ChecklistBeasiswaOut"
+   },
+   "DaftarIn": {
+    "properties": {
+     "nama": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Nama"
+     },
+     "email": {
+      "type": "string",
+      "format": "email",
+      "title": "Email"
+     },
+     "kata_sandi": {
+      "type": "string",
+      "maxLength": 128,
+      "minLength": 8,
+      "title": "Kata Sandi"
+     }
+    },
+    "type": "object",
+    "required": [
+     "nama",
+     "email",
+     "kata_sandi"
+    ],
+    "title": "DaftarIn",
+    "example": {
+     "email": "mahasiswa@example.com",
+     "kata_sandi": "kata-sandi-panjang",
+     "nama": "Nur Contoh"
+    }
+   },
+   "DetailAdmin": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "nama": {
+      "type": "string",
+      "title": "Nama"
+     },
+     "penyelenggara": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Penyelenggara"
+     },
+     "negara": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Negara"
+     },
+     "jenjang": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Jenjang"
+     },
+     "tenggat": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tenggat"
+     },
+     "tautan_resmi": {
+      "type": "string",
+      "title": "Tautan Resmi"
+     },
+     "manfaat": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Manfaat"
+     },
+     "tanggal_diperiksa": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tanggal Diperiksa"
+     },
+     "persyaratan": {
+      "items": {
+       "$ref": "#/components/schemas/PersyaratanOut"
+      },
+      "type": "array",
+      "title": "Persyaratan",
+      "default": []
+     },
+     "berkas_wajib": {
+      "items": {
+       "$ref": "#/components/schemas/BerkasWajibOut"
+      },
+      "type": "array",
+      "title": "Berkas Wajib",
+      "default": []
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "alasan_ditandai": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Alasan Ditandai"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "nama",
+     "tautan_resmi",
+     "status"
+    ],
+    "title": "DetailAdmin"
+   },
+   "DokumenOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "jenis": {
+      "type": "string",
+      "title": "Jenis"
+     },
+     "nama_berkas": {
+      "type": "string",
+      "title": "Nama Berkas"
+     },
+     "status_baca": {
+      "type": "string",
+      "title": "Status Baca"
+     },
+     "hasil_baca": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Hasil Baca"
+     },
+     "tanggal_unggah": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Tanggal Unggah"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "jenis",
+     "nama_berkas",
+     "status_baca",
+     "tanggal_unggah"
+    ],
+    "title": "DokumenOut"
+   },
+   "GantiSandiIn": {
+    "properties": {
+     "kata_sandi_lama": {
+      "type": "string",
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Kata Sandi Lama"
+     },
+     "kata_sandi_baru": {
+      "type": "string",
+      "maxLength": 128,
+      "minLength": 8,
+      "title": "Kata Sandi Baru"
+     }
+    },
+    "type": "object",
+    "required": [
+     "kata_sandi_lama",
+     "kata_sandi_baru"
+    ],
+    "title": "GantiSandiIn"
+   },
+   "HTTPValidationError": {
+    "properties": {
+     "detail": {
+      "items": {
+       "$ref": "#/components/schemas/ValidationError"
+      },
+      "type": "array",
+      "title": "Detail"
+     }
+    },
+    "type": "object",
+    "title": "HTTPValidationError"
+   },
+   "HasilBacaIn": {
+    "properties": {
+     "hasil_baca": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Hasil Baca"
+     }
+    },
+    "type": "object",
+    "required": [
+     "hasil_baca"
+    ],
+    "title": "HasilBacaIn"
+   },
+   "HasilDaftar": {
+    "properties": {
+     "token_akses": {
+      "type": "string",
+      "title": "Token Akses"
+     },
+     "token_penyegar": {
+      "type": "string",
+      "title": "Token Penyegar"
+     },
+     "kedaluwarsa_detik": {
+      "type": "integer",
+      "title": "Kedaluwarsa Detik"
+     },
+     "pengguna": {
+      "$ref": "#/components/schemas/PenggunaOut"
+     }
+    },
+    "type": "object",
+    "required": [
+     "token_akses",
+     "token_penyegar",
+     "kedaluwarsa_detik",
+     "pengguna"
+    ],
+    "title": "HasilDaftar"
+   },
+   "InteraksiIn": {
+    "properties": {
+     "aksi": {
+      "type": "string",
+      "enum": [
+       "klik",
+       "simpan",
+       "rencana_daftar"
+      ],
+      "title": "Aksi"
+     },
+     "status_rencana": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "akan_daftar",
+         "sudah_daftar",
+         "tidak_jadi"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status Rencana"
+     }
+    },
+    "type": "object",
+    "required": [
+     "aksi"
+    ],
+    "title": "InteraksiIn"
+   },
+   "InteraksiOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "aksi": {
+      "type": "string",
+      "title": "Aksi"
+     },
+     "status_rencana": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status Rencana"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "aksi"
+    ],
+    "title": "InteraksiOut"
+   },
+   "Kosong": {
+    "properties": {
+     "pesan": {
+      "type": "string",
+      "title": "Pesan",
+      "default": "ok"
+     }
+    },
+    "type": "object",
+    "title": "Kosong"
+   },
+   "ManualIn": {
+    "properties": {
+     "nama": {
+      "type": "string",
+      "maxLength": 300,
+      "minLength": 3,
+      "title": "Nama"
+     },
+     "penyelenggara": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Penyelenggara"
+     },
+     "negara": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 80
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Negara"
+     },
+     "jenjang": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string",
+         "enum": [
+          "D3",
+          "D4",
+          "S1",
+          "S2",
+          "S3"
+         ]
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Jenjang"
+     },
+     "manfaat": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Manfaat"
+     },
+     "tenggat": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tenggat"
+     },
+     "tautan_resmi": {
+      "type": "string",
+      "maxLength": 2083,
+      "minLength": 1,
+      "format": "uri",
+      "title": "Tautan Resmi"
+     },
+     "persyaratan": {
+      "items": {
+       "$ref": "#/components/schemas/SyaratIn"
+      },
+      "type": "array",
+      "title": "Persyaratan",
+      "default": []
+     },
+     "berkas_wajib": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Berkas Wajib",
+      "default": []
+     }
+    },
+    "type": "object",
+    "required": [
+     "nama",
+     "tautan_resmi"
+    ],
+    "title": "ManualIn"
+   },
+   "MasukIn": {
+    "properties": {
+     "email": {
+      "type": "string",
+      "format": "email",
+      "title": "Email"
+     },
+     "kata_sandi": {
+      "type": "string",
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Kata Sandi"
+     }
+    },
+    "type": "object",
+    "required": [
+     "email",
+     "kata_sandi"
+    ],
+    "title": "MasukIn",
+    "example": {
+     "email": "mahasiswa@example.com",
+     "kata_sandi": "kata-sandi-panjang"
+    }
+   },
+   "Meta": {
+    "properties": {
+     "kursor_berikut": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kursor Berikut"
+     }
+    },
+    "type": "object",
+    "title": "Meta"
+   },
+   "NotifikasiOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "jenis": {
+      "type": "string",
+      "title": "Jenis"
+     },
+     "dibaca": {
+      "type": "boolean",
+      "title": "Dibaca"
+     },
+     "tanggal_acuan": {
+      "type": "string",
+      "format": "date",
+      "title": "Tanggal Acuan"
+     },
+     "judul": {
+      "type": "string",
+      "title": "Judul"
+     },
+     "pesan": {
+      "type": "string",
+      "title": "Pesan"
+     },
+     "beasiswa_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Beasiswa Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "jenis",
+     "dibaca",
+     "tanggal_acuan",
+     "judul",
+     "pesan",
+     "beasiswa_id"
+    ],
+    "title": "NotifikasiOut"
+   },
+   "PenggunaOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "email": {
+      "type": "string",
+      "title": "Email"
+     },
+     "peran": {
+      "type": "string",
+      "title": "Peran"
+     },
+     "nama": {
+      "type": "string",
+      "title": "Nama"
+     },
+     "tanggal_lahir": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tanggal Lahir"
+     },
+     "kota_domisili": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kota Domisili"
+     },
+     "kampus": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kampus"
+     },
+     "jenis_kampus": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Jenis Kampus"
+     },
+     "program_studi": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Program Studi"
+     },
+     "jenjang": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Jenjang"
+     },
+     "semester": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Semester"
+     },
+     "ipk": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ipk"
+     },
+     "ips_terakhir": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ips Terakhir"
+     },
+     "minat": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Minat"
+     },
+     "penghasilan_orang_tua": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Penghasilan Orang Tua"
+     },
+     "skor_bahasa": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Skor Bahasa"
+     },
+     "kewarganegaraan": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kewarganegaraan"
+     },
+     "preferensi_notifikasi": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Preferensi Notifikasi"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "email",
+     "peran",
+     "nama",
+     "preferensi_notifikasi"
+    ],
+    "title": "PenggunaOut",
+    "description": "Profil yang boleh dilihat pemiliknya. Tidak memuat kata sandi, versi token, atau vektor."
+   },
+   "PerbaikiIn": {
+    "properties": {
+     "nama": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 300,
+        "minLength": 3
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nama"
+     },
+     "penyelenggara": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Penyelenggara"
+     },
+     "negara": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 80
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Negara"
+     },
+     "jenjang": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string",
+         "enum": [
+          "D3",
+          "D4",
+          "S1",
+          "S2",
+          "S3"
+         ]
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Jenjang"
+     },
+     "manfaat": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Manfaat"
+     },
+     "tenggat": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tenggat"
+     },
+     "tautan_resmi": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2083,
+        "minLength": 1,
+        "format": "uri"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tautan Resmi"
+     },
+     "persyaratan": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/SyaratIn"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Persyaratan"
+     },
+     "berkas_wajib": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Berkas Wajib"
+     }
+    },
+    "type": "object",
+    "title": "PerbaikiIn"
+   },
+   "PersyaratanOut": {
+    "properties": {
+     "jenis": {
+      "type": "string",
+      "title": "Jenis"
+     },
+     "nilai_batas": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nilai Batas"
+     },
+     "dapat_dikejar": {
+      "type": "boolean",
+      "title": "Dapat Dikejar"
+     }
+    },
+    "type": "object",
+    "required": [
+     "jenis",
+     "dapat_dikejar"
+    ],
+    "title": "PersyaratanOut"
+   },
+   "PreferensiNotifikasiIn": {
+    "properties": {
+     "email": {
+      "type": "boolean",
+      "title": "Email"
+     },
+     "push": {
+      "type": "boolean",
+      "title": "Push"
+     }
+    },
+    "type": "object",
+    "required": [
+     "email",
+     "push"
+    ],
+    "title": "PreferensiNotifikasiIn"
+   },
+   "ProfilIn": {
+    "properties": {
+     "nama": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200,
+        "minLength": 1
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nama"
+     },
+     "tanggal_lahir": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tanggal Lahir"
+     },
+     "kota_domisili": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 120
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kota Domisili"
+     },
+     "kampus": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kampus"
+     },
+     "jenis_kampus": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "negeri",
+         "swasta"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Jenis Kampus"
+     },
+     "program_studi": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Program Studi"
+     },
+     "jenjang": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "D3",
+         "D4",
+         "S1",
+         "S2",
+         "S3"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Jenjang"
+     },
+     "semester": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 14.0,
+        "minimum": 1.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Semester"
+     },
+     "ipk": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 4.0,
+        "minimum": 0.0
+       },
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ipk"
+     },
+     "ips_terakhir": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 4.0,
+        "minimum": 0.0
+       },
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ips Terakhir"
+     },
+     "minat": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string",
+         "maxLength": 60,
+         "minLength": 1
+        },
+        "type": "array",
+        "maxItems": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Minat"
+     },
+     "penghasilan_orang_tua": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "minimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Penghasilan Orang Tua"
+     },
+     "skor_bahasa": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "type": "integer"
+          },
+          {
+           "type": "number"
+          }
+         ]
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Skor Bahasa"
+     },
+     "kewarganegaraan": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 80
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kewarganegaraan"
+     }
+    },
+    "type": "object",
+    "title": "ProfilIn",
+    "description": "Semua kolom opsional; hanya kolom yang dikirim yang diubah.",
+    "example": {
+     "ipk": "3.60",
+     "jenis_kampus": "negeri",
+     "jenjang": "S1",
+     "kampus": "UIN Maulana Malik Ibrahim Malang",
+     "minat": [
+      "teknologi",
+      "data"
+     ],
+     "semester": 5
+    }
+   },
+   "RekomendasiOut": {
+    "properties": {
+     "beasiswa": {
+      "$ref": "#/components/schemas/BeasiswaRingkas"
+     },
+     "kategori": {
+      "type": "string",
+      "enum": [
+       "memenuhi",
+       "hampir_memenuhi",
+       "belum_memenuhi"
+      ],
+      "title": "Kategori"
+     },
+     "alasan": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Alasan"
+     },
+     "catatan_kekurangan": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Catatan Kekurangan"
+     },
+     "tenggat": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tenggat"
+     }
+    },
+    "type": "object",
+    "required": [
+     "beasiswa",
+     "kategori",
+     "alasan",
+     "catatan_kekurangan",
+     "tenggat"
+    ],
+    "title": "RekomendasiOut",
+    "description": "Skor numerik sengaja tidak dikembalikan: sistem tidak menampilkan persen peluang."
+   },
+   "RingkasanOut": {
+    "properties": {
+     "memenuhi": {
+      "type": "integer",
+      "title": "Memenuhi"
+     },
+     "hampir_memenuhi": {
+      "type": "integer",
+      "title": "Hampir Memenuhi"
+     },
+     "belum_memenuhi": {
+      "type": "integer",
+      "title": "Belum Memenuhi"
+     }
+    },
+    "type": "object",
+    "required": [
+     "memenuhi",
+     "hampir_memenuhi",
+     "belum_memenuhi"
+    ],
+    "title": "RingkasanOut"
+   },
+   "RujukanOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "nama": {
+      "type": "string",
+      "title": "Nama"
+     },
+     "tautan_resmi": {
+      "type": "string",
+      "title": "Tautan Resmi"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "nama",
+     "tautan_resmi"
+    ],
+    "title": "RujukanOut"
+   },
+   "SegarkanIn": {
+    "properties": {
+     "token_penyegar": {
+      "type": "string",
+      "title": "Token Penyegar"
+     }
+    },
+    "type": "object",
+    "required": [
+     "token_penyegar"
+    ],
+    "title": "SegarkanIn"
+   },
+   "StatusOut": {
+    "properties": {
+     "tersedia": {
+      "type": "boolean",
+      "title": "Tersedia"
+     }
+    },
+    "type": "object",
+    "required": [
+     "tersedia"
+    ],
+    "title": "StatusOut"
+   },
+   "SumberIn": {
+    "properties": {
+     "nama": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 3,
+      "title": "Nama"
+     },
+     "url": {
+      "type": "string",
+      "maxLength": 2083,
+      "minLength": 1,
+      "format": "uri",
+      "title": "Url"
+     },
+     "jenis": {
+      "type": "string",
+      "enum": [
+       "pantau_otomatis",
+       "tautan_keluar",
+       "input_manual",
+       "rujukan"
+      ],
+      "title": "Jenis"
+     },
+     "negara": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 80
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Negara"
+     },
+     "jadwal": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 60
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Jadwal"
+     },
+     "aktif": {
+      "type": "boolean",
+      "title": "Aktif",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "nama",
+     "url",
+     "jenis"
+    ],
+    "title": "SumberIn"
+   },
+   "SumberOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "nama": {
+      "type": "string",
+      "title": "Nama"
+     },
+     "url": {
+      "type": "string",
+      "title": "Url"
+     },
+     "jenis": {
+      "type": "string",
+      "title": "Jenis"
+     },
+     "negara": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Negara"
+     },
+     "jadwal": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Jadwal"
+     },
+     "status_terakhir": {
+      "type": "string",
+      "title": "Status Terakhir"
+     },
+     "aktif": {
+      "type": "boolean",
+      "title": "Aktif"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "nama",
+     "url",
+     "jenis",
+     "status_terakhir",
+     "aktif"
+    ],
+    "title": "SumberOut"
+   },
+   "SumberUbahIn": {
+    "properties": {
+     "nama": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200,
+        "minLength": 3
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nama"
+     },
+     "jenis": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "pantau_otomatis",
+         "tautan_keluar",
+         "input_manual",
+         "rujukan"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Jenis"
+     },
+     "negara": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Negara"
+     },
+     "jadwal": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Jadwal"
+     },
+     "aktif": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Aktif"
+     }
+    },
+    "type": "object",
+    "title": "SumberUbahIn"
+   },
+   "SyaratIn": {
+    "properties": {
+     "jenis": {
+      "type": "string",
+      "enum": [
+       "ipk_minimum",
+       "semester_minimum",
+       "semester_maksimum",
+       "jenjang",
+       "jenis_kampus",
+       "domisili",
+       "usia_maksimum",
+       "sertifikat_bahasa",
+       "penghasilan_maksimum",
+       "kewarganegaraan",
+       "berkas_pendukung",
+       "lainnya"
+      ],
+      "title": "Jenis"
+     },
+     "nilai_batas": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nilai Batas"
+     },
+     "dapat_dikejar": {
+      "type": "boolean",
+      "title": "Dapat Dikejar",
+      "default": false
+     }
+    },
+    "type": "object",
+    "required": [
+     "jenis"
+    ],
+    "title": "SyaratIn"
+   },
+   "TerapkanOut": {
+    "properties": {
+     "kolom_terisi": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Kolom Terisi"
+     }
+    },
+    "type": "object",
+    "required": [
+     "kolom_terisi"
+    ],
+    "title": "TerapkanOut"
+   },
+   "TersimpanOut": {
+    "properties": {
+     "beasiswa": {
+      "$ref": "#/components/schemas/BeasiswaRingkas"
+     },
+     "status_rencana": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status Rencana"
+     }
+    },
+    "type": "object",
+    "required": [
+     "beasiswa"
+    ],
+    "title": "TersimpanOut"
+   },
+   "TokenOut": {
+    "properties": {
+     "token_akses": {
+      "type": "string",
+      "title": "Token Akses"
+     },
+     "token_penyegar": {
+      "type": "string",
+      "title": "Token Penyegar"
+     },
+     "kedaluwarsa_detik": {
+      "type": "integer",
+      "title": "Kedaluwarsa Detik"
+     }
+    },
+    "type": "object",
+    "required": [
+     "token_akses",
+     "token_penyegar",
+     "kedaluwarsa_detik"
+    ],
+    "title": "TokenOut"
+   },
+   "TolakIn": {
+    "properties": {
+     "alasan": {
+      "type": "string",
+      "maxLength": 500,
+      "minLength": 3,
+      "title": "Alasan"
+     }
+    },
+    "type": "object",
+    "required": [
+     "alasan"
+    ],
+    "title": "TolakIn"
+   },
+   "TugasIn": {
+    "properties": {
+     "judul": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Judul"
+     },
+     "tanggal": {
+      "type": "string",
+      "format": "date",
+      "title": "Tanggal"
+     }
+    },
+    "type": "object",
+    "required": [
+     "judul",
+     "tanggal"
+    ],
+    "title": "TugasIn"
+   },
+   "TugasOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "judul": {
+      "type": "string",
+      "title": "Judul"
+     },
+     "tanggal": {
+      "type": "string",
+      "format": "date",
+      "title": "Tanggal"
+     },
+     "selesai": {
+      "type": "boolean",
+      "title": "Selesai"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "judul",
+     "tanggal",
+     "selesai"
+    ],
+    "title": "TugasOut"
+   },
+   "TugasUbahIn": {
+    "properties": {
+     "judul": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200,
+        "minLength": 1
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Judul"
+     },
+     "tanggal": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tanggal"
+     },
+     "selesai": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Selesai"
+     }
+    },
+    "type": "object",
+    "title": "TugasUbahIn"
+   },
+   "ValidationError": {
+    "properties": {
+     "loc": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        }
+       ]
+      },
+      "type": "array",
+      "title": "Location"
+     },
+     "msg": {
+      "type": "string",
+      "title": "Message"
+     },
+     "type": {
+      "type": "string",
+      "title": "Error Type"
+     },
+     "input": {
+      "title": "Input"
+     },
+     "ctx": {
+      "type": "object",
+      "title": "Context"
+     }
+    },
+    "type": "object",
+    "required": [
+     "loc",
+     "msg",
+     "type"
+    ],
+    "title": "ValidationError"
+   }
+  },
+  "securitySchemes": {
+   "HTTPBearer": {
+    "type": "http",
+    "description": "Token akses dari /auth/masuk",
+    "scheme": "bearer"
+   }
+  }
+ }
+}

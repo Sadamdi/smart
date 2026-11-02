@@ -42,34 +42,22 @@ def test_daftar_validasi_422(klien):
 
 def test_masuk_benar_dan_salah(klien):
     daftarkan(klien)
-    ok = klien.post(
-        f"{B}/auth/login", json={"email": "mahasiswa@example.com", "kata_sandi": "kata-sandi-panjang"}
-    )
+    ok = klien.post(f"{B}/auth/login", json={"email": "mahasiswa@example.com", "kata_sandi": "kata-sandi-panjang"})
     assert ok.status_code == 200 and ok.json()["data"]["kedaluwarsa_detik"] == 900
-    salah = klien.post(
-        f"{B}/auth/login", json={"email": "mahasiswa@example.com", "kata_sandi": "salah-sekali"}
-    )
-    tak_ada = klien.post(
-        f"{B}/auth/login", json={"email": "tidakada@example.com", "kata_sandi": "kata-sandi-panjang"}
-    )
+    salah = klien.post(f"{B}/auth/login", json={"email": "mahasiswa@example.com", "kata_sandi": "salah-sekali"})
+    tak_ada = klien.post(f"{B}/auth/login", json={"email": "tidakada@example.com", "kata_sandi": "kata-sandi-panjang"})
     assert salah.status_code == tak_ada.status_code == 401
-    assert (
-        salah.json()["error"]["message"] == tak_ada.json()["error"]["message"]
-    )  # tidak membocorkan keberadaan akun
+    assert salah.json()["error"]["message"] == tak_ada.json()["error"]["message"]  # tidak membocorkan keberadaan akun
 
 
 def test_masuk_dibatasi_setelah_lima_kali_gagal(klien):
     daftarkan(klien)
     for _ in range(5):
         assert (
-            klien.post(
-                f"{B}/auth/login", json={"email": "mahasiswa@example.com", "kata_sandi": "salah-sekali"}
-            ).status_code
+            klien.post(f"{B}/auth/login", json={"email": "mahasiswa@example.com", "kata_sandi": "salah-sekali"}).status_code
             == 401
         )
-    r = klien.post(
-        f"{B}/auth/login", json={"email": "mahasiswa@example.com", "kata_sandi": "kata-sandi-panjang"}
-    )
+    r = klien.post(f"{B}/auth/login", json={"email": "mahasiswa@example.com", "kata_sandi": "kata-sandi-panjang"})
     assert r.status_code == 429 and r.json()["error"]["code"] == "RATE_LIMITED"
 
 
@@ -120,9 +108,7 @@ def test_ganti_kata_sandi_mencabut_token_lama_dan_memberi_token_baru(klien):
     assert klien.get(f"{B}/me", headers=h).status_code == 401
     assert klien.get(f"{B}/me", headers=kepala(ok.json()["data"]["token_akses"])).status_code == 200
     assert (
-        klien.post(
-            f"{B}/auth/login", json={"email": "mahasiswa@example.com", "kata_sandi": "kata-sandi-baru-1"}
-        ).status_code
+        klien.post(f"{B}/auth/login", json={"email": "mahasiswa@example.com", "kata_sandi": "kata-sandi-baru-1"}).status_code
         == 200
     )
 

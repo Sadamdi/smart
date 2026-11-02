@@ -76,18 +76,11 @@ def test_alur_akun_lengkap_pada_basis_data_sungguhan(klien_db):
         json={"kampus": "UIN Malang", "jenjang": "S1", "semester": 5, "ipk": "3.60", "minat": ["data"]},
     )
     assert r.status_code == 200 and r.json()["data"]["ipk"] == "3.60"
-    assert (
-        klien_db.post(
-            f"{B}/auth/login", json={"email": email, "kata_sandi": "kata-sandi-panjang"}
-        ).status_code
-        == 200
-    )
+    assert klien_db.post(f"{B}/auth/login", json={"email": email, "kata_sandi": "kata-sandi-panjang"}).status_code == 200
     # logout mencabut token (versi_token naik di basis data)
     assert klien_db.post(f"{B}/auth/logout", headers=h).status_code == 200
     assert klien_db.get(f"{B}/me", headers=h).status_code == 401
-    baru = klien_db.post(f"{B}/auth/login", json={"email": email, "kata_sandi": "kata-sandi-panjang"}).json()[
-        "data"
-    ]
+    baru = klien_db.post(f"{B}/auth/login", json={"email": email, "kata_sandi": "kata-sandi-panjang"}).json()["data"]
     assert klien_db.delete(f"{B}/me", headers=kepala(baru["token_akses"])).status_code == 200
     assert klien_db.get(f"{B}/me", headers=kepala(baru["token_akses"])).status_code == 401
 
@@ -161,16 +154,13 @@ def test_daftar_dan_detail_beasiswa_sungguhan(klien_db, sesi):
     assert [x["nama"] for x in daftar] == ["Beasiswa Uji Terbit"]
     detail = klien_db.get(f"{B}/beasiswa/{terbit.id}", headers=h).json()["data"]
     assert (
-        detail["persyaratan"][0]["jenis"] == "ipk_minimum"
-        and detail["berkas_wajib"][0]["nama_berkas"] == "Transkrip nilai"
+        detail["persyaratan"][0]["jenis"] == "ipk_minimum" and detail["berkas_wajib"][0]["nama_berkas"] == "Transkrip nilai"
     )
     assert klien_db.get(f"{B}/beasiswa?q=Tertunda", headers=h).json()["data"] == []
 
 
 def test_kolom_versi_token_ada_di_basis_data(sesi):
     ada = sesi.execute(
-        text(
-            "select 1 from information_schema.columns where table_name='pengguna' and column_name='versi_token'"
-        )
+        text("select 1 from information_schema.columns where table_name='pengguna' and column_name='versi_token'")
     ).scalar()
     assert ada == 1

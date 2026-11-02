@@ -7,9 +7,7 @@ from app.repositories.beasiswa import BeasiswaRepo, DetailBeasiswa, FilterBeasis
 BATAS_MAKS = 50
 
 
-def daftar(
-    repo: BeasiswaRepo, filter_: FilterBeasiswa, kursor: str | None, batas: int, hari_ini: date
-) -> HalamanBeasiswa:
+def daftar(repo: BeasiswaRepo, filter_: FilterBeasiswa, kursor: str | None, batas: int, hari_ini: date) -> HalamanBeasiswa:
     return repo.daftar(filter_, kursor, max(1, min(batas, BATAS_MAKS)), hari_ini)
 
 
