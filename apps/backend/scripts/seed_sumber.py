@@ -64,10 +64,7 @@ def main() -> None:
     if not url:
         raise SystemExit("DATABASE_URL belum diisi.")
     engine = create_engine(url)
-    nilai = [
-        {"nama": n, "url": u, "jenis": j, "negara": ng, "jadwal": jd, "aktif": a}
-        for n, u, j, ng, jd, a in SUMBER_AWAL
-    ]
+    nilai = [{"nama": n, "url": u, "jenis": j, "negara": ng, "jadwal": jd, "aktif": a} for n, u, j, ng, jd, a in SUMBER_AWAL]
     stmt = insert(Sumber).values(nilai)
     stmt = stmt.on_conflict_do_update(
         index_elements=[Sumber.url],

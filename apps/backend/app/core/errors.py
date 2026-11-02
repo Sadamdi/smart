@@ -62,9 +62,7 @@ def pasang_penangan_galat(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
     async def _validasi(_: Request, exc: RequestValidationError) -> JSONResponse:
         bagian = [f"{'.'.join(str(x) for x in e['loc'][1:])}: {e['msg']}" for e in exc.errors()]
-        return JSONResponse(
-            status_code=422, content=_body("VALIDATION", "; ".join(bagian) or "masukan tidak valid")
-        )
+        return JSONResponse(status_code=422, content=_body("VALIDATION", "; ".join(bagian) or "masukan tidak valid"))
 
     @app.exception_handler(StarletteHTTPException)
     async def _http(_: Request, exc: StarletteHTTPException) -> JSONResponse:
