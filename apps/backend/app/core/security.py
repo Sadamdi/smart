@@ -39,15 +39,9 @@ def _wajib_rahasia(settings: Settings) -> str:
     return settings.jwt_secret
 
 
-def buat_token(
-    pengguna_id: uuid.UUID, versi: int, jenis: str, settings: Settings, sekarang: datetime | None = None
-) -> str:
+def buat_token(pengguna_id: uuid.UUID, versi: int, jenis: str, settings: Settings, sekarang: datetime | None = None) -> str:
     sekarang = sekarang or datetime.now(UTC)
-    umur = (
-        timedelta(minutes=settings.jwt_access_menit)
-        if jenis == AKSES
-        else timedelta(days=settings.jwt_refresh_hari)
-    )
+    umur = timedelta(minutes=settings.jwt_access_menit) if jenis == AKSES else timedelta(days=settings.jwt_refresh_hari)
     isi = {
         "sub": str(pengguna_id),
         "typ": jenis,
@@ -62,9 +56,7 @@ def buat_token(
 def baca_token(token: str, jenis: str, settings: Settings) -> tuple[uuid.UUID, int]:
     """Mengembalikan (pengguna_id, versi) atau melempar Unauthorized."""
     try:
-        isi = jwt.decode(
-            token, _wajib_rahasia(settings), algorithms=["HS256"], options={"require": ["exp", "sub", "typ"]}
-        )
+        isi = jwt.decode(token, _wajib_rahasia(settings), algorithms=["HS256"], options={"require": ["exp", "sub", "typ"]})
         if isi.get("typ") != jenis:
             raise Unauthorized("Jenis token tidak sesuai")
         return uuid.UUID(isi["sub"]), int(isi.get("ver", 0))

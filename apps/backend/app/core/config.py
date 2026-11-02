@@ -19,6 +19,15 @@ class Settings(BaseSettings):
     jwt_access_menit: int = 15
     jwt_refresh_hari: int = 30
 
+    # Layanan AI (endpoint OpenAI-compatible). Kosong berarti tidak tersedia; fitur turun ke jalur manual.
+    ai_base_url: str = ""
+    ai_api_key: str = ""
+    ai_model: str = ""
+    ai_batas_harian: int = 200
+
+    upload_dir: str = "data/unggahan"
+    upload_maks_byte: int = 5 * 1024 * 1024
+
     @field_validator("destructive_db_hosts", "cors_origins", mode="before")
     @classmethod
     def _pisah_koma(cls, nilai: object) -> object:

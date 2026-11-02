@@ -31,9 +31,7 @@ def daftar(
     kursor: Annotated[str | None, Query(max_length=200)] = None,
     batas: Annotated[int, Query(ge=1, le=50)] = 20,
 ) -> Amplop[list[BeasiswaRingkas]]:
-    halaman = layanan.daftar(
-        repo, FilterBeasiswa(q=q, jenjang=jenjang, negara=negara), kursor, batas, date.today()
-    )
+    halaman = layanan.daftar(repo, FilterBeasiswa(q=q, jenjang=jenjang, negara=negara), kursor, batas, date.today())
     return Amplop(
         data=[BeasiswaRingkas.model_validate(b) for b in halaman.item],
         meta=Meta(kursor_berikut=halaman.kursor_berikut),
