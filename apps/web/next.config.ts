@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
+  // Halaman aplikasi memuat data di klien setelah token diperiksa, jadi validasi navigasi instan
+  // hanya dijalankan untuk segmen yang memintanya secara eksplisit.
+  experimental: { instantInsights: { validationLevel: "manual-warning" } },
   turbopack: {
     rules: {
       "*.css": {
