@@ -12,5 +12,6 @@ Satu baris per dokumen fitur. Area berurutan; nomor fitur berurutan di dalam are
 | 06-chatbot | Chatbot berbasis data | `06-chatbot/1. chatbot-berbasis-data.md` | Planned | FR-SM-11 | F7 |
 | 07-notifikasi | Pengingat tenggat dan beasiswa baru | `07-notifikasi/1. pengingat-notifikasi.md` | Planned | FR-SM-13 | F8 |
 | 08-admin | Validasi data, kelola sumber, laporan | `08-admin/1. validasi-dan-sumber.md` | Planned | FR-SM-04, 14 | F9 |
+| 09-antarmuka-web | Antarmuka web mahasiswa dan admin | `09-antarmuka-web/1. antarmuka-web.md` | Active | FR-SM-05 sampai 14 | F6, F9 |
 
 Berkas berstatus Planned belum ada; dibuat saat tugasnya dimulai. Mengubah status di sini dilakukan bersamaan dengan membuat berkasnya.
