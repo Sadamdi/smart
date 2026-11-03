@@ -46,6 +46,17 @@ class AuthRepository {
     return Pengguna.fromJson(r.data as Map<String, dynamic>);
   }
 
+  Future<Pengguna> ubahPreferensi({
+    required bool email,
+    required bool push,
+  }) async {
+    final r = await _api.put(
+      '/me/preferensi-notifikasi',
+      body: {'email': email, 'push': push},
+    );
+    return Pengguna.fromJson(r.data as Map<String, dynamic>);
+  }
+
   Future<void> keluar() async {
     try {
       await _api.post('/auth/logout');

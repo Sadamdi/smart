@@ -12,6 +12,7 @@ import type {
   Dokumen,
   Laporan,
   Notifikasi,
+  PengaturanAdmin,
   Pengguna,
   Rekomendasi,
   Ringkasan,
@@ -82,6 +83,8 @@ export const useAntrean = () => useQuery({ queryKey: ["admin", "antrean"], query
 export const useDetailAdmin = (id: string) =>
   useQuery({ queryKey: ["admin", "beasiswa", id], queryFn: () => ambil<DetailAdmin>(`/admin/beasiswa/${id}`) });
 export const useSumber = () => useQuery({ queryKey: ["admin", "sumber"], queryFn: () => ambil<Sumber[]>("/admin/sumber") });
+export const usePengaturan = () =>
+  useQuery({ queryKey: ["admin", "pengaturan"], queryFn: () => ambil<PengaturanAdmin>("/admin/pengaturan") });
 export const useLaporan = () => useQuery({ queryKey: ["admin", "laporan"], queryFn: () => ambil<Laporan>("/admin/laporan") });
 
 /** Mutasi generik: kirim lalu batalkan cache kunci terkait. */

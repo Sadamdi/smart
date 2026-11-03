@@ -1,11 +1,41 @@
 "use client";
+import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { useState } from "react";
 import { JENIS_SUMBER } from "@/components/FormSumber";
 import { KosongState, Tampil } from "@/components/state";
 import { JudulHalaman, TautanTombol, cx } from "@/components/ui";
+import { kirim } from "@/lib/api";
 import { useSumber } from "@/lib/hooks";
 
 const STATUS: Record<string, string> = { berhasil: "Berhasil", gagal: "Gagal", belum_pernah: "Belum pernah diperiksa" };
+
+function TombolPantau({ id }: { id: string }) {
+  const qc = useQueryClient();
+  const [teks, setTeks] = useState<string | null>(null);
+  const [sibuk, setSibuk] = useState(false);
+  async function pantau() {
+    setSibuk(true);
+    setTeks(null);
+    try {
+      const r = await kirim<{ ditemukan: number; baru: number }>(`/admin/sumber/${id}/pantau`, "POST");
+      setTeks(`${r.data.ditemukan} ditemukan, ${r.data.baru} baru`);
+    } catch (e) {
+      setTeks(e instanceof Error ? e.message : "Gagal");
+    } finally {
+      setSibuk(false);
+      await qc.invalidateQueries({ queryKey: ["admin"] });
+    }
+  }
+  return (
+    <span className="mr-3 inline-flex flex-col items-end">
+      <button type="button" onClick={pantau} disabled={sibuk} className="font-semibold text-primary underline disabled:opacity-60">
+        {sibuk ? "Memantau" : "Pantau sekarang"}
+      </button>
+      {teks && <span className="text-xs text-muted">{teks}</span>}
+    </span>
+  );
+}
 
 export default function KelolaSumber() {
   const kueri = useSumber();
@@ -40,6 +70,7 @@ export default function KelolaSumber() {
                     </td>
                     <td className="px-4 py-3">{s.aktif ? "Ya" : "Tidak"}</td>
                     <td className="px-4 py-3 text-right">
+                      {s.jenis === "pantau_otomatis" && <TombolPantau id={s.id} />}
                       <Link href={`/admin/sumber/${s.id}`} className="font-semibold text-primary underline">
                         Ubah
                       </Link>

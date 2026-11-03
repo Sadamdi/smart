@@ -153,4 +153,8 @@ def laporan(sesi: Session) -> dict:
         "sumber_per_status": {k: per_sumber.get(k, 0) for k in ("berhasil", "gagal", "belum_pernah")},
         "jumlah_sumber": sum(per_sumber.values()),
         "jumlah_mahasiswa": pengguna,
+        "divalidasi_ai": sesi.scalar(
+            select(func.count()).select_from(Beasiswa).where(Beasiswa.divalidasi_ai_pada.is_not(None))
+        )
+        or 0,
     }
