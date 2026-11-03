@@ -50,7 +50,7 @@ Tahap berikutnya yang belum dikerjakan: peringkat belajar-mesin LightGBM dan pen
 
 | Yang ditanyakan | Tunjukkan |
 | --- | --- |
-| Web | `http://localhost:3000` (lokal), atau alamat Vercel setelah dipasang |
+| Web | https://smart-web-three.vercel.app (online; backend di server tim lewat tunnel) atau `http://localhost:3000` (lokal) |
 | UI/UX | Desain Figma `pot92lK04wCd7uc2iEAY1G` (Riska) dan `Dokument/03-Frontend/03-RENCANA-UIUX-DARI-FIGMA.md` |
 | Backend | `http://localhost:8000/docs` (Swagger, semua endpoint bisa dicoba) dan folder `apps/backend` |
 | Mobile | Folder `apps/mobile`; APK debug dibuat dengan `flutter build apk --debug` |
@@ -111,3 +111,12 @@ Agar tidak meleset lagi:
 - Tahap Laporan (15 persen) naik bila ada laporan kemajuan mingguan dan laporan pengujian; buat tiap pekan.
 - Tahap Penutup (10 persen) baru terisi dari uji coba pengguna dan serah terima (26 November sampai 8 Desember).
 - Jangan menyunting sheet. Hanya unggah dokumen.
+
+## 10. Pembaruan 4 November 2026
+
+- **Online:** web di Vercel meneruskan permintaan `/backend/...` ke backend di server tim (layanan `smart-backend` dan `smart-tunnel`). Alamat tunnel berubah bila layanan di-restart; perbarui `BACKEND_ORIGIN` di Vercel lalu deploy ulang.
+- **Validasi AI:** panel admin, menu Antrean validasi, memuat saklar validasi otomatis dan tombol jalankan sekarang. AI hanya menerbitkan beasiswa bila tenggat tertulis jelas di laman resmi dan minimal 3 hari lagi; selain itu beasiswa tetap menunggu dengan alasan. Tiap beasiswa diproses AI satu kali.
+- **Pemantau sumber:** menu Kelola sumber memuat tombol Pantau sekarang untuk sumber pantau otomatis.
+- **Machine learning:** lapisan ketiga LightGBM LambdaRank dengan penjelasan SHAP sudah ada. Model yang terpasang saat ini adalah model demo sintetis (versi diawali `lgbm-demo-sintetis`); model dari perilaku mahasiswa nyata baru dapat dilatih setelah ada cukup interaksi (`uv run python -m scripts.latih_peringkat --dari-interaksi`). Jawab jujur bila ditanya dosen.
+- **Baca CV:** PDF, DOCX, TXT dibaca dengan aturan; foto CV dibaca model gambar.
+- **Profil tambahan:** kondisi khusus (disabilitas, ekonomi kurang mampu, dan sebagainya) dan catatan; tidak dikirim ke layanan AI.
