@@ -278,6 +278,8 @@ def validasi_beasiswa(sesi: Session, settings: Settings, b: Beasiswa, hari_ini: 
     if not b.jenjang:
         b.jenjang = _jenjang_sah(data.get("jenjang"))
     syarat = [s for s in (syarat_valid(x, teks) for x in (data.get("persyaratan") or [])[:30]) if s]
+    if b.jenjang and not any(j == "jenjang" for j, _ in syarat):
+        syarat.append(("jenjang", {"nilai": list(b.jenjang)}))  # jenjang beasiswa menjadi syarat terukur
     _simpan_syarat(sesi, b, syarat, (data.get("berkas") or [])[:15])
 
     tenggat = tenggat_terverifikasi(data.get("tenggat"), data.get("kutipan_tenggat"), teks)
