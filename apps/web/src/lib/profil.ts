@@ -39,7 +39,18 @@ export type IsianProfil = {
   toefl: string;
   ielts: string;
   kewarganegaraan: string;
+  kondisi_khusus: string[];
+  catatan_tambahan: string;
 };
+
+export const PILIHAN_KONDISI: [string, string][] = [
+  ["disabilitas", "Penyandang disabilitas"],
+  ["ekonomi_kurang_mampu", "Ekonomi kurang mampu"],
+  ["yatim_piatu", "Yatim, piatu, atau yatim piatu"],
+  ["daerah_3t", "Berasal dari daerah 3T (terdepan, terluar, tertinggal)"],
+  ["penghafal_quran", "Penghafal Al-Qur'an"],
+  ["anak_tenaga_kesehatan", "Anak tenaga kesehatan"],
+];
 
 export function isianDariPengguna(p: Pengguna): IsianProfil {
   const s = (v: unknown) => (v === null || v === undefined ? "" : String(v));
@@ -59,6 +70,8 @@ export function isianDariPengguna(p: Pengguna): IsianProfil {
     toefl: s(p.skor_bahasa?.toefl),
     ielts: s(p.skor_bahasa?.ielts),
     kewarganegaraan: s(p.kewarganegaraan),
+    kondisi_khusus: p.kondisi_khusus ?? [],
+    catatan_tambahan: s(p.catatan_tambahan),
   };
 }
 
@@ -87,5 +100,7 @@ export function muatanProfil(i: IsianProfil) {
     penghasilan_orang_tua: angka(i.penghasilan_orang_tua),
     skor_bahasa: Object.keys(bahasa).length ? bahasa : null,
     kewarganegaraan: teks(i.kewarganegaraan),
+    kondisi_khusus: i.kondisi_khusus.length ? i.kondisi_khusus : null,
+    catatan_tambahan: teks(i.catatan_tambahan),
   };
 }
