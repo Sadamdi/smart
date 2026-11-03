@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/providers.dart';
 import '../../../core/theme/app_theme.dart';
@@ -7,6 +8,15 @@ import '../../../core/widgets/metrik_dan_progres.dart';
 import '../../../core/widgets/smart_app_bar.dart';
 import '../../auth/domain/pengguna.dart';
 import '../../auth/presentation/auth_controller.dart';
+
+const _labelKondisi = {
+  'disabilitas': 'Penyandang disabilitas',
+  'ekonomi_kurang_mampu': 'Ekonomi kurang mampu',
+  'yatim_piatu': 'Yatim, piatu, atau yatim piatu',
+  'daerah_3t': 'Daerah 3T',
+  'penghafal_quran': 'Penghafal Al-Quran',
+  'anak_tenaga_kesehatan': 'Anak tenaga kesehatan',
+};
 
 class ProfilPage extends ConsumerStatefulWidget {
   const ProfilPage({super.key});
@@ -27,12 +37,23 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
   final _ipk = TextEditingController();
   final _kota = TextEditingController();
   final _minat = TextEditingController();
+  final _catatan = TextEditingController();
+  Set<String> _kondisi = {};
   String? _jenisKampus;
   String? _jenjang;
 
   @override
   void dispose() {
-    for (final c in [_nama, _kampus, _prodi, _semester, _ipk, _kota, _minat]) {
+    for (final c in [
+      _nama,
+      _kampus,
+      _prodi,
+      _semester,
+      _ipk,
+      _kota,
+      _minat,
+      _catatan,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -46,6 +67,8 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
     _ipk.text = p.ipk ?? '';
     _kota.text = p.kotaDomisili ?? '';
     _minat.text = p.minat.join(', ');
+    _catatan.text = p.catatanTambahan ?? '';
+    _kondisi = p.kondisiKhusus.toSet();
     _jenisKampus = p.jenisKampus;
     _jenjang = p.jenjang;
     _galat = null;
@@ -88,6 +111,8 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
               ipk: double.tryParse(_ipk.text.trim().replaceAll(',', '.')),
               kotaDomisili: teks(_kota),
               minat: minat.isEmpty ? null : minat,
+              kondisiKhusus: _kondisi.toList(),
+              catatanTambahan: _catatan.text.trim(),
             ),
           );
       if (mounted) {
@@ -148,6 +173,15 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
             _Baris('IPK', p.ipk),
             _Baris('Kota domisili', p.kotaDomisili),
             _Baris('Minat', p.minat.isEmpty ? null : p.minat.join(', ')),
+            _Baris(
+              'Kondisi khusus',
+              p.kondisiKhusus.isEmpty
+                  ? null
+                  : p.kondisiKhusus
+                        .map((k) => _labelKondisi[k] ?? k)
+                        .join(', '),
+            ),
+            _Baris('Catatan khusus', p.catatanTambahan),
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: () => setState(() {
@@ -221,6 +255,30 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
                     'Minat (pisahkan dengan koma)',
                     hint: 'teknologi, riset, kepemimpinan',
                   ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Profil tambahan (opsional, tidak dikirim ke layanan AI)',
+                      style: t.titleSmall,
+                    ),
+                  ),
+                  for (final e in _labelKondisi.entries)
+                    CheckboxListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(e.value),
+                      value: _kondisi.contains(e.key),
+                      onChanged: (v) => setState(
+                        () => v == true
+                            ? _kondisi.add(e.key)
+                            : _kondisi.remove(e.key),
+                      ),
+                    ),
+                  _Kolom(
+                    _catatan,
+                    'Catatan khusus',
+                    hint: 'Contoh: penerima KIP',
+                  ),
                   if (_galat != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -248,7 +306,19 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
                 ],
               ),
             ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          for (final m in [
+            (Icons.description_outlined, 'Dokumen Saya', '/dokumen'),
+            (Icons.chat_bubble_outline, 'Chatbot AI', '/chat'),
+            (Icons.settings_outlined, 'Pengaturan', '/pengaturan'),
+          ])
+            ListTile(
+              leading: Icon(m.$1),
+              title: Text(m.$2),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push(m.$3),
+            ),
+          const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: () => ref.read(authControllerProvider.notifier).keluar(),
             icon: const Icon(Icons.logout, size: 18),
