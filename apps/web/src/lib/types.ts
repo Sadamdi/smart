@@ -103,4 +103,6 @@ export type Laporan = {
   sumber_per_status: Record<string, number>;
   jumlah_sumber: number;
   jumlah_mahasiswa: number;
+  divalidasi_ai?: number;
 };
+export type PengaturanAdmin = { auto_validasi_ai: boolean };

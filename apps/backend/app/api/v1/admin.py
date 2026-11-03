@@ -7,14 +7,19 @@ from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 from sqlalchemy.orm import Session
 
 from app.api.deps import wajib_admin
+from app.core.config import Settings, get_settings
+from app.core.errors import NotFound, UpstreamUnavailable
 from app.db import get_session
+from app.models import Sumber
 from app.schemas.beasiswa import BeasiswaDetail, BeasiswaRingkas, BerkasWajibOut, PersyaratanOut
 from app.schemas.common import Amplop
 from app.services import admin as layanan
+from app.services import laman, pemantau_ai
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(wajib_admin)])
 
 SesiDep = Annotated[Session, Depends(get_session)]
+SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 JENIS_SYARAT = Literal[
     "ipk_minimum",
@@ -201,3 +206,44 @@ def ubah_sumber(sumber_id: uuid.UUID, data: SumberUbahIn, sesi: SesiDep) -> Ampl
 @router.get("/laporan", summary="Ringkasan sistem", response_model=Amplop[dict])
 def laporan(sesi: SesiDep) -> Amplop[dict]:
     return Amplop(data=layanan.laporan(sesi))
+
+
+class PengaturanIn(BaseModel):
+    auto_validasi_ai: bool
+
+
+@router.get("/pengaturan", summary="Pengaturan sistem (saklar validasi AI)", response_model=Amplop[PengaturanIn])
+def pengaturan(sesi: SesiDep, settings: SettingsDep) -> Amplop[PengaturanIn]:
+    return Amplop(data=PengaturanIn(auto_validasi_ai=pemantau_ai.auto_validasi_aktif(sesi)))
+
+
+@router.put("/pengaturan", summary="Nyalakan atau matikan validasi otomatis oleh AI", response_model=Amplop[PengaturanIn])
+def ubah_pengaturan(data: PengaturanIn, sesi: SesiDep) -> Amplop[PengaturanIn]:
+    pemantau_ai.atur_auto_validasi(sesi, data.auto_validasi_ai)
+    sesi.commit()
+    return Amplop(data=data)
+
+
+@router.post(
+    "/validasi-ai/jalankan",
+    summary="Validasi AI sekarang untuk beasiswa menunggu (sekali per beasiswa)",
+    response_model=Amplop[dict],
+)
+def validasi_ai_sekarang(sesi: SesiDep, settings: SettingsDep) -> Amplop[dict]:
+    return Amplop(data=pemantau_ai.validasi_antrean(sesi, settings, date.today(), batas=10))
+
+
+@router.post(
+    "/sumber/{sumber_id}/pantau", summary="Pantau sumber sekarang (AI membaca laman resmi)", response_model=Amplop[dict]
+)
+def pantau(sumber_id: uuid.UUID, sesi: SesiDep, settings: SettingsDep) -> Amplop[dict]:
+    s = sesi.get(Sumber, sumber_id)
+    if s is None:
+        raise NotFound("Sumber tidak ditemukan")
+    try:
+        hasil = pemantau_ai.pantau_sumber(sesi, settings, s, date.today())
+    except (laman.LamanGagal, ValueError) as exc:
+        sesi.commit()
+        raise UpstreamUnavailable(f"Pemantauan gagal: {exc}") from exc
+    sesi.commit()
+    return Amplop(data=hasil)
