@@ -1,0 +1,135 @@
+"""Uji validasi AI dan pemantau: penjaga laman, verifikasi kutipan, aturan terbit, sekali per beasiswa, saklar admin."""
+
+import uuid
+from datetime import date, timedelta
+
+import pytest
+
+from app.core.config import Settings, get_settings
+from app.core.errors import UpstreamUnavailable
+from app.models import Beasiswa, Persyaratan, Sumber
+from app.services import laman, llm, pemantau_ai
+from tests.test_integrasi_db import sesi  # noqa: F401 (fixture)
+
+HARI = date(2026, 11, 4)
+S = Settings(ai_base_url="http://x", ai_api_key="k", ai_model="auto")
+LAMAN = (
+    "Beasiswa Contoh Unggul dari Yayasan Contoh. Pendaftaran ditutup 30 November 2026. "
+    "Syarat: IPK minimal 3,25 dan mahasiswa S1. Berkas: transkrip nilai dan KTP. " * 2
+)
+
+
+def test_penjaga_menolak_alamat_internal_dan_skema_aneh():
+    for url in ("http://127.0.0.1/x", "http://localhost/", "file:///etc/passwd", "ftp://contoh.id"):
+        with pytest.raises(laman.LamanGagal):
+            laman.periksa_alamat(url)
+
+
+def test_html_ke_teks_membuang_skrip_dan_menjaga_tautan():
+    t = laman.html_ke_teks('<script>alert(1)</script><p>Halo <a href="/daftar">Daftar</a></p>', "https://a.id/x")
+    assert "alert" not in t and "Daftar [https://a.id/daftar]" in t
+
+
+def test_kutipan_harus_ada_di_laman():
+    assert pemantau_ai.ada_kutipan("ditutup 30 November 2026", LAMAN)
+    assert not pemantau_ai.ada_kutipan("ditutup 1 Januari 2027", LAMAN)
+    assert pemantau_ai.tenggat_terverifikasi("2026-11-30", "ditutup 30 November 2026", LAMAN) == date(2026, 11, 30)
+    assert (
+        pemantau_ai.tenggat_terverifikasi("2026-12-01", "ditutup 30 November 2026", LAMAN) is None
+    )  # tanggal tak cocok kutipan
+    assert pemantau_ai.tenggat_terverifikasi("2026-11-30", "kutipan karangan", LAMAN) is None
+
+
+def test_syarat_valid_menolak_bentuk_salah_dan_kutipan_palsu():
+    ok = pemantau_ai.syarat_valid({"jenis": "ipk_minimum", "nilai": "3,25", "kutipan": "IPK minimal 3,25"}, LAMAN)
+    assert ok == ("ipk_minimum", {"nilai": 3.25})
+    assert pemantau_ai.syarat_valid({"jenis": "ipk_minimum", "nilai": 9, "kutipan": "IPK minimal 3,25"}, LAMAN) is None
+    assert pemantau_ai.syarat_valid({"jenis": "ipk_minimum", "nilai": 3, "kutipan": "tidak ada di laman"}, LAMAN) is None
+    assert pemantau_ai.syarat_valid({"jenis": "jenjang", "nilai": ["S1", "X9"], "kutipan": "mahasiswa S1"}, LAMAN) == (
+        "jenjang",
+        {"nilai": ["S1"]},
+    )
+
+
+def _jawab(tenggat="2026-11-30", kutipan="ditutup 30 November 2026"):
+    import json
+
+    return json.dumps(
+        {
+            "ini_beasiswa": True,
+            "penyelenggara": "Yayasan Contoh",
+            "jenjang": ["S1"],
+            "tenggat": tenggat,
+            "kutipan_tenggat": kutipan,
+            "persyaratan": [{"jenis": "ipk_minimum", "nilai": 3.25, "kutipan": "IPK minimal 3,25"}],
+            "berkas": ["Transkrip nilai", "KTP"],
+        }
+    )
+
+
+def _beasiswa(sesi, status="menunggu_validasi"):  # noqa: F811
+    s = Sumber(nama="Uji " + uuid.uuid4().hex[:6], url="https://uji.example/" + uuid.uuid4().hex, jenis="pantau_otomatis")
+    sesi.add(s)
+    sesi.flush()
+    b = Beasiswa(sumber_id=s.id, nama="Beasiswa Contoh Unggul", tautan_resmi="https://uji.example/b", status=status)
+    sesi.add(b)
+    sesi.flush()
+    return b
+
+
+pytestmark_db = pytest.mark.skipif(not get_settings().database_url or get_settings().app_env == "prod", reason="butuh DB")
+
+
+@pytestmark_db
+def test_validasi_menerbitkan_bila_semua_terverifikasi(sesi, monkeypatch):  # noqa: F811
+    monkeypatch.setattr(llm, "tanya", lambda *a, **k: _jawab())
+    b = _beasiswa(sesi)
+    assert pemantau_ai.validasi_beasiswa(sesi, S, b, HARI, teks=LAMAN) == "terbit"
+    assert b.status == "terbit" and b.tenggat == date(2026, 11, 30) and b.divalidasi_ai_pada is not None
+    jenis = {p.jenis for p in sesi.query(Persyaratan).filter_by(beasiswa_id=b.id)}
+    assert "ipk_minimum" in jenis
+
+
+@pytestmark_db
+def test_tenggat_karangan_tidak_menerbitkan(sesi, monkeypatch):  # noqa: F811
+    monkeypatch.setattr(llm, "tanya", lambda *a, **k: _jawab(kutipan="kutipan yang tidak ada"))
+    b = _beasiswa(sesi)
+    assert pemantau_ai.validasi_beasiswa(sesi, S, b, HARI, teks=LAMAN) == "menunggu"
+    assert b.status == "menunggu_validasi" and "tenggat" in b.alasan_ditandai
+
+
+@pytestmark_db
+def test_tenggat_terlalu_dekat_tetap_menunggu(sesi, monkeypatch):  # noqa: F811
+    monkeypatch.setattr(llm, "tanya", lambda *a, **k: _jawab("2026-11-05", "ditutup 5 November 2026"))
+    b = _beasiswa(sesi)
+    teks = LAMAN + " ditutup 5 November 2026"
+    assert pemantau_ai.validasi_beasiswa(sesi, S, b, HARI, teks=teks) == "menunggu"
+    assert "tiga hari" in b.alasan_ditandai.lower() or "3 hari" in b.alasan_ditandai
+
+
+@pytestmark_db
+def test_sekali_saja_dan_layanan_mati_tidak_menandai(sesi, monkeypatch):  # noqa: F811
+    panggilan = []
+    monkeypatch.setattr(llm, "tanya", lambda *a, **k: panggilan.append(1) or _jawab())
+    monkeypatch.setattr(laman, "ambil_teks", lambda url, klien=None: LAMAN)
+    b = _beasiswa(sesi)
+    pemantau_ai.validasi_antrean(sesi, S, HARI, batas=50)
+    assert b.divalidasi_ai_pada is not None
+    n = len(panggilan)
+    pemantau_ai.validasi_antrean(sesi, S, HARI, batas=50)
+    assert len(panggilan) == n  # beasiswa yang sama tidak diproses ulang
+
+    def mati(*a, **k):
+        raise UpstreamUnavailable("mati")
+
+    monkeypatch.setattr(llm, "tanya", mati)
+    b2 = _beasiswa(sesi)
+    r = pemantau_ai.validasi_antrean(sesi, S, HARI + timedelta(days=0), batas=50)
+    assert r["layanan_ai_mati"] == 1 and b2.divalidasi_ai_pada is None
+
+
+@pytestmark_db
+def test_saklar_default_aktif_dan_bisa_dimatikan(sesi):  # noqa: F811
+    assert pemantau_ai.auto_validasi_aktif(sesi) is True
+    pemantau_ai.atur_auto_validasi(sesi, False)
+    assert pemantau_ai.auto_validasi_aktif(sesi) is False

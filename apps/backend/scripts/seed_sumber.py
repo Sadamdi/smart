@@ -10,6 +10,8 @@ from sqlalchemy.dialects.postgresql import insert
 from app.core.config import get_settings
 from app.models import Sumber
 
+# Sumber yang dapat dibaca AI (halaman publik): SatuBeasiswa, Beasiswa Unggulan, Djarum, BSI. Luarkampus (login) dan LPDP
+# (captcha) tidak dilewati; Komdigi dan Scholarpedia hanya rujukan.
 # (nama, url, jenis, negara, jadwal cron atau None, aktif). Metode per sumber: Dokument/01-Arsitektur/04-PEMANTAUAN-SUMBER.md
 SUMBER_AWAL = [
     (
@@ -17,16 +19,16 @@ SUMBER_AWAL = [
         "https://satubeasiswa.kemdiktisaintek.go.id/beasiswa",
         "pantau_otomatis",
         "Indonesia",
-        None,
-        False,
+        "30 5 * * *",
+        True,
     ),
     ("Luarkampus.id", "https://luarkampus.id/beasiswa", "tautan_keluar", "Indonesia", None, True),
     (
         "Beasiswa Unggulan Kemendikdasmen",
         "https://beasiswaunggulan.kemendikdasmen.go.id",
-        "tautan_keluar",
+        "pantau_otomatis",
         "Indonesia",
-        None,
+        "30 5 * * *",
         True,
     ),
     (
@@ -37,7 +39,7 @@ SUMBER_AWAL = [
         "0 6 * * *",
         True,
     ),
-    ("Djarum Beasiswa Plus", "https://djarumbeasiswaplus.org/home", "input_manual", "Indonesia", None, True),
+    ("Djarum Beasiswa Plus", "https://djarumbeasiswaplus.org/home", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
     (
         "Beasiswa LPDP Terintegrasi",
         "https://beasiswalpdp-terintegrasi.kemenkeu.go.id",
@@ -46,7 +48,7 @@ SUMBER_AWAL = [
         None,
         True,
     ),
-    ("BSI Scholarship", "https://bsischolarship.id", "tautan_keluar", "Indonesia", None, True),
+    ("BSI Scholarship", "https://bsischolarship.id", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
     ("Beasiswa Komdigi", "https://beasiswa.komdigi.go.id", "rujukan", "Indonesia", None, True),
     (
         "Scholarpedia (Kobi Education)",
@@ -68,7 +70,13 @@ def main() -> None:
     stmt = insert(Sumber).values(nilai)
     stmt = stmt.on_conflict_do_update(
         index_elements=[Sumber.url],
-        set_={"nama": stmt.excluded.nama, "jenis": stmt.excluded.jenis, "negara": stmt.excluded.negara},
+        set_={
+            "nama": stmt.excluded.nama,
+            "jenis": stmt.excluded.jenis,
+            "negara": stmt.excluded.negara,
+            "jadwal": stmt.excluded.jadwal,
+            "aktif": stmt.excluded.aktif,
+        },
     )
     with engine.begin() as koneksi:
         koneksi.execute(stmt)
