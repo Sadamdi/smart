@@ -81,7 +81,7 @@ def boleh_diambil(klien: httpx.Client, url: str) -> bool:
     return parser.can_fetch(USER_AGENT, url)
 
 
-def html_ke_teks(html: str, dasar: str) -> str:
+def html_ke_teks(html: str, dasar: str, maks: int = TEKS_MAKS) -> str:
     h = re.sub(r"(?is)<(script|style|noscript|svg|head)\b.*?</\1>", " ", html)
     h = re.sub(
         r'(?is)<a\b[^>]*?href=["\']([^"\']+)["\'][^>]*>(.*?)</a>',
@@ -92,10 +92,10 @@ def html_ke_teks(html: str, dasar: str) -> str:
     h = unescape(re.sub(r"<[^>]+>", " ", h))
     h = re.sub(r"[ \t\r\f\v\xa0]+", " ", h)
     h = re.sub(r"\s*\n\s*", "\n", h).strip()
-    return h[:TEKS_MAKS]
+    return h[:maks]
 
 
-def ambil_teks(url: str, klien: httpx.Client | None = None) -> str:
+def ambil_teks(url: str, klien: httpx.Client | None = None, maks: int = TEKS_MAKS) -> str:
     """Mengambil laman, memeriksa robots.txt, dan mengembalikan teksnya."""
     punya = klien is None
     klien = klien or httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=20, follow_redirects=False)
@@ -107,7 +107,7 @@ def ambil_teks(url: str, klien: httpx.Client | None = None) -> str:
             raise LamanGagal(f"Laman mengembalikan status {r.status_code}")
         if "html" not in r.jenis and "text" not in r.jenis:
             raise LamanGagal("Isi laman bukan teks atau HTML")
-        return html_ke_teks(r.text, url)
+        return html_ke_teks(r.text, url, maks)
     finally:
         if punya:
             klien.close()
