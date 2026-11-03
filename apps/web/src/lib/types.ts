@@ -21,6 +21,8 @@ export type Pengguna = {
   penghasilan_orang_tua?: number | null;
   skor_bahasa?: Record<string, number> | null;
   kewarganegaraan?: string | null;
+  kondisi_khusus?: string[] | null;
+  catatan_tambahan?: string | null;
   preferensi_notifikasi: { email?: boolean; push?: boolean };
 };
 export type HasilDaftar = TokenOut & { pengguna: Pengguna };
