@@ -48,7 +48,15 @@ def _masukan(sesi: Session, hari_ini: date) -> list[MasukanBeasiswa]:
 
 
 def hitung(sesi: Session, p: Pengguna, hari_ini: date) -> list[HasilRekomendasi]:
-    hasil = susun(profil_dari(sesi, p), p.minat, p.program_studi, _masukan(sesi, hari_ini), hari_ini)
+    hasil = susun(
+        profil_dari(sesi, p),
+        p.minat,
+        p.program_studi,
+        _masukan(sesi, hari_ini),
+        hari_ini,
+        kondisi_khusus=p.kondisi_khusus,
+        catatan=p.catatan_tambahan,
+    )
     sesi.execute(delete(Rekomendasi).where(Rekomendasi.pengguna_id == p.id))
     for h in hasil:
         sesi.add(
@@ -64,7 +72,9 @@ def hitung(sesi: Session, p: Pengguna, hari_ini: date) -> list[HasilRekomendasi]
                 versi_model=VERSI_MODEL,
             )
         )
-    p.vektor_profil = PengemasHash().kemas(teks_profil(p.minat, p.program_studi, p.jenjang))
+    p.vektor_profil = PengemasHash().kemas(
+        teks_profil(p.minat, p.program_studi, p.jenjang, p.kondisi_khusus, p.catatan_tambahan)
+    )
     sesi.flush()
     return hasil
 

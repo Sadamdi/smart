@@ -42,3 +42,4 @@ apps/**/storage/
 /CLAUDE.md
 /README.md
 apps/backend/data/
+.vercel

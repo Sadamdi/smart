@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     ai_base_url: str = ""
     ai_api_key: str = ""
     ai_model: str = ""
+    ai_model_gambar: str = ""  # model bila pesan memuat gambar; kosong memakai ai_model
     ai_batas_harian: int = 200
 
     upload_dir: str = "data/unggahan"

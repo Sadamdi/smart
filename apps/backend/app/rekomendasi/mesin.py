@@ -47,9 +47,11 @@ def susun(
     beasiswa: list[MasukanBeasiswa],
     hari_ini: date,
     pengemas: Pengemas | None = None,
+    kondisi_khusus: list[str] | None = None,
+    catatan: str | None = None,
 ) -> list[HasilRekomendasi]:
     pengemas = pengemas or PengemasHash()
-    vek_profil = pengemas.kemas(teks_profil(minat, program_studi, profil.jenjang))
+    vek_profil = pengemas.kemas(teks_profil(minat, program_studi, profil.jenjang, kondisi_khusus, catatan))
     hasil: list[HasilRekomendasi] = []
     for b in beasiswa:
         if b.tenggat is not None and b.tenggat < hari_ini:

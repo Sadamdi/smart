@@ -72,6 +72,23 @@ class ProfilIn(BaseModel):
     penghasilan_orang_tua: Annotated[int, Field(ge=0)] | None = None
     skor_bahasa: dict[str, str | int | float] | None = None
     kewarganegaraan: Annotated[str, StringConstraints(strip_whitespace=True, max_length=80)] | None = None
+    kondisi_khusus: (
+        Annotated[
+            list[
+                Literal[
+                    "disabilitas",
+                    "ekonomi_kurang_mampu",
+                    "yatim_piatu",
+                    "daerah_3t",
+                    "penghafal_quran",
+                    "anak_tenaga_kesehatan",
+                ]
+            ],
+            Field(max_length=10),
+        ]
+        | None
+    ) = None
+    catatan_tambahan: Annotated[str, StringConstraints(strip_whitespace=True, max_length=1000)] | None = None
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -114,4 +131,6 @@ class PenggunaOut(BaseModel):
     penghasilan_orang_tua: int | None = None
     skor_bahasa: dict | None = None
     kewarganegaraan: str | None = None
+    kondisi_khusus: list[str] | None = None
+    catatan_tambahan: str | None = None
     preferensi_notifikasi: dict
