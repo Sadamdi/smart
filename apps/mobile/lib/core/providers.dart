@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/auth/data/auth_repository.dart';
 import '../features/auth/presentation/auth_controller.dart';
 import '../features/beasiswa/data/beasiswa_repository.dart';
+import '../features/chat/data/chat_repository.dart';
+import '../features/dokumen/data/dokumen_repository.dart';
 import '../features/kalender/data/kalender_repository.dart';
 import '../features/notifikasi/data/notifikasi_repository.dart';
 import '../features/rekomendasi/data/rekomendasi_repository.dart';
@@ -46,6 +48,14 @@ final kalenderRepositoryProvider = Provider<KalenderRepository>(
 
 final notifikasiRepositoryProvider = Provider<NotifikasiRepository>(
   (ref) => NotifikasiRepository(ref.watch(apiClientProvider)),
+);
+
+final chatRepositoryProvider = Provider<ChatRepository>(
+  (ref) => ChatRepository(ref.watch(apiClientProvider)),
+);
+
+final dokumenRepositoryProvider = Provider<DokumenRepository>(
+  (ref) => DokumenRepository(ref.watch(apiClientProvider)),
 );
 
 /// Teks galat yang aman ditampilkan ke pengguna.
