@@ -1,4 +1,4 @@
-"""Model 13 tabel SMART. Sumber: Dokument/01-Arsitektur/02-SKEMA-DATABASE.md dan Dokumen Perancangan DP-SM-001.
+"""Model 14 tabel SMART (13 tabel rancangan ditambah pengaturan sistem). Sumber: Dokument/01-Arsitektur/02-SKEMA-DATABASE.md dan Dokumen Perancangan DP-SM-001.
 
 Enumerasi disimpan sebagai text dengan CheckConstraint (bukan tipe enum) agar nilai baru mudah ditambahkan lewat migrasi.
 """
@@ -20,6 +20,7 @@ from sqlalchemy import (
     SmallInteger,
     Text,
     UniqueConstraint,
+    func,
     text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
@@ -133,6 +134,8 @@ class Beasiswa(IdMixin, WaktuMixin, Base):
     status: Mapped[str] = mapped_column(Text, nullable=False, server_default="menunggu_validasi")
     alasan_ditandai: Mapped[str | None] = mapped_column(Text)
     sidik_isi: Mapped[str | None] = mapped_column(Text)
+    # diisi sekali saat validasi AI selesai; beasiswa yang sama tidak diproses ulang
+    divalidasi_ai_pada: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     vektor = mapped_column(Vector(DIMENSI_VEKTOR))
 
 
@@ -265,6 +268,18 @@ class PerangkatPush(IdMixin, WaktuMixin, Base):
     aktif: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
 
 
+class Pengaturan(Base):
+    """Pengaturan sistem berbentuk kunci dan nilai, misalnya saklar validasi otomatis oleh AI."""
+
+    __tablename__ = "pengaturan"
+
+    kunci: Mapped[str] = mapped_column(Text, primary_key=True)
+    nilai: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    diubah_pada: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+
 TABEL_SMART = [
     "pengguna",
     "dokumen_pengguna",
@@ -279,4 +294,5 @@ TABEL_SMART = [
     "percakapan",
     "tugas_pribadi",
     "perangkat_push",
+    "pengaturan",
 ]
