@@ -58,6 +58,41 @@ SUMBER_AWAL = [
         None,
         True,
     ),
+    # Tambahan 4 November 2026 (sumber tambahan hasil riset bagian 12 dan 13, dan kalender beasiswa):
+    (
+        "KIP Kuliah Kemdiktisaintek",
+        "https://kip-kuliah.kemdiktisaintek.go.id/",
+        "pantau_otomatis",
+        "Indonesia",
+        "30 5 * * *",
+        True,
+    ),
+    ("Tanoto Foundation", "https://www.tanotofoundation.org/id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    (
+        "Australia Awards Indonesia",
+        "https://australiaawardsindonesia.org/",
+        "pantau_otomatis",
+        "Australia",
+        "30 5 * * *",
+        True,
+    ),
+    ("Turkiye Burslari", "https://turkiyeburslari.gov.tr/", "pantau_otomatis", "Turki", "30 5 * * *", True),
+    (
+        "INDBeasiswa: kalender beasiswa 2027 (agregator)",
+        "https://indbeasiswa.com/daftar-beasiswa-2027/",
+        "pantau_otomatis",
+        "Indonesia",
+        "30 5 * * *",
+        True,
+    ),
+    (
+        "INDBeasiswa: beasiswa S1 (agregator)",
+        "https://indbeasiswa.com/daftar-beasiswa-s1/",
+        "pantau_otomatis",
+        "Indonesia",
+        "30 5 * * *",
+        True,
+    ),
 ]
 
 
