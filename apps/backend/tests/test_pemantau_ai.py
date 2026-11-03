@@ -4,6 +4,7 @@ import uuid
 from datetime import date, timedelta
 
 import pytest
+from sqlalchemy import func, update
 
 from app.core.config import Settings, get_settings
 from app.core.errors import UpstreamUnavailable
@@ -111,7 +112,11 @@ def test_tenggat_terlalu_dekat_tetap_menunggu(sesi, monkeypatch):  # noqa: F811
 def test_sekali_saja_dan_layanan_mati_tidak_menandai(sesi, monkeypatch):  # noqa: F811
     panggilan = []
     monkeypatch.setattr(llm, "tanya", lambda *a, **k: panggilan.append(1) or _jawab())
-    monkeypatch.setattr(laman, "ambil_teks", lambda url, klien=None: LAMAN)
+    monkeypatch.setattr(laman, "ambil_teks", lambda url, klien=None, maks=0: LAMAN)
+    sesi.execute(
+        update(Beasiswa).values(divalidasi_ai_pada=func.now())
+    )  # abaikan antrean nyata; hanya data uji yang diperiksa
+    sesi.flush()
     b = _beasiswa(sesi)
     pemantau_ai.validasi_antrean(sesi, S, HARI, batas=50)
     assert b.divalidasi_ai_pada is not None
@@ -133,3 +138,16 @@ def test_saklar_default_aktif_dan_bisa_dimatikan(sesi):  # noqa: F811
     assert pemantau_ai.auto_validasi_aktif(sesi) is True
     pemantau_ai.atur_auto_validasi(sesi, False)
     assert pemantau_ai.auto_validasi_aktif(sesi) is False
+
+
+def test_bagi_teks_memotong_pada_batas_baris_dan_membatasi_jumlah():
+    teks = "\n".join(f"baris {i} " + "x" * 50 for i in range(100))
+    bagian = pemantau_ai.bagi_teks(teks, ukuran=500, maks=3)
+    assert len(bagian) == 3 and all(len(b) <= 560 for b in bagian)
+    assert pemantau_ai.bagi_teks("", 500, 3) == []
+
+
+def test_tautan_media_sosial_tidak_dipakai_sebagai_tautan_resmi():
+    assert pemantau_ai._media_sosial("https://www.instagram.com/indbeasiswa/")
+    assert pemantau_ai._media_sosial("http://t.me/indbeasiswa")
+    assert not pemantau_ai._media_sosial("https://www.tanotofoundation.org/id/")
