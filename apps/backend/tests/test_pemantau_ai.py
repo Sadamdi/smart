@@ -88,7 +88,7 @@ def test_validasi_menerbitkan_bila_semua_terverifikasi(sesi, monkeypatch):  # no
     assert pemantau_ai.validasi_beasiswa(sesi, S, b, HARI, teks=LAMAN) == "terbit"
     assert b.status == "terbit" and b.tenggat == date(2026, 11, 30) and b.divalidasi_ai_pada is not None
     jenis = {p.jenis for p in sesi.query(Persyaratan).filter_by(beasiswa_id=b.id)}
-    assert "ipk_minimum" in jenis
+    assert {"ipk_minimum", "jenjang"} <= jenis  # jenjang beasiswa otomatis menjadi syarat terukur
 
 
 @pytestmark_db
