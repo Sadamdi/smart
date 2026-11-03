@@ -7,6 +7,9 @@ import '../features/auth/presentation/auth_pages.dart';
 import '../features/beasiswa/presentation/detail_page.dart';
 import '../features/beasiswa/presentation/jelajah_page.dart';
 import '../features/beranda/presentation/beranda_page.dart';
+import '../features/chat/presentation/chat_page.dart';
+import '../features/dokumen/presentation/dokumen_page.dart';
+import '../features/pengaturan/presentation/pengaturan_page.dart';
 import '../features/kalender/presentation/kalender_page.dart';
 import '../features/notifikasi/presentation/notifikasi_page.dart';
 import '../features/profil/presentation/profil_page.dart';
@@ -45,6 +48,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/masuk', builder: (_, _) => const LoginPage()),
       GoRoute(path: '/daftar', builder: (_, _) => const DaftarPage()),
       GoRoute(path: '/notifikasi', builder: (_, _) => const NotifikasiPage()),
+      GoRoute(path: '/dokumen', builder: (_, _) => const DokumenPage()),
+      GoRoute(path: '/chat', builder: (_, _) => const ChatPage()),
+      GoRoute(path: '/pengaturan', builder: (_, _) => const PengaturanPage()),
       GoRoute(
         path: '/beasiswa/:id',
         builder: (_, s) => DetailPage(id: s.pathParameters['id']!),
