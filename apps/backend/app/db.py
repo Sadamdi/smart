@@ -17,6 +17,11 @@ def _pabrik_sesi() -> sessionmaker[Session]:
     return sessionmaker(mesin, expire_on_commit=False)
 
 
+def sesi_baru() -> Session:
+    """Sesi di luar siklus permintaan (penjadwal). Penutupan menjadi tanggung jawab pemanggil."""
+    return _pabrik_sesi()()
+
+
 def get_session() -> Iterator[Session]:
     with _pabrik_sesi()() as sesi:
         yield sesi
