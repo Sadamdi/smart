@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     # pemicu terjadwal di dalam aplikasi: validasi AI berkala dan pemantauan harian (aktifkan di server)
     penjadwal_aktif: bool = False
 
+    # model pemeringkat LightGBM; bila berkas tidak ada, urutan memakai skor gabungan aturan dan kemiripan
+    model_peringkat_path: str = "data/model/peringkat.lgb"
+
     upload_dir: str = "data/unggahan"
     upload_maks_byte: int = 5 * 1024 * 1024
 
