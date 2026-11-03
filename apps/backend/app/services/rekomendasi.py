@@ -7,11 +7,13 @@ from datetime import date
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.models import Beasiswa, DokumenPengguna, Pengguna, Persyaratan, Rekomendasi
 from app.rekomendasi.embedding import PengemasHash, teks_profil
 from app.rekomendasi.kelayakan import ProfilKelayakan
 from app.rekomendasi.konfigurasi import VERSI_MODEL
 from app.rekomendasi.mesin import HasilRekomendasi, MasukanBeasiswa, susun
+from app.rekomendasi.peringkat import muat, urut_ulang
 
 
 def profil_dari(sesi: Session, p: Pengguna) -> ProfilKelayakan:
@@ -57,6 +59,11 @@ def hitung(sesi: Session, p: Pengguna, hari_ini: date) -> list[HasilRekomendasi]
         kondisi_khusus=p.kondisi_khusus,
         catatan=p.catatan_tambahan,
     )
+    versi = VERSI_MODEL
+    model = muat(get_settings().model_peringkat_path)
+    if model is not None:
+        hasil = urut_ulang(hasil, model, hari_ini)
+        versi = f"{VERSI_MODEL}+{model.versi}"
     sesi.execute(delete(Rekomendasi).where(Rekomendasi.pengguna_id == p.id))
     for h in hasil:
         sesi.add(
@@ -69,7 +76,7 @@ def hitung(sesi: Session, p: Pengguna, hari_ini: date) -> list[HasilRekomendasi]
                 kategori=h.kategori,
                 alasan=h.alasan,
                 catatan_kekurangan=h.catatan_kekurangan,
-                versi_model=VERSI_MODEL,
+                versi_model=versi,
             )
         )
     p.vektor_profil = PengemasHash().kemas(
