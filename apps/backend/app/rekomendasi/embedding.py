@@ -34,8 +34,25 @@ def kemiripan(a: list[float], b: list[float]) -> float:
     return max(0.0, min(1.0, sum(x * y for x, y in zip(a, b, strict=True))))
 
 
-def teks_profil(minat: list[str] | None, program_studi: str | None, jenjang: str | None) -> str:
-    return " ".join([*(minat or []), program_studi or "", jenjang or ""]).strip()
+KATA_KONDISI = {
+    "disabilitas": "disabilitas difabel berkebutuhan khusus",
+    "ekonomi_kurang_mampu": "kurang mampu tidak mampu ekonomi bantuan",
+    "yatim_piatu": "yatim piatu",
+    "daerah_3t": "daerah terpencil 3T tertinggal",
+    "penghafal_quran": "hafiz penghafal quran tahfidz",
+    "anak_tenaga_kesehatan": "tenaga kesehatan",
+}
+
+
+def teks_profil(
+    minat: list[str] | None,
+    program_studi: str | None,
+    jenjang: str | None,
+    kondisi_khusus: list[str] | None = None,
+    catatan: str | None = None,
+) -> str:
+    kondisi = [KATA_KONDISI.get(k, k) for k in (kondisi_khusus or [])]
+    return " ".join([*(minat or []), program_studi or "", jenjang or "", *kondisi, catatan or ""]).strip()
 
 
 def teks_beasiswa(nama: str, penyelenggara: str | None, manfaat: str | None) -> str:

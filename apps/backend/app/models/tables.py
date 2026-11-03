@@ -61,6 +61,9 @@ class Pengguna(IdMixin, WaktuMixin, Base):
     penghasilan_orang_tua: Mapped[int | None] = mapped_column()
     skor_bahasa: Mapped[dict | None] = mapped_column(JSONB)
     kewarganegaraan: Mapped[str | None] = mapped_column(Text)
+    # profil tambahan (sensitif): hanya dipakai untuk kemiripan dan tidak dikirim ke layanan AI
+    kondisi_khusus: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
+    catatan_tambahan: Mapped[str | None] = mapped_column(Text)
     vektor_profil = mapped_column(Vector(DIMENSI_VEKTOR))
     # dinaikkan saat logout atau ganti kata sandi sehingga semua token lama tidak berlaku lagi
     versi_token: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
