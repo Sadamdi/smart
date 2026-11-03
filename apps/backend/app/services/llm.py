@@ -14,16 +14,21 @@ def tersedia(settings: Settings) -> bool:
     return bool(settings.ai_base_url and settings.ai_api_key and settings.ai_model)
 
 
-def tanya(settings: Settings, sistem: str, pesan: str, timeout: float = 30.0) -> str:
+def tanya(settings: Settings, sistem: str, pesan: str, timeout: float = 30.0, gambar_url: str | None = None) -> str:
     if not tersedia(settings):
         raise UpstreamUnavailable("Layanan AI belum dikonfigurasi")
+    model = settings.ai_model
+    isi: str | list = pesan
+    if gambar_url:
+        model = settings.ai_model_gambar or settings.ai_model
+        isi = [{"type": "text", "text": pesan}, {"type": "image_url", "image_url": {"url": gambar_url}}]
     try:
         r = httpx.post(
             settings.ai_base_url.rstrip("/") + "/chat/completions",
             headers={"Authorization": f"Bearer {settings.ai_api_key}"},
             json={
-                "model": settings.ai_model,
-                "messages": [{"role": "system", "content": sistem}, {"role": "user", "content": pesan}],
+                "model": model,
+                "messages": [{"role": "system", "content": sistem}, {"role": "user", "content": isi}],
                 "temperature": 0.2,
             },
             timeout=timeout,

@@ -7,7 +7,7 @@ import { pesanGalat } from "@/components/state";
 import { BarProgres, JudulHalaman, Kartu, Masukan, Medan, Pilihan, Tombol } from "@/components/ui";
 import { kirim } from "@/lib/api";
 import { kunci, useSaya } from "@/lib/hooks";
-import { isianDariPengguna, kelengkapanProfil, muatanProfil, type IsianProfil } from "@/lib/profil";
+import { PILIHAN_KONDISI, isianDariPengguna, kelengkapanProfil, muatanProfil, type IsianProfil } from "@/lib/profil";
 import type { Pengguna } from "@/lib/types";
 
 function Formulir({ saya }: { saya: Pengguna }) {
@@ -101,6 +101,33 @@ function Formulir({ saya }: { saya: Pengguna }) {
             </Medan>
           </div>
           <p className="mt-3 text-xs text-muted">Nama dan tanggal lahir tidak dikirim ke layanan AI.</p>
+        </Kartu>
+        <Kartu>
+          <h2 className="mb-1 text-lg font-bold text-navy">Profil tambahan</h2>
+          <p className="mb-4 text-sm text-muted">
+            Opsional. Dipakai untuk menemukan beasiswa khusus (misalnya untuk penyandang disabilitas atau mahasiswa kurang mampu).
+            Data ini tidak dikirim ke layanan AI dan tidak dipakai untuk menolak beasiswa.
+          </p>
+          <fieldset className="grid gap-2 sm:grid-cols-2">
+            <legend className="sr-only">Kondisi khusus</legend>
+            {PILIHAN_KONDISI.map(([nilai, label]) => (
+              <label key={nilai} className="flex items-center gap-2 text-sm text-ink">
+                <input type="checkbox" value={nilai} {...f.register("kondisi_khusus")} className="h-4 w-4 accent-primary" />
+                {label}
+              </label>
+            ))}
+          </fieldset>
+          <div className="mt-4">
+            <Medan label="Catatan khusus">
+              <textarea
+                rows={3}
+                maxLength={1000}
+                placeholder="Contoh: penerima KIP, tinggal di asrama, aktif di organisasi sosial"
+                {...f.register("catatan_tambahan")}
+                className="w-full rounded-lg border border-line bg-white px-3 py-2 text-sm"
+              />
+            </Medan>
+          </div>
         </Kartu>
         <div className="flex flex-wrap items-center gap-3">
           <Tombol type="submit" disabled={f.formState.isSubmitting}>
