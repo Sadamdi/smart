@@ -49,6 +49,13 @@ class AuthController extends Notifier<AuthState> {
     state = AuthState(StatusAuth.masuk, p);
   }
 
+  Future<void> ubahPreferensi({required bool email, required bool push}) async {
+    final p = await ref
+        .read(authRepositoryProvider)
+        .ubahPreferensi(email: email, push: push);
+    state = AuthState(StatusAuth.masuk, p);
+  }
+
   Future<void> keluar() async {
     await ref.read(authRepositoryProvider).keluar();
     state = const AuthState(StatusAuth.keluar);

@@ -15,6 +15,10 @@ class Pengguna {
     this.minat = const [],
     this.penghasilanOrangTua,
     this.kewarganegaraan,
+    this.kondisiKhusus = const [],
+    this.catatanTambahan,
+    this.notifEmail = true,
+    this.notifPush = true,
   });
 
   final String id;
@@ -32,6 +36,10 @@ class Pengguna {
   final List<String> minat;
   final int? penghasilanOrangTua;
   final String? kewarganegaraan;
+  final List<String> kondisiKhusus;
+  final String? catatanTambahan;
+  final bool notifEmail;
+  final bool notifPush;
 
   /// Kelengkapan profil dari kolom yang dipakai mesin rekomendasi.
   ({int terisi, int total}) get kelengkapan {
@@ -68,6 +76,10 @@ class Pengguna {
     minat: [for (final x in (j['minat'] as List? ?? [])) '$x'],
     penghasilanOrangTua: j['penghasilan_orang_tua'] as int?,
     kewarganegaraan: j['kewarganegaraan'] as String?,
+    kondisiKhusus: [for (final x in (j['kondisi_khusus'] as List? ?? [])) '$x'],
+    catatanTambahan: j['catatan_tambahan'] as String?,
+    notifEmail: (j['preferensi_notifikasi'] as Map?)?['email'] as bool? ?? true,
+    notifPush: (j['preferensi_notifikasi'] as Map?)?['push'] as bool? ?? true,
   );
 }
 
@@ -83,6 +95,8 @@ class ProfilMasukan {
     this.ipk,
     this.kotaDomisili,
     this.minat,
+    this.kondisiKhusus,
+    this.catatanTambahan,
   });
 
   final String? nama;
@@ -94,6 +108,8 @@ class ProfilMasukan {
   final double? ipk;
   final String? kotaDomisili;
   final List<String>? minat;
+  final List<String>? kondisiKhusus;
+  final String? catatanTambahan;
 
   Map<String, dynamic> toJson() => {
     if (nama != null) 'nama': nama,
@@ -105,5 +121,7 @@ class ProfilMasukan {
     if (ipk != null) 'ipk': ipk,
     if (kotaDomisili != null) 'kota_domisili': kotaDomisili,
     if (minat != null) 'minat': minat,
+    if (kondisiKhusus != null) 'kondisi_khusus': kondisiKhusus,
+    if (catatanTambahan != null) 'catatan_tambahan': catatanTambahan,
   };
 }
