@@ -12,7 +12,8 @@ export function PanelAuth({ judul, deskripsi, children }: { judul: string; deskr
     <div className="grid min-h-screen lg:grid-cols-2">
       <aside className="hidden flex-col justify-between bg-primary p-12 text-white lg:flex">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-base font-bold text-primary">S</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="" width={44} height={44} className="h-11 w-11" />
           <span className="text-xl font-bold">SMART</span>
         </div>
         <div>
@@ -36,7 +37,8 @@ export function PanelAuth({ judul, deskripsi, children }: { judul: string; deskr
       <main className="flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white">S</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.svg" alt="" width={40} height={40} className="h-10 w-10" />
             <span className="text-lg font-bold text-navy">SMART</span>
           </div>
           <h1 className="text-[28px] font-bold text-navy">{judul}</h1>

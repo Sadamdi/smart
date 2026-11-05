@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_mobile/features/auth/domain/pengguna.dart';
 import 'package:smart_mobile/features/chat/data/chat_repository.dart';
 import 'package:smart_mobile/features/dokumen/domain/dokumen.dart';
+import 'package:smart_mobile/features/profil/domain/profil_lanjutan.dart';
 
 void main() {
   test('Dokumen meringkas nilai yang terbaca', () {
@@ -49,5 +50,21 @@ void main() {
       'jawaban': null,
     });
     expect(p.jawaban, isNull);
+  });
+
+  test('Baris profil lanjutan diurai dan diformat bolak-balik', () {
+    final daftar = uraiBaris(
+      'HMJ TI | Ketua | 2025\nUKM Robotik\n\n | tanpa nama',
+      ['nama', 'jabatan', 'tahun'],
+    );
+    expect(daftar, [
+      {'nama': 'HMJ TI', 'jabatan': 'Ketua', 'tahun': 2025},
+      {'nama': 'UKM Robotik'},
+    ]);
+    expect(
+      formatBaris(daftar, ['nama', 'jabatan', 'tahun']),
+      'HMJ TI | Ketua | 2025\nUKM Robotik',
+    );
+    expect(uraiDaftarKoma('Python, , SQL'), ['Python', 'SQL']);
   });
 }

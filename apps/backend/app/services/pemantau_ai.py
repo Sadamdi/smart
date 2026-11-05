@@ -28,6 +28,7 @@ BATAS_ITEM_LAMAN = 30
 JENJANG = {"D3", "D4", "S1", "S2", "S3"}
 POTONGAN = 12000  # ukuran teks per panggilan AI saat membaca laman daftar yang panjang
 POTONGAN_MAKS = 6
+ALASAN_SITEMAP = "Dari peta situs, menunggu validasi"
 TENGGAT_JAUH_HARI = 3 * 365
 
 SISTEM = (
@@ -42,6 +43,7 @@ Alamat laman: {url}
 
 Keluarkan JSON dengan bentuk:
 {{
+  "nama": nama resmi program seperti tertulis di laman atau null,
   "ini_beasiswa": true atau false (apakah laman ini memang menjelaskan beasiswa tersebut),
   "tautan_penyelenggara": alamat laman resmi penyelenggara yang tertulis di teks dalam kurung siku, atau null,
   "penyelenggara": teks atau null,
@@ -265,6 +267,12 @@ def validasi_beasiswa(sesi: Session, settings: Settings, b: Beasiswa, hari_ini: 
     if data.get("ini_beasiswa") is not True:
         return _selesai(b, "menunggu", "Validasi AI: laman tidak menjelaskan beasiswa ini. Perlu diperiksa admin.")
 
+    if (
+        (b.alasan_ditandai or "").startswith("Dari peta situs")
+        and isinstance(data.get("nama"), str)
+        and len(data["nama"].strip()) >= 4
+    ):
+        b.nama = data["nama"].strip()[:300]  # nama resmi menggantikan nama sementara dari alamat
     resmi = data.get("tautan_penyelenggara")
     if isinstance(resmi, str) and resmi.startswith(("http://", "https://")) and f"[{resmi}]" in teks:
         if urlparse(resmi).netloc != urlparse(b.tautan_resmi).netloc and not _media_sosial(resmi):
@@ -351,6 +359,8 @@ def validasi_antrean(sesi: Session, settings: Settings, hari_ini: date, batas: i
 
 def pantau_sumber(sesi: Session, settings: Settings, sumber: Sumber, hari_ini: date) -> dict[str, int]:
     """Membaca laman sumber dengan AI dan menyimpan program yang ditemukan sebagai beasiswa menunggu validasi."""
+    if sumber.url.endswith(".xml"):
+        return pantau_sitemap(sesi, sumber)
     ringkas = {"ditemukan": 0, "baru": 0}
     try:
         teks = laman.ambil_teks(sumber.url, maks=POTONGAN * POTONGAN_MAKS)
@@ -390,6 +400,62 @@ def pantau_sumber(sesi: Session, settings: Settings, sumber: Sumber, hari_ini: d
                 alasan_ditandai="Hasil pemantauan, menunggu validasi",
                 tanggal_diperiksa=datetime.now(UTC),
                 sidik_isi=sidik,
+            )
+        )
+        ringkas["baru"] += 1
+    sumber.status_terakhir = "berhasil"
+    sesi.flush()
+    return ringkas
+
+
+def _kunci_alamat(url: str) -> str:
+    """Kunci pendek dari alamat detail (empat karakter terakhir slug) agar alamat panjang dan pendek dikenali sama."""
+    return urlparse(url).path.rstrip("/").rsplit("/", 1)[-1].rsplit("-", 1)[-1].lower()
+
+
+def _nama_dari_slug(url: str) -> str:
+    slug = urlparse(url).path.rstrip("/").rsplit("/", 1)[-1]
+    kata = slug.rsplit("-", 1)[0].replace("-", " ").strip()
+    return (kata or slug).title()[:300]
+
+
+def pantau_sitemap(sesi: Session, sumber: Sumber, batas: int = 150) -> dict[str, int]:
+    """Membaca peta situs publik (sitemap.xml) dan mendaftarkan laman detail beasiswa baru sebagai menunggu validasi.
+
+    Nama sementara diambil dari alamat; validasi AI menggantinya dengan nama resmi dari laman.
+    """
+    try:
+        xml = laman.ambil_mentah(sumber.url)
+    except laman.LamanGagal:
+        sumber.status_terakhir = "gagal"
+        sesi.flush()
+        raise
+    host = urlparse(sumber.url).netloc
+    alamat = [
+        u
+        for u in re.findall(r"<loc>\s*([^<\s]+)\s*</loc>", xml)
+        if urlparse(u).netloc == host and urlparse(u).path.startswith("/beasiswa/") and urlparse(u).path.count("/") == 2
+    ]
+    ada = {
+        _kunci_alamat(u)
+        for (u,) in sesi.execute(select(Beasiswa.tautan_resmi).where(Beasiswa.tautan_resmi.like(f"%{host}%")))
+    }
+    ringkas = {"ditemukan": len(alamat), "baru": 0}
+    for u in alamat[:batas]:
+        k = _kunci_alamat(u)
+        if k in ada:
+            continue
+        ada.add(k)
+        sesi.add(
+            Beasiswa(
+                sumber_id=sumber.id,
+                nama=_nama_dari_slug(u),
+                negara=sumber.negara,
+                tautan_resmi=u,
+                status="menunggu_validasi",
+                alasan_ditandai=ALASAN_SITEMAP,
+                tanggal_diperiksa=datetime.now(UTC),
+                sidik_isi=_sidik(f"{_nama_dari_slug(u)}-{k}", u),
             )
         )
         ringkas["baru"] += 1

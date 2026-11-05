@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/auth_controller.dart';
 import '../../features/notifikasi/presentation/notifikasi_providers.dart';
 import '../theme/app_theme.dart';
+import 'logo_smart.dart';
 
 /// Kepala halaman tab: logo SMART, program studi, lonceng notifikasi, avatar.
 class SmartAppBar extends ConsumerWidget implements PreferredSizeWidget {
@@ -30,15 +31,7 @@ class SmartAppBar extends ConsumerWidget implements PreferredSizeWidget {
       titleSpacing: 16,
       title: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Warna.primary,
-              borderRadius: BorderRadius.circular(Jari.kartuDalam),
-            ),
-            child: const Icon(Icons.school, color: Warna.putih, size: 22),
-          ),
+          const LogoSmart(),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

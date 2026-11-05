@@ -95,6 +95,22 @@ def html_ke_teks(html: str, dasar: str, maks: int = TEKS_MAKS) -> str:
     return h[:maks]
 
 
+def ambil_mentah(url: str, klien: httpx.Client | None = None) -> str:
+    """Mengambil isi mentah (misalnya sitemap XML) dengan penjaga yang sama seperti ambil_teks."""
+    punya = klien is None
+    klien = klien or httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=30, follow_redirects=False)
+    try:
+        if not boleh_diambil(klien, url):
+            raise LamanGagal("robots.txt melarang pengambilan laman ini")
+        r = _unduh(klien, url)
+        if r.status_code >= 400:
+            raise LamanGagal(f"Laman mengembalikan status {r.status_code}")
+        return r.text
+    finally:
+        if punya:
+            klien.close()
+
+
 def ambil_teks(url: str, klien: httpx.Client | None = None, maks: int = TEKS_MAKS) -> str:
     """Mengambil laman, memeriksa robots.txt, dan mengembalikan teksnya."""
     punya = klien is None

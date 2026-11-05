@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { ProfilLanjutanKartu } from "@/components/ProfilLanjutan";
 import { pesanGalat } from "@/components/state";
 import { BarProgres, JudulHalaman, Kartu, Masukan, Medan, Pilihan, Tombol } from "@/components/ui";
 import { kirim } from "@/lib/api";
@@ -170,6 +171,11 @@ export default function ProfilSaya() {
     <div>
       <JudulHalaman judul="Profil Saya" deskripsi="Data ini dipakai Mesin Rekomendasi untuk menilai syarat beasiswa." />
       {saya && <Formulir saya={saya} />}
+      {saya && (
+        <div className="mt-6 max-w-4xl">
+          <ProfilLanjutanKartu key={JSON.stringify(saya.profil_lanjutan ?? {})} saya={saya} />
+        </div>
+      )}
     </div>
   );
 }
