@@ -308,6 +308,7 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
             ),
           const SizedBox(height: 16),
           for (final m in [
+            (Icons.badge_outlined, 'Profil Lanjutan', '/profil-lanjutan'),
             (Icons.description_outlined, 'Dokumen Saya', '/dokumen'),
             (Icons.chat_bubble_outline, 'Chatbot AI', '/chat'),
             (Icons.settings_outlined, 'Pengaturan', '/pengaturan'),

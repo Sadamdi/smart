@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/providers.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/logo_smart.dart';
 import 'auth_controller.dart';
 
 final _pola = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
@@ -34,19 +35,7 @@ class _Kerangka extends StatelessWidget {
               Center(
                 child: Column(
                   children: [
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        color: Warna.primary,
-                        borderRadius: BorderRadius.circular(Jari.kartu),
-                      ),
-                      child: const Icon(
-                        Icons.school,
-                        size: 38,
-                        color: Warna.putih,
-                      ),
-                    ),
+                    const LogoSmart(ukuran: 72),
                     const SizedBox(height: 12),
                     Text('SMART', style: t.headlineMedium),
                     const SizedBox(height: 4),

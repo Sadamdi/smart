@@ -93,6 +93,14 @@ SUMBER_AWAL = [
         "30 5 * * *",
         True,
     ),
+    (
+        "SatuBeasiswa: peta situs (laman detail)",
+        "https://satubeasiswa.kemdiktisaintek.go.id/sitemap.xml",
+        "pantau_otomatis",
+        "Indonesia",
+        "30 5 * * *",
+        True,
+    ),
 ]
 
 
