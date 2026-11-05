@@ -218,7 +218,7 @@ def test_unggah_cv_dibaca_dikoreksi_dan_diterapkan_ke_profil(klien_db, tmp_path)
     )
     assert kor.json()["data"]["hasil_baca"]["ipk"] == 3.7
     t = klien_db.post(f"{B}/me/dokumen/{d['id']}/terapkan-ke-profil", headers=h).json()["data"]
-    assert set(t["kolom_terisi"]) == {"ipk", "semester", "skor_bahasa"}
+    assert set(t["kolom_terisi"]) == {"ipk", "semester", "skor_bahasa", "profil_lanjutan.organisasi"}
     assert klien_db.get(f"{B}/me", headers=h).json()["data"]["ipk"] == "3.70"
     assert len(klien_db.get(f"{B}/me/dokumen", headers=h).json()["data"]) == 1
     assert klien_db.delete(f"{B}/me/dokumen/{d['id']}", headers=h).status_code == 200
@@ -314,6 +314,8 @@ def test_tugas_dan_notifikasi_milik_orang_lain_tidak_dapat_diakses(klien_db, ses
 
 
 def test_chat_memakai_data_basis_data_dan_menyimpan_riwayat(klien_db, sesi, monkeypatch):
+    sesi.execute(update(Beasiswa).values(status="kedaluwarsa"))  # abaikan data nyata; hanya data uji yang dipakai
+    sesi.flush()
     h = _akun(klien_db)
     b = _beasiswa(sesi, _sumber(sesi), "Beasiswa Tanoto Uji", HARI + timedelta(days=30), manfaat="Rp 1.000.000 per bulan")
     diterima = {}

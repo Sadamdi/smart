@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.core.config import Settings
 from app.core.errors import NotFound, UpstreamUnavailable, ValidationFailed
 from app.models import DokumenPengguna, Pengguna
+from app.schemas.pengguna import Organisasi, Pengalaman, Prestasi, Sertifikat
 from app.services import llm
 
 TIPE_DIIZINKAN = {".pdf", ".docx", ".txt", ".png", ".jpg", ".jpeg"}
@@ -87,17 +88,41 @@ def baca_gambar(settings: Settings, nama: str, isi: bytes) -> str:
         return ""
 
 
+_DAFTAR = {"organisasi": Organisasi, "prestasi": Prestasi, "sertifikat": Sertifikat, "pengalaman": Pengalaman}
+_SKALAR = ("sekolah_asal", "jurusan_sekolah", "kota_asal", "provinsi_asal", "fakultas")
+
+
+def _bersih_daftar(nilai: object, model) -> list[dict]:
+    """Memeriksa tiap butir dengan model skema; butir yang tidak valid dibuang."""
+    hasil: list[dict] = []
+    for item in nilai if isinstance(nilai, list) else []:
+        try:
+            hasil.append(model.model_validate(item).model_dump(exclude_none=True))
+        except ValueError:
+            continue
+    return hasil[:20]
+
+
 def baca_dengan_ai(settings: Settings, teks: str) -> dict:
-    """Cadangan bila aturan tidak menemukan apa pun: AI mengambil IPK, semester, skor bahasa, organisasi (divalidasi)."""
+    """AI mengambil data profil dari teks dokumen. Semua nilai divalidasi; hasil aturan tetap diutamakan."""
     if not llm.tersedia(settings):
         return {}
     try:
         jawab = llm.tanya(
             settings,
             SISTEM_BACA,
-            'Dari teks berikut keluarkan HANYA JSON {"ipk": angka atau null, "semester": bilangan bulat atau null, '
-            '"skor_bahasa": {"toefl": angka, "ielts": angka} atau null, "pengalaman_organisasi": [teks]}.\n\n' + teks,
-            timeout=60,
+            "Dari teks berikut keluarkan HANYA JSON dengan bentuk {"
+            '"ipk": angka atau null, "semester": bilangan bulat atau null, '
+            '"skor_bahasa": {"toefl": angka, "ielts": angka} atau null, '
+            '"sekolah_asal": teks atau null, "jurusan_sekolah": teks atau null, "kota_asal": teks atau null, '
+            '"provinsi_asal": teks atau null, "fakultas": teks atau null, '
+            '"organisasi": [{"nama": teks, "jabatan": teks atau null, "tahun": angka atau null}], '
+            '"prestasi": [{"nama": teks, "tingkat": "sekolah"/"kota"/"provinsi"/"nasional"/"internasional" atau null, '
+            '"tahun": angka atau null}], '
+            '"sertifikat": [{"nama": teks, "penerbit": teks atau null, "tahun": angka atau null}], '
+            '"pengalaman": [{"nama": teks, "peran": teks atau null, "tahun": angka atau null}], '
+            '"keahlian": [teks]}. Isi hanya yang tertulis jelas.\n\n' + teks,
+            timeout=90,
         )
         data = json.loads(jawab[jawab.find("{") : jawab.rfind("}") + 1])
     except (UpstreamUnavailable, ValueError):
@@ -114,10 +139,48 @@ def baca_dengan_ai(settings: Settings, teks: str) -> dict:
         sah = {k: float(v) for k, v in bhs.items() if k in ("toefl", "ielts") and isinstance(v, int | float)}
         if sah:
             hasil["skor_bahasa"] = sah
-    org = data.get("pengalaman_organisasi")
-    if isinstance(org, list):
-        hasil["pengalaman_organisasi"] = [str(o)[:120] for o in org if isinstance(o, str)][:8]
+    for k in _SKALAR:
+        if isinstance(data.get(k), str) and data[k].strip():
+            hasil[k] = data[k].strip()[:150]
+    for k, model in _DAFTAR.items():
+        daftar = _bersih_daftar(data.get(k), model)
+        if daftar:
+            hasil[k] = daftar
+    keahlian = [str(x).strip()[:120] for x in data.get("keahlian", []) if isinstance(x, str) and x.strip()]
+    if keahlian:
+        hasil["keahlian"] = keahlian[:30]
     return hasil
+
+
+def gabung_profil_lanjutan(lama: dict | None, hasil: dict) -> tuple[dict, list[str]]:
+    """Menggabungkan hasil baca ke profil lanjutan tanpa menimpa isian pengguna; mengembalikan (profil, bagian terisi)."""
+    baru = {k: v for k, v in (lama or {}).items()}
+    terisi: list[str] = []
+    for k in _SKALAR:
+        if hasil.get(k) and not baru.get(k):
+            baru[k] = hasil[k]
+            terisi.append(k)
+    sumber = dict(hasil)
+    if sumber.get("pengalaman_organisasi") and not sumber.get("organisasi"):
+        sumber["organisasi"] = [{"nama": str(x)[:120]} for x in sumber["pengalaman_organisasi"]]
+    for k in ("organisasi", "prestasi", "sertifikat", "pengalaman"):
+        ada = list(baru.get(k, []))
+        kunci_ada = {str(x.get("nama", "")).lower() for x in ada if isinstance(x, dict)}
+        tambah = [x for x in sumber.get(k, []) if isinstance(x, dict) and str(x.get("nama", "")).lower() not in kunci_ada]
+        if tambah:
+            baru[k] = (ada + tambah)[:20]
+            terisi.append(k)
+    keahlian = list(baru.get("keahlian", []))
+    sudah = {y.lower() for y in keahlian}
+    tambah = []
+    for x in sumber.get("keahlian", []):
+        if x.lower() not in sudah:
+            sudah.add(x.lower())
+            tambah.append(x)
+    if tambah:
+        baru["keahlian"] = (keahlian + tambah)[:30]
+        terisi.append("keahlian")
+    return baru, terisi
 
 
 def simpan(sesi: Session, p: Pengguna, jenis: str, nama: str, isi: bytes, settings: Settings) -> DokumenPengguna:
@@ -136,9 +199,8 @@ def simpan(sesi: Session, p: Pengguna, jenis: str, nama: str, isi: bytes, settin
     try:
         teks = ekstrak_teks(nama, isi) or baca_gambar(settings, nama, isi)
         if teks.strip():
-            hasil = baca_dengan_aturan(teks)
-            if not hasil:
-                hasil = baca_dengan_ai(settings, teks)
+            aturan = baca_dengan_aturan(teks)
+            hasil = baca_dengan_ai(settings, teks) | aturan if len(teks) >= 40 else aturan
             d.hasil_baca = hasil | {"ringkasan_teks": teks[:600]}
             d.status_baca = "selesai"
         else:
@@ -187,6 +249,10 @@ def terapkan_ke_profil(sesi: Session, p: Pengguna, hasil: dict) -> list[str]:
     if not p.skor_bahasa and isinstance(hasil.get("skor_bahasa"), dict):
         p.skor_bahasa = hasil["skor_bahasa"]
         terisi.append("skor_bahasa")
+    baru, bagian = gabung_profil_lanjutan(p.profil_lanjutan, hasil)
+    if bagian:
+        p.profil_lanjutan = baru
+        terisi += [f"profil_lanjutan.{b}" for b in bagian]
     sesi.flush()
     return terisi
 
