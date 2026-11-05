@@ -10,6 +10,7 @@ import '../features/beranda/presentation/beranda_page.dart';
 import '../features/chat/presentation/chat_page.dart';
 import '../features/dokumen/presentation/dokumen_page.dart';
 import '../features/pengaturan/presentation/pengaturan_page.dart';
+import '../features/profil/presentation/profil_lanjutan_page.dart';
 import '../features/kalender/presentation/kalender_page.dart';
 import '../features/notifikasi/presentation/notifikasi_page.dart';
 import '../features/profil/presentation/profil_page.dart';
@@ -50,6 +51,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/notifikasi', builder: (_, _) => const NotifikasiPage()),
       GoRoute(path: '/dokumen', builder: (_, _) => const DokumenPage()),
       GoRoute(path: '/chat', builder: (_, _) => const ChatPage()),
+      GoRoute(
+        path: '/profil-lanjutan',
+        builder: (_, _) => const ProfilLanjutanPage(),
+      ),
       GoRoute(path: '/pengaturan', builder: (_, _) => const PengaturanPage()),
       GoRoute(
         path: '/beasiswa/:id',
