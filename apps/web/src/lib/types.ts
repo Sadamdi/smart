@@ -23,7 +23,23 @@ export type Pengguna = {
   kewarganegaraan?: string | null;
   kondisi_khusus?: string[] | null;
   catatan_tambahan?: string | null;
+  profil_lanjutan?: ProfilLanjutan | null;
   preferensi_notifikasi: { email?: boolean; push?: boolean };
+};
+export type ProfilLanjutan = {
+  provinsi_asal?: string | null;
+  kota_asal?: string | null;
+  sekolah_asal?: string | null;
+  jenis_sekolah?: "SMA" | "SMK" | "MA" | "Pesantren" | "Lainnya" | null;
+  jurusan_sekolah?: string | null;
+  tahun_lulus?: number | null;
+  fakultas?: string | null;
+  organisasi?: Record<string, string | number>[];
+  prestasi?: Record<string, string | number>[];
+  sertifikat?: Record<string, string | number>[];
+  pengalaman?: Record<string, string | number>[];
+  keahlian?: string[];
+  target_studi?: { jenjang: string[]; negara: string[]; bidang: string[] } | null;
 };
 export type HasilDaftar = TokenOut & { pengguna: Pengguna };
 

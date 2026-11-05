@@ -151,3 +151,32 @@ def test_tautan_media_sosial_tidak_dipakai_sebagai_tautan_resmi():
     assert pemantau_ai._media_sosial("https://www.instagram.com/indbeasiswa/")
     assert pemantau_ai._media_sosial("http://t.me/indbeasiswa")
     assert not pemantau_ai._media_sosial("https://www.tanotofoundation.org/id/")
+
+
+def test_kunci_alamat_menyamakan_alamat_panjang_dan_pendek():
+    panjang = "https://satubeasiswa.example/beasiswa/beasiswa-bermitra-84gp"
+    pendek = "https://satubeasiswa.example/beasiswa/84gp"
+    assert pemantau_ai._kunci_alamat(panjang) == pemantau_ai._kunci_alamat(pendek) == "84gp"
+    assert pemantau_ai._nama_dari_slug(panjang) == "Beasiswa Bermitra"
+
+
+@pytestmark_db
+def test_pantau_sitemap_mendaftarkan_alamat_baru_saja(sesi, monkeypatch):  # noqa: F811
+    xml = (
+        "<urlset><url><loc>https://uji-sitemap.example/beasiswa/beasiswa-alfa-ab12</loc></url>"
+        "<url><loc>https://uji-sitemap.example/beasiswa/beasiswa-beta-cd34</loc></url>"
+        "<url><loc>https://uji-sitemap.example/tentang</loc></url>"
+        "<url><loc>https://lain.example/beasiswa/x-ef56</loc></url></urlset>"
+    )
+    monkeypatch.setattr(laman, "ambil_mentah", lambda url, klien=None: xml)
+    s = Sumber(nama="Sitemap uji", url="https://uji-sitemap.example/sitemap.xml", jenis="pantau_otomatis")
+    sesi.add(s)
+    sesi.flush()
+    sesi.add(
+        Beasiswa(sumber_id=s.id, nama="Sudah Ada", tautan_resmi="https://uji-sitemap.example/beasiswa/ab12", status="terbit")
+    )
+    sesi.flush()
+    r = pemantau_ai.pantau_sumber(sesi, S, s, HARI)
+    assert r == {"ditemukan": 2, "baru": 1}  # alfa sudah ada (kunci ab12); hanya beta baru
+    baru = sesi.query(Beasiswa).filter_by(sumber_id=s.id, status="menunggu_validasi").one()
+    assert baru.nama == "Beasiswa Beta" and baru.alasan_ditandai.startswith("Dari peta situs")

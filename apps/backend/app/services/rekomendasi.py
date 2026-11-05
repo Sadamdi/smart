@@ -16,6 +16,22 @@ from app.rekomendasi.mesin import HasilRekomendasi, MasukanBeasiswa, susun
 from app.rekomendasi.peringkat import muat, urut_ulang
 
 
+def lanjutan(p: Pengguna) -> dict:
+    return p.profil_lanjutan or {}
+
+
+def teks_tambahan(p: Pengguna) -> str:
+    """Kata kunci dari profil lanjutan dan catatan untuk lapisan kemiripan."""
+    pl = lanjutan(p)
+    bagian: list[str] = [p.catatan_tambahan or "", pl.get("fakultas") or "", pl.get("jurusan_sekolah") or ""]
+    for kunci in ("organisasi", "prestasi", "sertifikat", "pengalaman"):
+        bagian += [str(x.get("nama", "")) for x in pl.get(kunci, []) if isinstance(x, dict)]
+    bagian += [str(k) for k in pl.get("keahlian", [])]
+    ts = pl.get("target_studi") or {}
+    bagian += [str(b) for b in ts.get("bidang", [])] + [str(n) for n in ts.get("negara", [])]
+    return " ".join(x for x in bagian if x).strip()
+
+
 def profil_dari(sesi: Session, p: Pengguna) -> ProfilKelayakan:
     berkas: set[str] = set()
     for d in sesi.scalars(select(DokumenPengguna).where(DokumenPengguna.pengguna_id == p.id)):
@@ -27,6 +43,7 @@ def profil_dari(sesi: Session, p: Pengguna) -> ProfilKelayakan:
         ipk=float(p.ipk) if p.ipk is not None else None,
         jenis_kampus=p.jenis_kampus,
         kota_domisili=p.kota_domisili,
+        daerah_asal=[x for x in (lanjutan(p).get("kota_asal"), lanjutan(p).get("provinsi_asal")) if x],
         tanggal_lahir=p.tanggal_lahir,
         penghasilan_orang_tua=p.penghasilan_orang_tua,
         skor_bahasa=p.skor_bahasa,
@@ -57,7 +74,7 @@ def hitung(sesi: Session, p: Pengguna, hari_ini: date) -> list[HasilRekomendasi]
         _masukan(sesi, hari_ini),
         hari_ini,
         kondisi_khusus=p.kondisi_khusus,
-        catatan=p.catatan_tambahan,
+        catatan=teks_tambahan(p),
     )
     versi = VERSI_MODEL
     model = muat(get_settings().model_peringkat_path)
@@ -80,7 +97,7 @@ def hitung(sesi: Session, p: Pengguna, hari_ini: date) -> list[HasilRekomendasi]
             )
         )
     p.vektor_profil = PengemasHash().kemas(
-        teks_profil(p.minat, p.program_studi, p.jenjang, p.kondisi_khusus, p.catatan_tambahan)
+        teks_profil(p.minat, p.program_studi, p.jenjang, p.kondisi_khusus, teks_tambahan(p))
     )
     sesi.flush()
     return hasil

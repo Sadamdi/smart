@@ -70,7 +70,8 @@ function Sidebar({ pengguna, admin, tutup }: { pengguna: Pengguna; admin: boolea
     <nav aria-label="Menu utama" className="flex h-full w-[250px] flex-col bg-white px-4 py-6">
       <div className="mb-8 flex items-center justify-between px-2">
         <Link href={admin ? "/admin" : "/"} className="flex items-center gap-3" onClick={tutup}>
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white">S</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="" width={40} height={40} className="h-10 w-10" />
           <span>
             <span className="block text-lg font-bold leading-none text-navy">SMART</span>
             <span className="text-xs text-muted">{admin ? "Panel Admin" : "Scholarship Assistant"}</span>

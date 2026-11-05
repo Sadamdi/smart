@@ -19,6 +19,7 @@ class Pengguna {
     this.catatanTambahan,
     this.notifEmail = true,
     this.notifPush = true,
+    this.profilLanjutan = const {},
   });
 
   final String id;
@@ -40,6 +41,7 @@ class Pengguna {
   final String? catatanTambahan;
   final bool notifEmail;
   final bool notifPush;
+  final Map<String, dynamic> profilLanjutan;
 
   /// Kelengkapan profil dari kolom yang dipakai mesin rekomendasi.
   ({int terisi, int total}) get kelengkapan {
@@ -80,6 +82,9 @@ class Pengguna {
     catatanTambahan: j['catatan_tambahan'] as String?,
     notifEmail: (j['preferensi_notifikasi'] as Map?)?['email'] as bool? ?? true,
     notifPush: (j['preferensi_notifikasi'] as Map?)?['push'] as bool? ?? true,
+    profilLanjutan: Map<String, dynamic>.from(
+      j['profil_lanjutan'] as Map? ?? {},
+    ),
   );
 }
 
@@ -97,6 +102,7 @@ class ProfilMasukan {
     this.minat,
     this.kondisiKhusus,
     this.catatanTambahan,
+    this.profilLanjutan,
   });
 
   final String? nama;
@@ -110,6 +116,7 @@ class ProfilMasukan {
   final List<String>? minat;
   final List<String>? kondisiKhusus;
   final String? catatanTambahan;
+  final Map<String, dynamic>? profilLanjutan;
 
   Map<String, dynamic> toJson() => {
     if (nama != null) 'nama': nama,
@@ -123,5 +130,6 @@ class ProfilMasukan {
     if (minat != null) 'minat': minat,
     if (kondisiKhusus != null) 'kondisi_khusus': kondisiKhusus,
     if (catatanTambahan != null) 'catatan_tambahan': catatanTambahan,
+    if (profilLanjutan != null) 'profil_lanjutan': profilLanjutan,
   };
 }
