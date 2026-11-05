@@ -27,6 +27,7 @@ class ProfilKelayakan:
     ipk: float | None = None
     jenis_kampus: str | None = None
     kota_domisili: str | None = None
+    daerah_asal: list[str] = field(default_factory=list)  # kota dan provinsi asal (profil lanjutan)
     tanggal_lahir: date | None = None
     penghasilan_orang_tua: int | None = None
     skor_bahasa: dict | None = None
@@ -151,7 +152,8 @@ def periksa_syarat(
     if jenis == "jenis_kampus":
         return _pilihan(jenis, batas, profil.jenis_kampus, "kampus", "Kampus {nilai} sesuai")
     if jenis == "domisili":
-        return _pilihan(jenis, batas, profil.kota_domisili, "domisili", "Domisili sesuai")
+        wilayah = ", ".join(x for x in [profil.kota_domisili, *profil.daerah_asal] if x) or None
+        return _pilihan(jenis, batas, wilayah, "domisili", "Domisili atau daerah asal sesuai")
     if jenis == "kewarganegaraan":
         return _pilihan(jenis, batas, profil.kewarganegaraan, "warga negara", "Kewarganegaraan sesuai")
     if jenis == "usia_maksimum":

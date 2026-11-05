@@ -49,6 +49,59 @@ class TokenOut(BaseModel):
     kedaluwarsa_detik: int
 
 
+Pendek = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
+Tahun = Annotated[int, Field(ge=1990, le=2100)] | None
+TINGKAT_PRESTASI = Literal["sekolah", "kota", "provinsi", "nasional", "internasional"]
+
+
+class Organisasi(BaseModel):
+    nama: Pendek
+    jabatan: Annotated[str, StringConstraints(strip_whitespace=True, max_length=80)] | None = None
+    tahun: Tahun = None
+
+
+class Prestasi(BaseModel):
+    nama: Pendek
+    tingkat: TINGKAT_PRESTASI | None = None
+    tahun: Tahun = None
+
+
+class Sertifikat(BaseModel):
+    nama: Pendek
+    penerbit: Annotated[str, StringConstraints(strip_whitespace=True, max_length=120)] | None = None
+    tahun: Tahun = None
+
+
+class Pengalaman(BaseModel):
+    nama: Pendek
+    peran: Annotated[str, StringConstraints(strip_whitespace=True, max_length=80)] | None = None
+    tahun: Tahun = None
+
+
+class TargetStudi(BaseModel):
+    jenjang: list[Literal["D3", "D4", "S1", "S2", "S3"]] = []
+    negara: list[Pendek] = Field(default=[], max_length=10)
+    bidang: list[Pendek] = Field(default=[], max_length=10)
+
+
+class ProfilLanjutan(BaseModel):
+    """Profil lanjutan (opsional) untuk pencarian yang lebih terarah. Dikirim utuh; mengganti isi sebelumnya."""
+
+    provinsi_asal: Annotated[str, StringConstraints(strip_whitespace=True, max_length=80)] | None = None
+    kota_asal: Annotated[str, StringConstraints(strip_whitespace=True, max_length=80)] | None = None
+    sekolah_asal: Annotated[str, StringConstraints(strip_whitespace=True, max_length=150)] | None = None
+    jenis_sekolah: Literal["SMA", "SMK", "MA", "Pesantren", "Lainnya"] | None = None
+    jurusan_sekolah: Annotated[str, StringConstraints(strip_whitespace=True, max_length=80)] | None = None
+    tahun_lulus: Tahun = None
+    fakultas: Annotated[str, StringConstraints(strip_whitespace=True, max_length=120)] | None = None
+    organisasi: list[Organisasi] = Field(default=[], max_length=20)
+    prestasi: list[Prestasi] = Field(default=[], max_length=20)
+    sertifikat: list[Sertifikat] = Field(default=[], max_length=20)
+    pengalaman: list[Pengalaman] = Field(default=[], max_length=20)
+    keahlian: list[Pendek] = Field(default=[], max_length=30)
+    target_studi: TargetStudi | None = None
+
+
 class ProfilIn(BaseModel):
     """Semua kolom opsional; hanya kolom yang dikirim yang diubah."""
 
@@ -89,6 +142,7 @@ class ProfilIn(BaseModel):
         | None
     ) = None
     catatan_tambahan: Annotated[str, StringConstraints(strip_whitespace=True, max_length=1000)] | None = None
+    profil_lanjutan: ProfilLanjutan | None = None
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -133,4 +187,5 @@ class PenggunaOut(BaseModel):
     kewarganegaraan: str | None = None
     kondisi_khusus: list[str] | None = None
     catatan_tambahan: str | None = None
+    profil_lanjutan: dict | None = None
     preferensi_notifikasi: dict
