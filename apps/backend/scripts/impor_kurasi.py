@@ -4,16 +4,30 @@ Tenggat dan syarat tidak diisi di sini: validasi AI membacanya dari laman resmi 
 Aman diulang. Pemakaian (dari apps/backend): uv run python -m scripts.impor_kurasi
 """
 
+from datetime import UTC, date, datetime, timedelta
+
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models import Beasiswa, Sumber
-from app.services.pemantau_ai import _sidik
+from app.models import Beasiswa, Persyaratan, Sumber
+from app.services import laman
+from app.services.admin import HARI_MINIMAL_TERBIT
+from app.services.pemantau_ai import _sidik, tenggat_terverifikasi
 
 URL_SUMBER = "kurasi://tim-smart"
 # (nama, penyelenggara, negara, jenjang, tautan resmi)
+# Entri dengan tenggat dan kutipan: tenggat dipakai hanya bila kutipan benar-benar ada di laman resmi saat ini.
 KURASI = [
+    (
+        "Chinese Government Scholarship (CSC) 2027/2028",
+        "Pemerintah Tiongkok (Kedutaan Besar RRT di Indonesia)",
+        "Tiongkok",
+        ["S1", "S2", "S3"],
+        "https://id.china-embassy.gov.cn/eng/sgdt/202610/t20261027_12047753.htm",
+        "2027-02-14",
+        "before February 14, 2027",
+    ),
     (
         "ASEAN Undergraduate Scholarship NUS",
         "National University of Singapore",
@@ -67,23 +81,37 @@ def main() -> None:
             s = Sumber(nama="Daftar kurasi tim SMART (tautan resmi)", url=URL_SUMBER, jenis="tautan_keluar", aktif=True)
             sesi.add(s)
             sesi.flush()
-        for nama, penyelenggara, negara, jenjang, tautan in KURASI:
+        for entri in KURASI:
+            nama, penyelenggara, negara, jenjang, tautan = entri[:5]
+            tenggat, kutipan = (entri[5], entri[6]) if len(entri) == 7 else (None, None)
             sidik = _sidik(nama, tautan)
             if sesi.scalar(select(Beasiswa.id).where(Beasiswa.sumber_id == s.id, Beasiswa.sidik_isi == sidik)):
                 continue
-            sesi.add(
-                Beasiswa(
-                    sumber_id=s.id,
-                    nama=nama,
-                    penyelenggara=penyelenggara,
-                    negara=negara,
-                    jenjang=jenjang,
-                    tautan_resmi=tautan,
-                    status="menunggu_validasi",
-                    alasan_ditandai="Kurasi tim, menunggu validasi",
-                    sidik_isi=sidik,
-                )
+            status, alasan, tgl = "menunggu_validasi", "Kurasi tim, menunggu validasi", None
+            if tenggat:
+                try:
+                    tgl = tenggat_terverifikasi(tenggat, kutipan, laman.ambil_teks(tautan, maks=60000))
+                except laman.LamanGagal:
+                    tgl = None
+                if tgl and tgl >= date.today() + timedelta(days=HARI_MINIMAL_TERBIT):
+                    status, alasan = "terbit", None
+            b = Beasiswa(
+                sumber_id=s.id,
+                nama=nama,
+                penyelenggara=penyelenggara,
+                negara=negara,
+                jenjang=jenjang,
+                tautan_resmi=tautan,
+                tenggat=tgl,
+                status=status,
+                alasan_ditandai=alasan,
+                sidik_isi=sidik,
+                tanggal_diperiksa=datetime.now(UTC),
             )
+            sesi.add(b)
+            sesi.flush()
+            if jenjang:
+                sesi.add(Persyaratan(beasiswa_id=b.id, jenis="jenjang", nilai_batas={"nilai": jenjang}, dapat_dikejar=False))
             baru += 1
         sesi.commit()
     print(f"{baru} beasiswa kurasi baru.")
