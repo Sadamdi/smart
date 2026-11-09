@@ -37,6 +37,12 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
   final _kota = TextEditingController();
   final _minat = TextEditingController();
   final _catatan = TextEditingController();
+  final _lahir = TextEditingController();
+  final _ips = TextEditingController();
+  final _penghasilan = TextEditingController();
+  final _warga = TextEditingController();
+  final _toefl = TextEditingController();
+  final _ielts = TextEditingController();
   Set<String> _kondisi = {};
   String? _jenisKampus;
   String? _jenjang;
@@ -52,6 +58,12 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
       _kota,
       _minat,
       _catatan,
+      _lahir,
+      _ips,
+      _penghasilan,
+      _warga,
+      _toefl,
+      _ielts,
     ]) {
       c.dispose();
     }
@@ -67,6 +79,12 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
     _kota.text = p.kotaDomisili ?? '';
     _minat.text = p.minat.join(', ');
     _catatan.text = p.catatanTambahan ?? '';
+    _lahir.text = p.tanggalLahir ?? '';
+    _ips.text = p.ipsTerakhir ?? '';
+    _penghasilan.text = p.penghasilanOrangTua?.toString() ?? '';
+    _warga.text = p.kewarganegaraan ?? '';
+    _toefl.text = p.skorBahasa['toefl']?.toString() ?? '';
+    _ielts.text = p.skorBahasa['ielts']?.toString() ?? '';
     _kondisi = p.kondisiKhusus.toSet();
     _jenisKampus = p.jenisKampus;
     _jenjang = p.jenjang;
@@ -112,6 +130,19 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
               minat: minat.isEmpty ? null : minat,
               kondisiKhusus: _kondisi.toList(),
               catatanTambahan: _catatan.text.trim(),
+              tanggalLahir: teks(_lahir),
+              ipsTerakhir: double.tryParse(_ips.text.trim().replaceAll(',', '.')),
+              penghasilanOrangTua: int.tryParse(
+                _penghasilan.text.trim().replaceAll(RegExp(r'[^0-9]'), ''),
+              ),
+              kewarganegaraan: teks(_warga),
+              skorBahasa: {
+                if (_toefl.text.trim().isNotEmpty)
+                  'toefl': num.tryParse(_toefl.text.trim()) ?? _toefl.text.trim(),
+                if (_ielts.text.trim().isNotEmpty)
+                  'ielts': num.tryParse(_ielts.text.trim().replaceAll(',', '.')) ??
+                      _ielts.text.trim(),
+              },
             ),
           );
       if (mounted) {
@@ -136,6 +167,9 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
     return Scaffold(
       appBar: const SmartAppBar(),
       body: ListView(
+        // Semua kolom form tetap terpasang agar validasi mencakup kolom yang di luar layar.
+        // ignore: deprecated_member_use
+        cacheExtent: 6000,
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
           Text('Profil Saya', style: t.headlineMedium),
@@ -157,12 +191,23 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
                 ('Jenjang', p.jenjang),
                 ('Semester', p.semester?.toString()),
                 ('IPK', p.ipk),
+                ('IPS terakhir', p.ipsTerakhir),
+                ('TOEFL', p.skorBahasa['toefl']?.toString()),
+                ('IELTS', p.skorBahasa['ielts']?.toString()),
               ],
             ),
             const SizedBox(height: 12),
             _KartuData(
               judul: 'Lainnya',
               baris: [
+                ('Tanggal lahir', p.tanggalLahir),
+                ('Kewarganegaraan', p.kewarganegaraan),
+                (
+                  'Penghasilan orang tua',
+                  p.penghasilanOrangTua == null
+                      ? null
+                      : 'Rp${p.penghasilanOrangTua}',
+                ),
                 ('Kota domisili', p.kotaDomisili),
                 ('Minat', p.minat.isEmpty ? null : p.minat.join(', ')),
                 (
@@ -242,6 +287,42 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
                     'IPK',
                     angka: true,
                     validator: (v) => _wajibAngka(v, 0, 4, 'IPK'),
+                  ),
+                  _Kolom(
+                    _ips,
+                    'IPS terakhir',
+                    angka: true,
+                    validator: (v) => _wajibAngka(v, 0, 4, 'IPS'),
+                  ),
+                  _Kolom(
+                    _toefl,
+                    'Skor TOEFL (opsional)',
+                    angka: true,
+                    validator: (v) => _wajibAngka(v, 0, 677, 'TOEFL'),
+                  ),
+                  _Kolom(
+                    _ielts,
+                    'Skor IELTS (opsional)',
+                    angka: true,
+                    validator: (v) => _wajibAngka(v, 0, 9, 'IELTS'),
+                  ),
+                  _Kolom(
+                    _lahir,
+                    'Tanggal lahir (TTTT-BB-HH)',
+                    hint: '2004-08-17',
+                    validator: (v) {
+                      final s = (v ?? '').trim();
+                      if (s.isEmpty) return null;
+                      return DateTime.tryParse(s) == null
+                          ? 'Tulis tanggal seperti 2004-08-17.'
+                          : null;
+                    },
+                  ),
+                  _Kolom(_warga, 'Kewarganegaraan', hint: 'Indonesia'),
+                  _Kolom(
+                    _penghasilan,
+                    'Penghasilan orang tua per bulan (Rp)',
+                    angka: true,
                   ),
                   _Kolom(_kota, 'Kota domisili'),
                   _Kolom(
