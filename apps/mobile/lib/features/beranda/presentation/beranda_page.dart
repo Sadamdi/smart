@@ -245,7 +245,7 @@ class _KartuProfil extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Warna.putih,
+        color: Warna.kartu,
         borderRadius: BorderRadius.circular(Jari.kartu),
         boxShadow: bayanganKartu,
       ),
@@ -254,7 +254,7 @@ class _KartuProfil extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.fact_check_outlined, color: Warna.primary),
+              Icon(Icons.fact_check_outlined, color: Warna.primary),
               const SizedBox(width: 10),
               Expanded(child: Text('Kelengkapan Profil', style: t.titleMedium)),
               TextButton(
@@ -289,7 +289,7 @@ class _BarisTenggat extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Warna.putih,
+        color: Warna.kartu,
         borderRadius: BorderRadius.circular(Jari.kartu),
         boxShadow: bayanganKartu,
       ),
@@ -357,7 +357,7 @@ class _Pintas extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 4),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: Warna.putih,
+            color: Warna.kartu,
             borderRadius: BorderRadius.circular(Jari.kartu),
             boxShadow: bayanganKartu,
           ),

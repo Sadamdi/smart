@@ -266,7 +266,7 @@ class _Isi extends ConsumerWidget {
                         ListTile(
                           dense: true,
                           contentPadding: EdgeInsets.zero,
-                          leading: const Icon(
+                          leading: Icon(
                             Icons.description_outlined,
                             color: Warna.primary,
                           ),
@@ -345,7 +345,7 @@ class _Bagian extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Warna.putih,
+        color: Warna.kartu,
         borderRadius: BorderRadius.circular(Jari.kartu),
         boxShadow: bayanganKartu,
       ),
@@ -374,7 +374,7 @@ class _BarisSyarat extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(top: 2),
             child: Icon(
               Icons.check_circle_outline,
