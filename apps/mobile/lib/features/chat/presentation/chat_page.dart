@@ -62,7 +62,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: saya ? Warna.primary : Warna.putih,
+          color: saya ? Warna.primary : Warna.kartu,
           borderRadius: BorderRadius.circular(Jari.kartuDalam),
           boxShadow: saya ? null : bayanganKartu,
         ),
@@ -98,7 +98,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               width: double.infinity,
               color: Warna.errorSoft,
               padding: const EdgeInsets.all(12),
-              child: const Text(
+              child: Text(
                 'Chatbot belum dapat menjawab saat ini. Anda tetap dapat menelusuri beasiswa dan melihat rekomendasi.',
                 style: TextStyle(color: Warna.error),
               ),
@@ -131,7 +131,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           if (_galat != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(_galat!, style: const TextStyle(color: Warna.error)),
+              child: Text(_galat!, style: TextStyle(color: Warna.error)),
             ),
           SafeArea(
             child: Padding(

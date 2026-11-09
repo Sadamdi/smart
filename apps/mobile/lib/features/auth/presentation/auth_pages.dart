@@ -162,7 +162,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               Text(
                 _galat!,
                 key: const Key('galat-form'),
-                style: const TextStyle(color: Warna.error),
+                style: TextStyle(color: Warna.error),
               ),
             ],
             const SizedBox(height: 20),
@@ -284,7 +284,7 @@ class _DaftarPageState extends ConsumerState<DaftarPage> {
               Text(
                 _galat!,
                 key: const Key('galat-form'),
-                style: const TextStyle(color: Warna.error),
+                style: TextStyle(color: Warna.error),
               ),
             ],
             const SizedBox(height: 20),

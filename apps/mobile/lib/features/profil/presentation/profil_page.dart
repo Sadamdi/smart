@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/providers.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/metrik_dan_progres.dart';
 import '../../../core/widgets/smart_app_bar.dart';
 import '../../auth/domain/pengguna.dart';
 import '../../auth/presentation/auth_controller.dart';
@@ -38,6 +37,12 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
   final _kota = TextEditingController();
   final _minat = TextEditingController();
   final _catatan = TextEditingController();
+  final _lahir = TextEditingController();
+  final _ips = TextEditingController();
+  final _penghasilan = TextEditingController();
+  final _warga = TextEditingController();
+  final _toefl = TextEditingController();
+  final _ielts = TextEditingController();
   Set<String> _kondisi = {};
   String? _jenisKampus;
   String? _jenjang;
@@ -53,6 +58,12 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
       _kota,
       _minat,
       _catatan,
+      _lahir,
+      _ips,
+      _penghasilan,
+      _warga,
+      _toefl,
+      _ielts,
     ]) {
       c.dispose();
     }
@@ -68,6 +79,12 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
     _kota.text = p.kotaDomisili ?? '';
     _minat.text = p.minat.join(', ');
     _catatan.text = p.catatanTambahan ?? '';
+    _lahir.text = p.tanggalLahir ?? '';
+    _ips.text = p.ipsTerakhir ?? '';
+    _penghasilan.text = p.penghasilanOrangTua?.toString() ?? '';
+    _warga.text = p.kewarganegaraan ?? '';
+    _toefl.text = p.skorBahasa['toefl']?.toString() ?? '';
+    _ielts.text = p.skorBahasa['ielts']?.toString() ?? '';
     _kondisi = p.kondisiKhusus.toSet();
     _jenisKampus = p.jenisKampus;
     _jenjang = p.jenjang;
@@ -113,6 +130,19 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
               minat: minat.isEmpty ? null : minat,
               kondisiKhusus: _kondisi.toList(),
               catatanTambahan: _catatan.text.trim(),
+              tanggalLahir: teks(_lahir),
+              ipsTerakhir: double.tryParse(_ips.text.trim().replaceAll(',', '.')),
+              penghasilanOrangTua: int.tryParse(
+                _penghasilan.text.trim().replaceAll(RegExp(r'[^0-9]'), ''),
+              ),
+              kewarganegaraan: teks(_warga),
+              skorBahasa: {
+                if (_toefl.text.trim().isNotEmpty)
+                  'toefl': num.tryParse(_toefl.text.trim()) ?? _toefl.text.trim(),
+                if (_ielts.text.trim().isNotEmpty)
+                  'ielts': num.tryParse(_ielts.text.trim().replaceAll(',', '.')) ??
+                      _ielts.text.trim(),
+              },
             ),
           );
       if (mounted) {
@@ -137,53 +167,62 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
     return Scaffold(
       appBar: const SmartAppBar(),
       body: ListView(
+        // Semua kolom form tetap terpasang agar validasi mencakup kolom yang di luar layar.
+        // ignore: deprecated_member_use
+        cacheExtent: 6000,
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
           Text('Profil Saya', style: t.headlineMedium),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Warna.putih,
-              borderRadius: BorderRadius.circular(Jari.kartu),
-              boxShadow: bayanganKartu,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(p.nama, style: t.titleLarge),
-                Text(p.email, style: t.bodyMedium),
-                const SizedBox(height: 12),
-                Text(
-                  'Kelengkapan profil: ${kel.terisi} dari ${kel.total}',
-                  style: t.bodySmall,
-                ),
-                const SizedBox(height: 6),
-                BarProgres(nilai: kel.terisi / kel.total),
-              ],
-            ),
+          _HeaderProfil(
+            nama: p.nama,
+            email: p.email,
+            terisi: kel.terisi,
+            total: kel.total,
           ),
           const SizedBox(height: 16),
           if (!_ubah) ...[
-            _Baris('Kampus', p.kampus),
-            _Baris('Jenis kampus', p.jenisKampus),
-            _Baris('Program studi', p.programStudi),
-            _Baris('Jenjang', p.jenjang),
-            _Baris('Semester', p.semester?.toString()),
-            _Baris('IPK', p.ipk),
-            _Baris('Kota domisili', p.kotaDomisili),
-            _Baris('Minat', p.minat.isEmpty ? null : p.minat.join(', ')),
-            _Baris(
-              'Kondisi khusus',
-              p.kondisiKhusus.isEmpty
-                  ? null
-                  : p.kondisiKhusus
-                        .map((k) => _labelKondisi[k] ?? k)
-                        .join(', '),
+            _KartuData(
+              judul: 'Data akademik',
+              baris: [
+                ('Kampus', p.kampus),
+                ('Jenis kampus', p.jenisKampus),
+                ('Program studi', p.programStudi),
+                ('Jenjang', p.jenjang),
+                ('Semester', p.semester?.toString()),
+                ('IPK', p.ipk),
+                ('IPS terakhir (opsional)', p.ipsTerakhir),
+                ('TOEFL', p.skorBahasa['toefl']?.toString()),
+                ('IELTS', p.skorBahasa['ielts']?.toString()),
+              ],
             ),
-            _Baris('Catatan khusus', p.catatanTambahan),
+            const SizedBox(height: 12),
+            _KartuData(
+              judul: 'Lainnya',
+              baris: [
+                ('Tanggal lahir', p.tanggalLahir),
+                ('Kewarganegaraan', p.kewarganegaraan),
+                (
+                  'Penghasilan orang tua',
+                  p.penghasilanOrangTua == null
+                      ? null
+                      : 'Rp${p.penghasilanOrangTua}',
+                ),
+                ('Kota domisili', p.kotaDomisili),
+                ('Minat', p.minat.isEmpty ? null : p.minat.join(', ')),
+                (
+                  'Kondisi khusus',
+                  p.kondisiKhusus.isEmpty
+                      ? null
+                      : p.kondisiKhusus
+                            .map((k) => _labelKondisi[k] ?? k)
+                            .join(', '),
+                ),
+                ('Catatan khusus', p.catatanTambahan),
+              ],
+            ),
             const SizedBox(height: 16),
-            FilledButton.icon(
+            FilledButton.tonalIcon(
               onPressed: () => setState(() {
                 _isi(p);
                 _ubah = true;
@@ -203,7 +242,7 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
                         ? 'Nama tidak boleh kosong.'
                         : null,
                   ),
-                  _Kolom(_kampus, 'Kampus'),
+                  _Kolom(_kampus, 'Kampus (opsional)'),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: DropdownButtonFormField<String>(
@@ -224,7 +263,7 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
                       onChanged: (v) => setState(() => _jenisKampus = v),
                     ),
                   ),
-                  _Kolom(_prodi, 'Program studi'),
+                  _Kolom(_prodi, 'Program studi (opsional)'),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: DropdownButtonFormField<String>(
@@ -249,10 +288,46 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
                     angka: true,
                     validator: (v) => _wajibAngka(v, 0, 4, 'IPK'),
                   ),
+                  _Kolom(
+                    _ips,
+                    'IPS terakhir (opsional)',
+                    angka: true,
+                    validator: (v) => _wajibAngka(v, 0, 4, 'IPS'),
+                  ),
+                  _Kolom(
+                    _toefl,
+                    'Skor TOEFL (opsional)',
+                    angka: true,
+                    validator: (v) => _wajibAngka(v, 0, 677, 'TOEFL'),
+                  ),
+                  _Kolom(
+                    _ielts,
+                    'Skor IELTS (opsional)',
+                    angka: true,
+                    validator: (v) => _wajibAngka(v, 0, 9, 'IELTS'),
+                  ),
+                  _Kolom(
+                    _lahir,
+                    'Tanggal lahir (TTTT-BB-HH)',
+                    hint: '2004-08-17',
+                    validator: (v) {
+                      final s = (v ?? '').trim();
+                      if (s.isEmpty) return null;
+                      return DateTime.tryParse(s) == null
+                          ? 'Tulis tanggal seperti 2004-08-17.'
+                          : null;
+                    },
+                  ),
+                  _Kolom(_warga, 'Kewarganegaraan', hint: 'Indonesia'),
+                  _Kolom(
+                    _penghasilan,
+                    'Penghasilan orang tua per bulan, Rp (opsional)',
+                    angka: true,
+                  ),
                   _Kolom(_kota, 'Kota domisili'),
                   _Kolom(
                     _minat,
-                    'Minat (pisahkan dengan koma)',
+                    'Minat, pisahkan dengan koma (opsional)',
                     hint: 'teknologi, riset, kepemimpinan',
                   ),
                   Align(
@@ -284,7 +359,7 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Text(
                         _galat!,
-                        style: const TextStyle(color: Warna.error),
+                        style: TextStyle(color: Warna.error),
                       ),
                     ),
                   FilledButton(
@@ -307,20 +382,43 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
               ),
             ),
           const SizedBox(height: 16),
-          for (final m in [
-            (Icons.badge_outlined, 'Profil Lanjutan', '/profil-lanjutan'),
-            (Icons.description_outlined, 'Dokumen Saya', '/dokumen'),
-            (Icons.chat_bubble_outline, 'Chatbot AI', '/chat'),
-            (Icons.settings_outlined, 'Pengaturan', '/pengaturan'),
-          ])
-            ListTile(
-              leading: Icon(m.$1),
-              title: Text(m.$2),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push(m.$3),
+          Material(
+            color: Warna.kartu,
+            borderRadius: BorderRadius.circular(Jari.kartu),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (final (i, m) in [
+                  (Icons.badge_outlined, 'Profil Lanjutan', '/profil-lanjutan'),
+                  (Icons.description_outlined, 'Dokumen Saya', '/dokumen'),
+                  (Icons.chat_bubble_outline, 'Chatbot AI', '/chat'),
+                  (Icons.settings_outlined, 'Pengaturan', '/pengaturan'),
+                ].indexed) ...[
+                  if (i > 0) const Divider(indent: 64),
+                  ListTile(
+                    leading: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Warna.container3,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(m.$1, size: 20, color: Warna.primary),
+                    ),
+                    title: Text(m.$2),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push(m.$3),
+                  ),
+                ],
+              ],
             ),
+          ),
           const SizedBox(height: 16),
           OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Warna.error,
+              side: BorderSide(color: Warna.error.withValues(alpha: 0.5)),
+            ),
             onPressed: () => ref.read(authControllerProvider.notifier).keluar(),
             icon: const Icon(Icons.logout, size: 18),
             label: const Text('Keluar'),
@@ -362,35 +460,133 @@ class _Kolom extends StatelessWidget {
   }
 }
 
-class _Baris extends StatelessWidget {
-  const _Baris(this.label, this.nilai);
+class _HeaderProfil extends StatelessWidget {
+  const _HeaderProfil({
+    required this.nama,
+    required this.email,
+    required this.terisi,
+    required this.total,
+  });
 
-  final String label;
-  final String? nilai;
+  final String nama;
+  final String email;
+  final int terisi;
+  final int total;
 
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final kosong = nilai == null || nilai!.isEmpty;
+    final huruf = nama.trim().isEmpty ? '?' : nama.trim()[0].toUpperCase();
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Warna.putih,
-        borderRadius: BorderRadius.circular(Jari.kartuDalam),
-        boxShadow: bayanganKartu,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF2F6FC0), Color(0xFF143F7C)],
+        ),
+        borderRadius: BorderRadius.circular(Jari.kartu),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(flex: 4, child: Text(label, style: t.bodySmall)),
-          Expanded(
-            flex: 6,
-            child: Text(
-              kosong ? 'Belum diisi' : nilai!,
-              textAlign: TextAlign.end,
-              style: kosong ? t.bodySmall : t.titleSmall,
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: Colors.white.withValues(alpha: 0.18),
+                child: Text(
+                  huruf,
+                  style: t.titleLarge?.copyWith(color: Warna.putih),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      nama,
+                      style: t.titleLarge?.copyWith(color: Warna.putih),
+                    ),
+                    Text(
+                      email,
+                      style: t.bodyMedium?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Kelengkapan data utama: $terisi dari $total',
+            style: t.bodySmall?.copyWith(
+              color: Colors.white.withValues(alpha: 0.9),
             ),
           ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(Jari.bulat),
+            child: LinearProgressIndicator(
+              value: total == 0 ? 0 : terisi / total,
+              minHeight: 8,
+              backgroundColor: Colors.white.withValues(alpha: 0.25),
+              valueColor: const AlwaysStoppedAnimation(Color(0xFFF5B73B)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Satu kartu berisi beberapa pasang label dan nilai, dipisah garis tipis.
+class _KartuData extends StatelessWidget {
+  const _KartuData({required this.judul, required this.baris});
+
+  final String judul;
+  final List<(String, String?)> baris;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+      decoration: BoxDecoration(
+        color: Warna.kartu,
+        borderRadius: BorderRadius.circular(Jari.kartu),
+        boxShadow: bayanganKartu,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(judul, style: t.labelSmall),
+          const SizedBox(height: 4),
+          for (final (i, b) in baris.indexed) ...[
+            if (i > 0) const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 4, child: Text(b.$1, style: t.bodySmall)),
+                  Expanded(
+                    flex: 6,
+                    child: Text(
+                      (b.$2 == null || b.$2!.isEmpty) ? 'Belum diisi' : b.$2!,
+                      textAlign: TextAlign.end,
+                      style: (b.$2 == null || b.$2!.isEmpty)
+                          ? t.bodySmall
+                          : t.titleSmall,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

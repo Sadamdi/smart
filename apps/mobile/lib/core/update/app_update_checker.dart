@@ -5,12 +5,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 
-import 'apk_downloader.dart';
-import 'device_abi.dart';
+import 'pembaruan_controller.dart';
 import 'update_config.dart';
 import 'update_manifest.dart';
 
@@ -43,6 +41,7 @@ class AppUpdateChecker {
   static const _kanal = MethodChannel('smart/app_info');
   static String? _kunciSendiri;
   static bool _dialogTerbuka = false;
+  static bool _ditutupPengguna = false;
   static bool _opsionalSudahTampil = false;
   static DateTime? _terakhirPeriksa;
   static int _percobaanJaringan = 0;
@@ -159,7 +158,7 @@ class AppUpdateChecker {
       _opsionalSudahTampil = false;
       return;
     }
-    await _tampilkanDialog(context, hasil, wajib);
+    await _tampilkanDialog(context, hasil, wajib, contextOf: contextOf);
   }
 
   /// Dari Pengaturan: memeriksa sekarang dan memberi tahu apa pun hasilnya.
@@ -212,17 +211,38 @@ class AppUpdateChecker {
   static Future<void> _tampilkanDialog(
     BuildContext context,
     HasilPeriksa hasil,
-    bool wajib,
-  ) async {
+    bool wajib, {
+    BuildContext? Function()? contextOf,
+  }) async {
     if (_dialogTerbuka) return;
     _dialogTerbuka = true;
+    final c = PembaruanController.instance;
     try {
-      await showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => _DialogPembaruan(hasil: hasil, wajib: wajib),
-      );
+      var ulang = 0;
+      BuildContext? ctx = context;
+      // Dialog bisa terlepas sendiri bila tumpukan halaman berganti (mis. pengalihan masuk/beranda saat aplikasi
+      // baru dibuka). Selama bukan pengguna yang menutupnya dan unduhan belum jalan, tampilkan lagi.
+      while (ctx != null && ctx.mounted) {
+        _ditutupPengguna = false;
+        c.setDialogTerbuka(true);
+        if (!ctx.mounted) break;
+        await showDialog<void>(
+          // ignore: use_build_context_synchronously
+          context: ctx,
+          barrierDismissible: false,
+          builder: (_) => _DialogPembaruan(hasil: hasil, wajib: wajib),
+        );
+        c.setDialogTerbuka(false);
+        final perlu =
+            !_ditutupPengguna &&
+            c.tahap != TahapPembaruan.memasang &&
+            (wajib || c.tahap == TahapPembaruan.siap);
+        if (!perlu || contextOf == null || ++ulang > 5) break;
+        await Future<void>.delayed(const Duration(milliseconds: 800));
+        ctx = contextOf();
+      }
     } finally {
+      c.setDialogTerbuka(false);
       _dialogTerbuka = false;
     }
   }
@@ -280,8 +300,6 @@ class AppUpdateChecker {
   }
 }
 
-enum _Tahap { siap, mengunduh, memasang, gagal }
-
 class _DialogPembaruan extends StatefulWidget {
   const _DialogPembaruan({required this.hasil, required this.wajib});
 
@@ -293,93 +311,10 @@ class _DialogPembaruan extends StatefulWidget {
 }
 
 class _DialogPembaruanState extends State<_DialogPembaruan> {
-  _Tahap _tahap = _Tahap.siap;
-  double? _kemajuan;
-  bool _menungguJaringan = false;
-  String? _galat;
-  CancelToken? _batal;
+  final _c = PembaruanController.instance;
 
   UpdateManifest get _m => widget.hasil.manifest!;
   int get _terpasang => widget.hasil.build;
-
-  Future<void> _unduhDanPasang() async {
-    setState(() {
-      _tahap = _Tahap.mengunduh;
-      _kemajuan = null;
-      _galat = null;
-      _menungguJaringan = false;
-    });
-    _batal = CancelToken();
-    final abi = deviceApkAbi();
-    try {
-      final url = _m.apkUntuk(abi);
-      final sha = _m.sha256Untuk(abi);
-      if (url == null || sha == null || sha.isEmpty) {
-        throw const UpdateDownloadException(UpdateFailure.tidakAda);
-      }
-      final dir = await getApplicationCacheDirectory();
-      final berkas = await ApkDownloader().download(
-        url: url,
-        target: File('${dir.path}/smart-update-${_m.build}.apk'),
-        expectedSha256: sha,
-        cancelToken: _batal,
-        onProgress: (diterima, total) {
-          if (!mounted) return;
-          setState(() => _kemajuan = total > 0 ? diterima / total : null);
-        },
-        onWaitingForNetwork: (menunggu) {
-          if (mounted) setState(() => _menungguJaringan = menunggu);
-        },
-      );
-      // Pemeriksaan terakhir sebelum pemasang: APK harus ditandatangani kunci yang sama dengan aplikasi ini.
-      final kunciApk = await AppUpdateChecker.sidikKunciApk(berkas.path);
-      final kunciSendiri = await AppUpdateChecker.sidikKunciSendiri();
-      if (kunciApk == null ||
-          kunciSendiri == null ||
-          kunciApk != kunciSendiri) {
-        await berkas.delete();
-        _gagal(
-          'Berkas pembaruan tidak berasal dari penerbit resmi SMART sehingga tidak dipasang.',
-        );
-        return;
-      }
-      if (!mounted) return;
-      setState(() => _tahap = _Tahap.memasang);
-      final hasil = await OpenFilex.open(
-        berkas.path,
-        type: 'application/vnd.android.package-archive',
-      );
-      if (hasil.type != ResultType.done) throw Exception(hasil.message);
-    } on UpdateDownloadException catch (e) {
-      _gagal(switch (e.reason) {
-        UpdateFailure.hostDitolak =>
-          'Alamat pembaruan tidak dipercaya, jadi unduhan dibatalkan.',
-        UpdateFailure.corrupted => 'Berkas pembaruan rusak saat diunduh. Tekan "Coba lagi" untuk mengunduh ulang.',
-        UpdateFailure.network => 'Koneksi terputus terlalu lama. Unduhan tersimpan, tekan "Lanjutkan" saat internet kembali.',
-        UpdateFailure.tidakAda =>
-          'Berkas pembaruan tidak ditemukan. Tutup lalu buka lagi aplikasinya.',
-      });
-    } catch (e) {
-      if (e is DioException && CancelToken.isCancel(e)) return;
-      debugPrint('[update] gagal: $e');
-      _gagal('Pembaruan gagal dipasang. Tekan "Coba lagi".');
-    }
-  }
-
-  void _gagal(String pesan) {
-    if (!mounted) return;
-    setState(() {
-      _tahap = _Tahap.gagal;
-      _menungguJaringan = false;
-      _galat = pesan;
-    });
-  }
-
-  @override
-  void dispose() {
-    _batal?.cancel();
-    super.dispose();
-  }
 
   String get _barisVersi {
     final v = bandingkanVersi(_m.version, widget.hasil.versi);
@@ -410,118 +345,140 @@ class _DialogPembaruanState extends State<_DialogPembaruan> {
     );
   }
 
+  /// Menutup dialog atas kehendak pengguna (bukan karena halaman di bawahnya berganti).
+  void _tutup() {
+    AppUpdateChecker._ditutupPengguna = true;
+    Navigator.of(context).pop();
+  }
+
+  void _perbarui() {
+    _c.mulai(widget.hasil);
+    // Unduhan berjalan di latar belakang dengan banner kemajuan; dialog opsional langsung ditutup.
+    if (!widget.wajib) _tutup();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final persen = _kemajuan == null
-        ? null
-        : (_kemajuan! * 100).clamp(0, 100).round();
-    return PopScope(
-      canPop: !widget.wajib && _tahap != _Tahap.mengunduh,
-      child: AlertDialog(
-        title: Text(
-          _tahap == _Tahap.memasang
-              ? 'Memasang pembaruan'
-              : widget.wajib
-              ? 'Pembaruan wajib'
-              : 'Versi baru tersedia',
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _barisVersi,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              if (_tertinggal > 1)
-                Text(
-                  'Naik $_tertinggal versi sekaligus',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
+    return ListenableBuilder(
+      listenable: _c,
+      builder: (context, _) {
+        final tahap = _c.tahap;
+        final persen = _c.kemajuan == null
+            ? null
+            : (_c.kemajuan! * 100).clamp(0, 100).round();
+        return PopScope(
+          canPop: false,
+          child: AlertDialog(
+            title: Text(
+              tahap == TahapPembaruan.memasang
+                  ? 'Memasang pembaruan'
+                  : widget.wajib
+                  ? 'Pembaruan wajib'
+                  : 'Versi baru tersedia',
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _barisVersi,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                ),
-              if (_m.notes.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(_m.notes),
-              ],
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                  onPressed: _lihatSemua,
-                  child: Text(
-                    _m.riwayat.length > 1
-                        ? 'Lihat semua catatan rilis'
-                        : 'Lihat catatan lengkap',
+                  if (_tertinggal > 1)
+                    Text(
+                      'Naik $_tertinggal versi sekaligus',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  if (_m.notes.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(_m.notes),
+                  ],
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                      onPressed: _lihatSemua,
+                      child: Text(
+                        _m.riwayat.length > 1
+                            ? 'Lihat semua catatan rilis'
+                            : 'Lihat catatan lengkap',
+                      ),
+                    ),
                   ),
-                ),
+                  if (widget.wajib) ...[
+                    const SizedBox(height: 8),
+                    const Text('Versi ini wajib dipasang untuk melanjutkan.'),
+                  ],
+                  if (tahap == TahapPembaruan.mengunduh) ...[
+                    const SizedBox(height: 16),
+                    LinearProgressIndicator(value: _c.kemajuan),
+                    const SizedBox(height: 6),
+                    Text(
+                      _c.menungguJaringan
+                          ? 'Menunggu koneksi internet... unduhan dilanjutkan otomatis.'
+                          : persen == null
+                          ? 'Menyiapkan unduhan...'
+                          : 'Mengunduh $persen%',
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Unduhan tetap jalan di latar belakang. Pemasang terbuka otomatis setelah selesai.',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  ],
+                  if (tahap == TahapPembaruan.memasang) ...[
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Pilih "Perbarui" di jendela pemasangan, lalu "Buka" untuk menjalankan versi baru.',
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Pertama kali, Android meminta izin "Izinkan dari sumber ini". Aktifkan untuk SMART, lalu kembali dan tekan "Pasang lagi".',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  ],
+                  if (_c.galat != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      _c.galat!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              if (widget.wajib) ...[
-                const SizedBox(height: 8),
-                const Text('Versi ini wajib dipasang untuk melanjutkan.'),
-              ],
-              if (_tahap == _Tahap.mengunduh) ...[
-                const SizedBox(height: 16),
-                LinearProgressIndicator(value: _kemajuan),
-                const SizedBox(height: 6),
-                Text(
-                  _menungguJaringan
-                      ? 'Menunggu koneksi internet... unduhan dilanjutkan otomatis.'
-                      : persen == null
-                      ? 'Menyiapkan unduhan...'
-                      : 'Mengunduh $persen%',
-                ),
-              ],
-              if (_tahap == _Tahap.memasang) ...[
-                const SizedBox(height: 16),
-                const Text(
-                  'Pilih "Perbarui" di jendela pemasangan, lalu "Buka" untuk menjalankan versi baru.',
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Pertama kali, Android meminta izin "Izinkan dari sumber ini". Aktifkan untuk SMART, lalu kembali dan tekan "Pasang lagi".',
-                  style: TextStyle(fontSize: 13),
-                ),
-              ],
-              if (_galat != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  _galat!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+            actions: [
+              if (tahap == TahapPembaruan.mengunduh) ...[
+                TextButton(onPressed: _c.batal, child: const Text('Batal')),
+                if (!widget.wajib)
+                  FilledButton(
+                    onPressed: _tutup,
+                    child: const Text('Sembunyikan'),
+                  ),
+              ] else ...[
+                if (!widget.wajib)
+                  TextButton(onPressed: _tutup, child: const Text('Nanti')),
+                FilledButton(
+                  onPressed: tahap == TahapPembaruan.memasang
+                      ? _c.pasang
+                      : _perbarui,
+                  child: Text(switch (tahap) {
+                    TahapPembaruan.gagal =>
+                      _c.bisaLanjut ? 'Lanjutkan' : 'Coba lagi',
+                    TahapPembaruan.memasang => 'Pasang lagi',
+                    _ => 'Perbarui sekarang',
+                  }),
                 ),
               ],
             ],
           ),
-        ),
-        actions: [
-          if (!widget.wajib && _tahap != _Tahap.mengunduh)
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Nanti'),
-            ),
-          if (_tahap == _Tahap.mengunduh)
-            TextButton(
-              onPressed: () {
-                _batal?.cancel();
-                setState(() => _tahap = _Tahap.siap);
-              },
-              child: const Text('Batal'),
-            ),
-          if (_tahap != _Tahap.mengunduh)
-            FilledButton(
-              onPressed: _unduhDanPasang,
-              child: Text(switch (_tahap) {
-                _Tahap.gagal =>
-                  _galat?.contains('Lanjutkan') == true
-                      ? 'Lanjutkan'
-                      : 'Coba lagi',
-                _Tahap.memasang => 'Pasang lagi',
-                _ => 'Perbarui sekarang',
-              }),
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

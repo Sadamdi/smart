@@ -20,6 +20,7 @@ class Pengguna {
     this.notifEmail = true,
     this.notifPush = true,
     this.profilLanjutan = const {},
+    this.skorBahasa = const {},
   });
 
   final String id;
@@ -42,18 +43,18 @@ class Pengguna {
   final bool notifEmail;
   final bool notifPush;
   final Map<String, dynamic> profilLanjutan;
+  final Map<String, dynamic> skorBahasa;
 
-  /// Kelengkapan profil dari kolom yang dipakai mesin rekomendasi.
+  /// Kelengkapan profil dari tujuh syarat yang paling sering diminta beasiswa (sama dengan web). Kolom lain opsional.
   ({int terisi, int total}) get kelengkapan {
     final nilai = <bool>[
-      (kampus ?? '').isNotEmpty,
-      (jenisKampus ?? '').isNotEmpty,
-      (programStudi ?? '').isNotEmpty,
       (jenjang ?? '').isNotEmpty,
       semester != null,
       (ipk ?? '').isNotEmpty,
+      (jenisKampus ?? '').isNotEmpty,
       (kotaDomisili ?? '').isNotEmpty,
-      minat.isNotEmpty,
+      (kewarganegaraan ?? '').isNotEmpty,
+      (tanggalLahir ?? '').isNotEmpty,
     ];
     return (terisi: nilai.where((x) => x).length, total: nilai.length);
   }
@@ -85,6 +86,7 @@ class Pengguna {
     profilLanjutan: Map<String, dynamic>.from(
       j['profil_lanjutan'] as Map? ?? {},
     ),
+    skorBahasa: Map<String, dynamic>.from(j['skor_bahasa'] as Map? ?? {}),
   );
 }
 
@@ -103,8 +105,18 @@ class ProfilMasukan {
     this.kondisiKhusus,
     this.catatanTambahan,
     this.profilLanjutan,
+    this.tanggalLahir,
+    this.ipsTerakhir,
+    this.penghasilanOrangTua,
+    this.kewarganegaraan,
+    this.skorBahasa,
   });
 
+  final String? tanggalLahir;
+  final double? ipsTerakhir;
+  final int? penghasilanOrangTua;
+  final String? kewarganegaraan;
+  final Map<String, dynamic>? skorBahasa;
   final String? nama;
   final String? kampus;
   final String? jenisKampus;
@@ -131,5 +143,10 @@ class ProfilMasukan {
     if (kondisiKhusus != null) 'kondisi_khusus': kondisiKhusus,
     if (catatanTambahan != null) 'catatan_tambahan': catatanTambahan,
     if (profilLanjutan != null) 'profil_lanjutan': profilLanjutan,
+    if (tanggalLahir != null) 'tanggal_lahir': tanggalLahir,
+    if (ipsTerakhir != null) 'ips_terakhir': ipsTerakhir,
+    if (penghasilanOrangTua != null) 'penghasilan_orang_tua': penghasilanOrangTua,
+    if (kewarganegaraan != null) 'kewarganegaraan': kewarganegaraan,
+    if (skorBahasa != null && skorBahasa!.isNotEmpty) 'skor_bahasa': skorBahasa,
   };
 }

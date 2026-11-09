@@ -7,6 +7,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+# flutter menulis peringatan (mis. kunci startup) ke stderr; itu bukan galat. Kegagalan dicek lewat $LASTEXITCODE.
+function Jalankan([scriptblock]$cmd) { $p = $ErrorActionPreference; $ErrorActionPreference = "Continue"; try { & $cmd 2>&1 | ForEach-Object { "$_" } } finally { $ErrorActionPreference = $p } }
 $Root = Resolve-Path (Join-Path $PSScriptRoot "..")
 Set-Location $Root
 
@@ -35,14 +37,14 @@ New-Item -ItemType Directory -Force -Path $releasesDir | Out-Null
 $define = "API_BASE_URL=$ApiBaseUrl"
 
 Write-Host "==> SMART $versionFull | API: $ApiBaseUrl"
-flutter pub get
+Jalankan { flutter pub get }
 if ($LASTEXITCODE -ne 0) { throw "flutter pub get gagal" }
 
 $targets = @{ arm64 = "android-arm64"; arm32 = "android-arm"; x64 = "android-x64" }
 foreach ($abi in $Abis) {
   $t = @{ Target = $targets[$abi]; Name = $abi }
   Write-Host "==> Build $($t.Name)"
-  flutter build apk --release --target-platform $t.Target --dart-define=$define $manifestDefine
+  Jalankan { flutter build apk --release --target-platform $t.Target --dart-define=$define $manifestDefine }
   if ($LASTEXITCODE -ne 0) { throw "flutter build $($t.Name) gagal" }
   Copy-Item (Join-Path $Root "build\app\outputs\flutter-apk\app-release.apk") (Join-Path $releasesDir "smart-$version-$($t.Name).apk") -Force
 }
