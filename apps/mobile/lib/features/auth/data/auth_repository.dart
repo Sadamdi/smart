@@ -33,7 +33,10 @@ class AuthRepository {
         penyegar: d['token_penyegar'] as String,
       ),
     );
-    return Pengguna.fromJson(d['pengguna'] as Map<String, dynamic>);
+    // Login hanya mengembalikan token; pendaftaran mengembalikan token beserta pengguna.
+    final p = d['pengguna'];
+    if (p is Map<String, dynamic>) return Pengguna.fromJson(p);
+    return saya();
   }
 
   Future<Pengguna> saya() async {

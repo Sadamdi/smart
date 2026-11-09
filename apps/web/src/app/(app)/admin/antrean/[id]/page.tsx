@@ -38,6 +38,7 @@ function Formulir({ d }: { d: DetailAdmin }) {
   const simpan = useAksi((m: ReturnType<typeof muatanPerbaikan>) => kirim(`/admin/beasiswa/${d.id}`, "PUT", m), ["admin", "beasiswa", d.id]);
   const terbit = useAksi(() => kirim(`/admin/beasiswa/${d.id}/terbitkan`, "POST"));
   const tolak = useAksi(() => kirim(`/admin/beasiswa/${d.id}/tolak`, "POST", { alasan }));
+  const validasiAi = useAksi(() => kirim(`/admin/beasiswa/${d.id}/validasi-ai`, "POST"));
 
   function siapkan() {
     setGalatLokal(null);
@@ -50,7 +51,7 @@ function Formulir({ d }: { d: DetailAdmin }) {
     }
   }
   const set = <K extends keyof IsianValidasi>(k: K, v: IsianValidasi[K]) => setI({ ...i, [k]: v });
-  const galat = simpan.error ?? terbit.error ?? tolak.error;
+  const galat = simpan.error ?? terbit.error ?? tolak.error ?? validasiAi.error;
 
   return (
     <div className="grid gap-6 lg:grid-cols-3">
@@ -157,6 +158,14 @@ function Formulir({ d }: { d: DetailAdmin }) {
               }}
             >
               Simpan perubahan
+            </Tombol>
+            <Tombol
+              varian="sekunder"
+              className="w-full"
+              disabled={validasiAi.isPending}
+              onClick={() => validasiAi.mutate(undefined, { onSuccess: selesai })}
+            >
+              {validasiAi.isPending ? "AI sedang membaca laman resmi..." : "Validasi dengan AI (otomatis)"}
             </Tombol>
             <Tombol
               className="w-full"
