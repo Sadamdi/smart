@@ -45,7 +45,7 @@ class KartuBeasiswa extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Warna.putih,
+        color: Warna.kartu,
         borderRadius: BorderRadius.circular(Jari.kartu),
         boxShadow: bayanganKartu,
       ),

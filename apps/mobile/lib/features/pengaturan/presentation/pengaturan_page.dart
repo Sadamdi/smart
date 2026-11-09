@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
+import '../../../core/tema_provider.dart';
 import '../../../core/update/app_update_checker.dart';
 import '../../../core/update/versi_aplikasi.dart';
 import '../../auth/presentation/auth_controller.dart';
@@ -44,6 +45,35 @@ class PengaturanPage extends ConsumerWidget {
                   title: const Text('Pengingat push di ponsel'),
                   value: p.notifPush,
                   onChanged: (v) => ubah(email: p.notifEmail, push: v),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Tampilan',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                SegmentedButton<ThemeMode>(
+                  showSelectedIcon: false,
+                  segments: const [
+                    ButtonSegment(
+                      value: ThemeMode.system,
+                      icon: Icon(Icons.brightness_auto),
+                      label: Text('Sistem'),
+                    ),
+                    ButtonSegment(
+                      value: ThemeMode.light,
+                      icon: Icon(Icons.light_mode_outlined),
+                      label: Text('Terang'),
+                    ),
+                    ButtonSegment(
+                      value: ThemeMode.dark,
+                      icon: Icon(Icons.dark_mode_outlined),
+                      label: Text('Gelap'),
+                    ),
+                  ],
+                  selected: {ref.watch(temaProvider)},
+                  onSelectionChanged: (s) =>
+                      ref.read(temaProvider.notifier).atur(s.first),
                 ),
                 const SizedBox(height: 16),
                 Text(

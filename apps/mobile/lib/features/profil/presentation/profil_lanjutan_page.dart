@@ -252,7 +252,7 @@ class _ProfilLanjutanPageState extends ConsumerState<ProfilLanjutanPage> {
           if (_galat != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Text(_galat!, style: const TextStyle(color: Warna.error)),
+              child: Text(_galat!, style: TextStyle(color: Warna.error)),
             ),
           FilledButton(
             onPressed: _kirim ? null : _simpan,

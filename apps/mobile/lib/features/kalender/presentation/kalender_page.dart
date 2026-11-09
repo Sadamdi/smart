@@ -268,7 +268,7 @@ class _GridBulan extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Warna.putih,
+        color: Warna.kartu,
         borderRadius: BorderRadius.circular(Jari.kartu),
         boxShadow: bayanganKartu,
       ),
@@ -327,11 +327,11 @@ class _GridBulan extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.circle, size: 8, color: Warna.error),
+              Icon(Icons.circle, size: 8, color: Warna.error),
               const SizedBox(width: 4),
               Text('Tenggat', style: t.bodySmall),
               const SizedBox(width: 16),
-              const Icon(Icons.circle, size: 8, color: Warna.primary),
+              Icon(Icons.circle, size: 8, color: Warna.primary),
               const SizedBox(width: 4),
               Text('Tugas pribadi', style: t.bodySmall),
             ],
@@ -379,7 +379,7 @@ class _Sel extends StatelessWidget {
               ),
             ),
             if (tugas)
-              const Positioned(
+              Positioned(
                 bottom: 3,
                 child: Icon(Icons.circle, size: 5, color: Warna.primary),
               ),
@@ -413,13 +413,13 @@ class _BarisAcara extends StatelessWidget {
         boxShadow: bayanganKartu,
       ),
       child: Material(
-        color: Warna.putih,
+        color: Warna.kartu,
         borderRadius: BorderRadius.circular(Jari.kartuDalam),
         clipBehavior: Clip.antiAlias,
         child: ListTile(
           onTap: onBuka,
           leading: acara.tenggat
-              ? const CircleAvatar(
+              ? CircleAvatar(
                   backgroundColor: Warna.errorSoft,
                   child: Icon(Icons.timer_outlined, color: Warna.error),
                 )
@@ -469,7 +469,7 @@ class _KartuChecklist extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Warna.putih,
+        color: Warna.kartu,
         borderRadius: BorderRadius.circular(Jari.kartu),
         boxShadow: bayanganKartu,
       ),
