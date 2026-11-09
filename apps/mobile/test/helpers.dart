@@ -141,6 +141,6 @@ Widget aplikasi(ServerPalsu s, {bool sudahMasuk = true}) {
         )..httpClientAdapter = s,
       ),
     ],
-    child: const SmartApp(googleFonts: false),
+    child: const SmartApp(googleFonts: false, pembuka: false),
   );
 }

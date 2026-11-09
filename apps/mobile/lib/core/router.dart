@@ -21,6 +21,11 @@ class _Segarkan extends ChangeNotifier {
   void ping() => notifyListeners();
 }
 
+/// Kunci navigator utama; dipakai pemeriksa pembaruan untuk menampilkan dialog di atas halaman mana pun.
+final navigatorKeyProvider = Provider<GlobalKey<NavigatorState>>(
+  (ref) => GlobalKey<NavigatorState>(),
+);
+
 /// Router mengikuti status masuk: belum masuk selalu ke layar masuk.
 final routerProvider = Provider<GoRouter>((ref) {
   final segarkan = _Segarkan();
@@ -28,6 +33,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(segarkan.dispose);
 
   return GoRouter(
+    navigatorKey: ref.read(navigatorKeyProvider),
     initialLocation: '/',
     refreshListenable: segarkan,
     redirect: (context, state) {
