@@ -253,9 +253,9 @@ ThemeData buatTema({bool googleFonts = true, Palet w = Palet.terang}) {
       style: FilledButton.styleFrom(
         backgroundColor: w.primary,
         foregroundColor: Warna.putih,
-        minimumSize: const Size.fromHeight(48),
+        minimumSize: const Size.fromHeight(52),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Jari.kartuDalam),
+          borderRadius: BorderRadius.circular(14),
         ),
         textStyle: tema.labelLarge,
       ),
@@ -263,10 +263,10 @@ ThemeData buatTema({bool googleFonts = true, Palet w = Palet.terang}) {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: w.primary,
-        minimumSize: const Size.fromHeight(44),
+        minimumSize: const Size.fromHeight(48),
         side: BorderSide(color: w.outline),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Jari.kartuDalam),
+          borderRadius: BorderRadius.circular(14),
         ),
         textStyle: tema.labelLarge,
       ),
@@ -278,8 +278,17 @@ ThemeData buatTema({bool googleFonts = true, Palet w = Palet.terang}) {
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: w.kartu,
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      height: 68,
       indicatorColor: w.container3,
+      indicatorShape: const StadiumBorder(),
+      iconTheme: WidgetStateProperty.resolveWith(
+        (s) => IconThemeData(
+          color: s.contains(WidgetState.selected) ? w.primary : w.muted,
+        ),
+      ),
       labelTextStyle: WidgetStatePropertyAll(
         tema.labelSmall?.copyWith(letterSpacing: 0),
       ),
