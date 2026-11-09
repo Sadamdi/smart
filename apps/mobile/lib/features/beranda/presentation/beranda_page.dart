@@ -41,75 +41,64 @@ class BerandaPage extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
-            if (p != null && (p.jenjang ?? '').isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: ChipStatus(
-                    label: [
+            _Hero(
+              nama: p?.namaDepan ?? 'Mahasiswa',
+              info: p != null && (p.jenjang ?? '').isNotEmpty
+                  ? [
                       if (p.semester != null) 'Semester ${p.semester}',
                       p.jenjang!,
                       if ((p.ipk ?? '').isNotEmpty) 'IPK ${p.ipk}',
-                    ].join(' · '),
+                    ].join(' · ')
+                  : null,
+              terisi: kel?.terisi ?? 0,
+              total: kel?.total ?? 0,
+              onLengkapi: () => context.go('/profil'),
+              ringkasan: ringkasan.when(
+                loading: () => const SizedBox(
+                  height: 64,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-              ),
-            Text(
-              'Halo, ${p?.namaDepan ?? 'Mahasiswa'}',
-              style: t.headlineMedium,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Lihat beasiswa yang paling sesuai dengan profilmu dan tenggat yang perlu dikejar.',
-              style: t.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            if (kel != null) _KartuProfil(terisi: kel.terisi, total: kel.total),
-            const SizedBox(height: 20),
-            const JudulBagian('Ringkasan Rekomendasi'),
-            const SizedBox(height: 8),
-            ringkasan.when(
-              loading: () => const SizedBox(height: 120, child: MemuatState()),
-              error: (e, _) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: GalatState(
-                  pesan: pesanGalat(e),
-                  cobaLagi: () => ref.invalidate(ringkasanRekomendasiProvider),
+                error: (e, _) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          pesanGalat(e),
+                          style: t.bodySmall?.copyWith(color: Colors.white),
+                        ),
+                      ),
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () =>
+                            ref.invalidate(ringkasanRekomendasiProvider),
+                        child: const Text('Coba lagi'),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              data: (r) => IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                data: (r) => Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Metrik(
-                        angka: '${r.memenuhi}',
-                        label: 'Memenuhi',
-                        keterangan: 'Semua syarat',
-                        ikon: Icons.check_circle_outline,
-                        warna: Warna.sukses,
-                        latarIkon: Warna.suksesSoft,
-                      ),
+                    _Angka('${r.memenuhi}', 'Memenuhi', const Color(0xFF7BE0A4)),
+                    _Pemisah(),
+                    _Angka(
+                      '${r.hampirMemenuhi}',
+                      'Hampir memenuhi',
+                      const Color(0xFFFFD27A),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Metrik(
-                        angka: '${r.hampirMemenuhi}',
-                        label: 'Hampir memenuhi',
-                        keterangan: 'Kurang sedikit',
-                        ikon: Icons.timelapse,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Metrik(
-                        angka: '${r.belumMemenuhi}',
-                        label: 'Belum memenuhi',
-                        keterangan: 'Syarat belum terpenuhi',
-                        ikon: Icons.lock_outline,
-                        warna: Warna.muted,
-                      ),
+                    _Pemisah(),
+                    _Angka(
+                      '${r.belumMemenuhi}',
+                      'Belum memenuhi',
+                      Colors.white70,
                     ),
                   ],
                 ),
@@ -232,47 +221,153 @@ class BerandaPage extends ConsumerWidget {
   }
 }
 
-class _KartuProfil extends StatelessWidget {
-  const _KartuProfil({required this.terisi, required this.total});
+class _Hero extends StatelessWidget {
+  const _Hero({
+    required this.nama,
+    required this.info,
+    required this.terisi,
+    required this.total,
+    required this.onLengkapi,
+    required this.ringkasan,
+  });
 
+  final String nama;
+  final String? info;
   final int terisi;
   final int total;
+  final VoidCallback onLengkapi;
+  final Widget ringkasan;
 
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final lengkap = terisi == total;
+    final lengkap = total > 0 && terisi == total;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       decoration: BoxDecoration(
-        color: Warna.kartu,
-        borderRadius: BorderRadius.circular(Jari.kartu),
-        boxShadow: bayanganKartu,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF2F6FC0), Color(0xFF143F7C)],
+        ),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.fact_check_outlined, color: Warna.primary),
-              const SizedBox(width: 10),
-              Expanded(child: Text('Kelengkapan Profil', style: t.titleMedium)),
-              TextButton(
-                onPressed: () => context.go('/profil'),
-                child: Text(lengkap ? 'Lihat' : 'Lengkapi'),
+          if (info != null)
+            Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(Jari.bulat),
               ),
-            ],
-          ),
+              child: Text(
+                info!,
+                style: t.labelMedium?.copyWith(color: Colors.white),
+              ),
+            ),
           Text(
-            '$terisi dari $total data akademik terisi. Data yang lengkap membuat rekomendasi lebih tepat.',
-            style: t.bodyMedium,
+            'Halo, $nama',
+            style: t.headlineMedium?.copyWith(color: Colors.white),
           ),
-          const SizedBox(height: 10),
-          BarProgres(nilai: terisi / total),
+          const SizedBox(height: 4),
+          Text(
+            'Lihat beasiswa yang paling sesuai dengan profilmu dan tenggat yang perlu dikejar.',
+            style: t.bodyMedium?.copyWith(
+              color: Colors.white.withValues(alpha: 0.85),
+            ),
+          ),
+          const SizedBox(height: 18),
+          ringkasan,
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Kelengkapan Profil',
+                        style: t.labelLarge?.copyWith(color: Colors.white),
+                      ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(Jari.bulat),
+                        child: LinearProgressIndicator(
+                          value: total == 0 ? 0 : terisi / total,
+                          minHeight: 6,
+                          backgroundColor: Colors.white.withValues(alpha: 0.25),
+                          valueColor: const AlwaysStoppedAnimation(
+                            Color(0xFFF5B73B),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$terisi dari $total data akademik terisi',
+                        style: t.bodySmall?.copyWith(color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(foregroundColor: Colors.white),
+                  onPressed: onLengkapi,
+                  child: Text(lengkap ? 'Lihat' : 'Lengkapi'),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
+}
+
+class _Angka extends StatelessWidget {
+  const _Angka(this.angka, this.label, this.warna);
+
+  final String angka;
+  final String label;
+  final Color warna;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            angka,
+            style: t.headlineMedium?.copyWith(color: warna, fontSize: 32),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: t.bodySmall?.copyWith(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Pemisah extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 1,
+    height: 40,
+    color: Colors.white.withValues(alpha: 0.2),
+  );
 }
 
 class _BarisTenggat extends StatelessWidget {
