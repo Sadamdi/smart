@@ -15,7 +15,7 @@ describe("format", () => {
     const hariIni = new Date(2026, 10, 3);
     expect(sisaHari("2026-11-10", hariIni)).toBe(7);
     expect(sisaHari("2026-11-01", hariIni)).toBe(-2);
-    expect(labelSisa(undefined)).toBe("Tenggat belum diketahui");
+    expect(labelSisa(undefined)).toBe("Cek laman resmi");
   });
 });
 

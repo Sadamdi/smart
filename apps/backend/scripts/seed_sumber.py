@@ -101,6 +101,22 @@ SUMBER_AWAL = [
         "30 5 * * *",
         True,
     ),
+    # Tambahan 9 November 2026 (laman publik tanpa login yang dapat dibaca robot):
+    ("LPDP Kemenkeu", "https://lpdp.kemenkeu.go.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    ("Pertamina Foundation", "https://pertaminafoundation.org/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    (
+        "Generasi Baru Indonesia (Bank Indonesia)",
+        "https://www.bi.go.id/id/sdm/genbi/default.aspx",
+        "pantau_otomatis",
+        "Indonesia",
+        "30 5 * * *",
+        True,
+    ),
+    ("Beasiswa Kemenag", "https://beasiswa.kemenag.go.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    ("Yayasan Tunas Muda", "https://www.ytm.or.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    ("Beasiswa.id", "https://www.beasiswa.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    ("Info Beasiswa", "https://www.infobeasiswa.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    ("INDBeasiswa beranda", "https://indbeasiswa.com/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
 ]
 
 

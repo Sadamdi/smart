@@ -55,7 +55,7 @@ export default function DetailBeasiswa() {
                   </span>
                 ))}
                 <span className="rounded-full bg-c1 px-3 py-1 text-navy">
-                  Tenggat {tanggalIndo(b.tenggat)} ({labelSisa(b.tenggat)})
+                  Tenggat {b.tenggat ? `${tanggalIndo(b.tenggat)} (${labelSisa(b.tenggat)})` : "belum diumumkan, cek tautan resmi"}
                 </span>
               </div>
             </div>

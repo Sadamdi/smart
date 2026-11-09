@@ -193,7 +193,7 @@ def notifikasi(sesi: SesiDep, p: SaatIni) -> Amplop[list[NotifikasiOut]]:
     sesi.commit()
     hasil = []
     for n, b in pasangan:
-        judul, pesan = _pesan(b.tenggat, hari, b.nama)
+        judul, pesan = _pesan(n.tanggal_acuan, hari, b.nama)
         hasil.append(
             NotifikasiOut(
                 id=n.id,

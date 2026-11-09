@@ -82,8 +82,6 @@ def test_alur_validasi_admin_sampai_terbit_dan_terlihat_mahasiswa(klien_db, sesi
     )
     antre = klien_db.get(f"{B}/admin/antrean-validasi", headers=admin).json()["data"]
     assert any(x["id"] == str(b.id) and x["alasan_ditandai"] == "tenggat kosong" for x in antre)
-    # tanpa tenggat tidak boleh terbit
-    assert klien_db.post(f"{B}/admin/beasiswa/{b.id}/terbitkan", headers=admin).status_code == 422
     # tenggat kurang dari tiga hari ditolak
     klien_db.put(f"{B}/admin/beasiswa/{b.id}", headers=admin, json={"tenggat": str(HARI + timedelta(days=1))})
     assert klien_db.post(f"{B}/admin/beasiswa/{b.id}/terbitkan", headers=admin).status_code == 422
@@ -102,6 +100,15 @@ def test_alur_validasi_admin_sampai_terbit_dan_terlihat_mahasiswa(klien_db, sesi
     assert t.status_code == 200 and t.json()["data"]["status"] == "terbit"
     assert klien_db.get(f"{B}/beasiswa/{b.id}", headers=mhs).status_code == 200
     assert klien_db.post(f"{B}/admin/beasiswa/{b.id}/terbitkan", headers=admin).status_code == 409
+
+
+def test_admin_dapat_menerbitkan_tanpa_tenggat_tertulis(klien_db, sesi):
+    admin, mhs = _admin(klien_db, sesi), _akun(klien_db)
+    b = _beasiswa(sesi, _sumber(sesi), "Beasiswa Tenggat Belum Diumumkan", status="menunggu_validasi")
+    t = klien_db.post(f"{B}/admin/beasiswa/{b.id}/terbitkan", headers=admin)
+    assert t.status_code == 200 and t.json()["data"]["tenggat"] is None
+    d = klien_db.get(f"{B}/beasiswa/{b.id}", headers=mhs)
+    assert d.status_code == 200 and d.json()["data"]["tenggat"] is None
 
 
 def test_admin_menolak_dan_input_manual_dan_sumber(klien_db, sesi):

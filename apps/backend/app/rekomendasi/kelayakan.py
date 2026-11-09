@@ -200,7 +200,7 @@ def nilai_kelayakan(
 ) -> HasilKelayakan:
     hasil = [h for j, b in syarat if (h := periksa_syarat(j, b, profil, hari_ini, tol)) is not None]
     if not hasil:
-        return HasilKelayakan(MEMENUHI, 1.0, ["Belum ada syarat terukur yang tercatat; periksa tautan resmi"], [])
+        return HasilKelayakan(MEMENUHI, 0.6, ["Belum ada syarat terukur yang tercatat; periksa tautan resmi"], [])
     alasan = [h.alasan for h in hasil if h.status == OK and h.alasan]
     kurang = [h.kekurangan for h in hasil if h.status in (TOLERAN, TIDAK_DIKETAHUI) and h.kekurangan]
     skor = sum(h.nilai for h in hasil) / len(hasil)
