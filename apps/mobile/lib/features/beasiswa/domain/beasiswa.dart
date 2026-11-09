@@ -1,5 +1,14 @@
 import '../../../core/format.dart';
 
+/// API mengirim jenjang sebagai daftar (mis. [S1, S2]); ditampilkan sebagai "S1, S2".
+String? teksJenjang(Object? v) {
+  if (v is List) {
+    final t = v.map((e) => '$e').where((e) => e.isNotEmpty).join(', ');
+    return t.isEmpty ? null : t;
+  }
+  return v is String && v.isNotEmpty ? v : null;
+}
+
 class BeasiswaRingkas {
   const BeasiswaRingkas({
     required this.id,
@@ -24,7 +33,7 @@ class BeasiswaRingkas {
     nama: j['nama'] as String,
     penyelenggara: j['penyelenggara'] as String?,
     negara: j['negara'] as String?,
-    jenjang: j['jenjang'] as String?,
+    jenjang: teksJenjang(j['jenjang']),
     tenggat: urai(j['tenggat'] as String?),
     tautanResmi: (j['tautan_resmi'] ?? '') as String,
   );

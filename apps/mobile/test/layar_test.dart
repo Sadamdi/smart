@@ -134,7 +134,6 @@ void main() {
               'token_akses': 'a',
               'token_penyegar': 'p',
               'kedaluwarsa_detik': 900,
-              'pengguna': penggunaJson(),
             }),
           },
         ),

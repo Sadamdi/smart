@@ -107,6 +107,11 @@ class KartuBeasiswa extends StatelessWidget {
                             ? 'Sudah lewat'
                             : '${teksSisaHari(tenggat, sekarang: sekarang)} (${tenggat.day} ${bulanPendek(tenggat.month)})',
                         dekat: sisa <= 7,
+                      )
+                    else
+                      ChipStatus.tenggat(
+                        'Tenggat belum diumumkan',
+                        dekat: false,
                       ),
                   ],
                 ),
