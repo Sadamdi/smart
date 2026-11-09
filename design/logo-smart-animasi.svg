@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SMART">
+  <defs>
+    <linearGradient id="bg" x1="8" y1="4" x2="58" y2="62" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2F6FC0"/>
+      <stop offset="1" stop-color="#143F7C"/>
+    </linearGradient>
+  </defs>
+  <style>
+    .kotak{transform-origin:32px 32px;animation:muncul .55s cubic-bezier(.2,.9,.3,1.2) both}
+    .alas{animation:naik .5s .35s ease-out both}
+    .topi{animation:turun .55s .15s cubic-bezier(.2,.9,.3,1) both}
+    .jumbai{animation:naik .4s .75s ease-out both}
+    .bintang{transform-box:fill-box;transform-origin:center;animation:kilau 1.6s 1.1s ease-in-out infinite}
+    @keyframes muncul{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+    @keyframes turun{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+    @keyframes naik{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    @keyframes kilau{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.25) rotate(20deg)}}
+    @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+  </style>
+  <rect class="kotak" width="64" height="64" rx="15" fill="url(#bg)"/>
+  <path class="alas" d="M18 30.5L32 37L46 30.5V39.5C46 43.5 39.5 47.5 32 47.5C24.5 47.5 18 43.5 18 39.5Z" fill="#fff" fill-opacity=".82"/>
+  <path class="topi" d="M32 13L57 24.5L32 36L7 24.5Z" fill="#fff"/>
+  <path class="jumbai" d="M50 27.6V41" stroke="#F5B73B" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+  <path class="bintang" d="M50 40.5L51.7 44.4L55.6 46.1L51.7 47.8L50 51.7L48.3 47.8L44.4 46.1L48.3 44.4Z" fill="#F5B73B"/>
+</svg>
