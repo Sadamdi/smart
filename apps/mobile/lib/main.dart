@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/update/pemeriksa_pembaruan.dart';
 
 void main() {
   runApp(
@@ -23,6 +24,8 @@ class SmartApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: buatTema(googleFonts: googleFonts),
       routerConfig: ref.watch(routerProvider),
+      builder: (context, child) =>
+          PemeriksaPembaruan(child: child ?? const SizedBox.shrink()),
     );
   }
 }
