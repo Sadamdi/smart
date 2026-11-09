@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
+import '../../../core/update/app_update_checker.dart';
+import '../../../core/update/versi_aplikasi.dart';
 import '../../auth/presentation/auth_controller.dart';
 
 class PengaturanPage extends ConsumerWidget {
@@ -42,6 +44,23 @@ class PengaturanPage extends ConsumerWidget {
                   title: const Text('Pengingat push di ponsel'),
                   value: p.notifPush,
                   onChanged: (v) => ubah(email: p.notifEmail, push: v),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Aplikasi',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const TileVersiAplikasi(),
+                ListTile(
+                  leading: const Icon(Icons.system_update_alt),
+                  title: const Text('Periksa pembaruan'),
+                  subtitle: const Text('Unduh versi terbaru bila tersedia'),
+                  onTap: () => AppUpdateChecker.manual(context),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.history),
+                  title: const Text('Catatan rilis'),
+                  onTap: () => AppUpdateChecker.tampilkanCatatan(context),
                 ),
                 const SizedBox(height: 8),
                 const Text(
