@@ -66,9 +66,7 @@ def perbaiki(sesi: Session, beasiswa_id: uuid.UUID, data: dict, syarat: list[dic
 def periksa_boleh_terbit(b: Beasiswa, hari_ini: date) -> None:
     if not b.tautan_resmi or not b.tautan_resmi.startswith(("http://", "https://")):
         raise ValidationFailed("Tautan resmi wajib berupa alamat http atau https")
-    if b.tenggat is None:
-        raise ValidationFailed("Tenggat wajib diisi sebelum diterbitkan")
-    if b.tenggat < hari_ini + timedelta(days=HARI_MINIMAL_TERBIT):
+    if b.tenggat is not None and b.tenggat < hari_ini + timedelta(days=HARI_MINIMAL_TERBIT):
         raise ValidationFailed(f"Tenggat paling cepat {HARI_MINIMAL_TERBIT} hari dari hari ini")
 
 

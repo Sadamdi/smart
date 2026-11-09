@@ -54,7 +54,7 @@ export function KartuBeasiswa({
         )}
       >
         <CalendarDays className="h-4 w-4" aria-hidden />
-        <span>Tenggat {tanggalIndo(beasiswa.tenggat)}</span>
+        <span>Tenggat {beasiswa.tenggat ? tanggalIndo(beasiswa.tenggat) : "belum diumumkan"}</span>
         <span className="ml-auto">{labelSisa(beasiswa.tenggat)}</span>
       </div>
       {children && <div className="mt-4 flex-1">{children}</div>}

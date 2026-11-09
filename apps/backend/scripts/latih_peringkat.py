@@ -30,14 +30,17 @@ from app.models import Interaksi, Pengguna
 from app.rekomendasi.kelayakan import ProfilKelayakan
 from app.rekomendasi.mesin import HasilRekomendasi, susun
 from app.rekomendasi.peringkat import fitur_dari, latih, simpan
-from app.services.rekomendasi import _masukan, profil_dari
+from app.services.rekomendasi import _masukan, profil_dari, teks_tambahan
 
 MIN_PENGGUNA = 20
 MIN_PASANGAN = 200
 LABEL_AKSI = {"klik": 1, "simpan": 2, "rencana_daftar": 3}
 
 
-def _kumpulkan(sesi: Session, hari: date) -> tuple[np.ndarray, np.ndarray, list[int]]:
+DOMAIN_SIMULASI = "@sim.smart.invalid"
+
+
+def _kumpulkan(sesi: Session, hari: date, hanya_simulasi: bool = False) -> tuple[np.ndarray, np.ndarray, list[int]]:
     inter: dict[uuid.UUID, dict[uuid.UUID, int]] = defaultdict(dict)
     for i in sesi.scalars(select(Interaksi)):
         lama = inter[i.pengguna_id].get(i.beasiswa_id, 0)
@@ -48,7 +51,7 @@ def _kumpulkan(sesi: Session, hari: date) -> tuple[np.ndarray, np.ndarray, list[
     grup: list[int] = []
     for pid, label in inter.items():
         p = sesi.get(Pengguna, pid)
-        if p is None:
+        if p is None or (hanya_simulasi and not p.email.endswith(DOMAIN_SIMULASI)):
             continue
         hasil = susun(
             profil_dari(sesi, p),
@@ -57,7 +60,7 @@ def _kumpulkan(sesi: Session, hari: date) -> tuple[np.ndarray, np.ndarray, list[
             masukan,
             hari,
             kondisi_khusus=p.kondisi_khusus,
-            catatan=p.catatan_tambahan,
+            catatan=teks_tambahan(p),
         )
         if len(hasil) < 2:
             continue
@@ -101,6 +104,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dari-interaksi", action="store_true")
     ap.add_argument("--demo-sintetis", action="store_true")
+    ap.add_argument("--simulasi", action="store_true", help="dengan --dari-interaksi: hanya pengguna simulasi")
     a = ap.parse_args()
     if a.dari_interaksi == a.demo_sintetis:
         raise SystemExit("Pilih tepat satu: --dari-interaksi atau --demo-sintetis")
@@ -110,13 +114,13 @@ def main() -> None:
     hari = date.today()
     with Session(create_engine(settings.database_url)) as sesi:
         if a.dari_interaksi:
-            x, y, grup = _kumpulkan(sesi, hari)
+            x, y, grup = _kumpulkan(sesi, hari, a.simulasi)
             if len(grup) < MIN_PENGGUNA or len(y) < MIN_PASANGAN:
                 raise SystemExit(
                     f"Data interaksi belum cukup ({len(grup)} pengguna, {len(y)} pasangan; butuh "
                     f"{MIN_PENGGUNA} pengguna dan {MIN_PASANGAN} pasangan). Model tidak dilatih."
                 )
-            versi = f"lgbm-interaksi-{hari:%Y%m%d}"
+            versi = f"lgbm-simulasi-{len(grup)}pengguna-{hari:%Y%m%d}" if a.simulasi else f"lgbm-interaksi-{hari:%Y%m%d}"
         else:
             x, y, grup = _sintetis(sesi, hari)
             versi = f"lgbm-demo-sintetis-{hari:%Y%m%d}"
