@@ -191,7 +191,7 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
                 ('Jenjang', p.jenjang),
                 ('Semester', p.semester?.toString()),
                 ('IPK', p.ipk),
-                ('IPS terakhir', p.ipsTerakhir),
+                ('IPS terakhir (opsional)', p.ipsTerakhir),
                 ('TOEFL', p.skorBahasa['toefl']?.toString()),
                 ('IELTS', p.skorBahasa['ielts']?.toString()),
               ],
@@ -242,7 +242,7 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
                         ? 'Nama tidak boleh kosong.'
                         : null,
                   ),
-                  _Kolom(_kampus, 'Kampus'),
+                  _Kolom(_kampus, 'Kampus (opsional)'),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: DropdownButtonFormField<String>(
@@ -263,7 +263,7 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
                       onChanged: (v) => setState(() => _jenisKampus = v),
                     ),
                   ),
-                  _Kolom(_prodi, 'Program studi'),
+                  _Kolom(_prodi, 'Program studi (opsional)'),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: DropdownButtonFormField<String>(
@@ -290,7 +290,7 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
                   ),
                   _Kolom(
                     _ips,
-                    'IPS terakhir',
+                    'IPS terakhir (opsional)',
                     angka: true,
                     validator: (v) => _wajibAngka(v, 0, 4, 'IPS'),
                   ),
@@ -321,13 +321,13 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
                   _Kolom(_warga, 'Kewarganegaraan', hint: 'Indonesia'),
                   _Kolom(
                     _penghasilan,
-                    'Penghasilan orang tua per bulan (Rp)',
+                    'Penghasilan orang tua per bulan, Rp (opsional)',
                     angka: true,
                   ),
                   _Kolom(_kota, 'Kota domisili'),
                   _Kolom(
                     _minat,
-                    'Minat (pisahkan dengan koma)',
+                    'Minat, pisahkan dengan koma (opsional)',
                     hint: 'teknologi, riset, kepemimpinan',
                   ),
                   Align(
@@ -522,7 +522,7 @@ class _HeaderProfil extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Kelengkapan profil: $terisi dari $total',
+            'Kelengkapan data utama: $terisi dari $total',
             style: t.bodySmall?.copyWith(
               color: Colors.white.withValues(alpha: 0.9),
             ),
