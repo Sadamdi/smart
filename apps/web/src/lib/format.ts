@@ -21,7 +21,7 @@ export function sisaHari(iso?: string | null, sekarang: Date = new Date()): numb
 
 export function labelSisa(iso?: string | null): string {
   const s = sisaHari(iso);
-  if (s === null) return "Tenggat belum diketahui";
+  if (s === null) return "Cek laman resmi";
   if (s < 0) return "Sudah lewat";
   if (s === 0) return "Hari ini";
   return `${s} hari lagi`;
