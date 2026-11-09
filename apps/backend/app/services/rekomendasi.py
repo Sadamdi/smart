@@ -4,7 +4,7 @@ import uuid
 from collections import defaultdict
 from datetime import date
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, insert, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -55,7 +55,9 @@ def profil_dari(sesi: Session, p: Pengguna) -> ProfilKelayakan:
 def _masukan(sesi: Session, hari_ini: date) -> list[MasukanBeasiswa]:
     baris = list(
         sesi.scalars(
-            select(Beasiswa).where(Beasiswa.status == "terbit", Beasiswa.tenggat.is_not(None), Beasiswa.tenggat >= hari_ini)
+            select(Beasiswa).where(
+                Beasiswa.status == "terbit", or_(Beasiswa.tenggat.is_(None), Beasiswa.tenggat >= hari_ini)
+            )
         )
     )
     syarat: dict[uuid.UUID, list[tuple[str, dict | None]]] = defaultdict(list)
@@ -82,19 +84,23 @@ def hitung(sesi: Session, p: Pengguna, hari_ini: date) -> list[HasilRekomendasi]
         hasil = urut_ulang(hasil, model, hari_ini)
         versi = f"{VERSI_MODEL}+{model.versi}"
     sesi.execute(delete(Rekomendasi).where(Rekomendasi.pengguna_id == p.id))
-    for h in hasil:
-        sesi.add(
-            Rekomendasi(
-                pengguna_id=p.id,
-                beasiswa_id=h.beasiswa_id,
-                skor=h.skor,
-                skor_kelayakan=h.skor_kelayakan,
-                skor_kemiripan=h.skor_kemiripan,
-                kategori=h.kategori,
-                alasan=h.alasan,
-                catatan_kekurangan=h.catatan_kekurangan,
-                versi_model=versi,
-            )
+    if hasil:  # satu sisipan massal: sisipan per baris ke basis data jarak jauh membuat hitung ulang puluhan detik
+        sesi.execute(
+            insert(Rekomendasi),
+            [
+                {
+                    "pengguna_id": p.id,
+                    "beasiswa_id": h.beasiswa_id,
+                    "skor": h.skor,
+                    "skor_kelayakan": h.skor_kelayakan,
+                    "skor_kemiripan": h.skor_kemiripan,
+                    "kategori": h.kategori,
+                    "alasan": h.alasan,
+                    "catatan_kekurangan": h.catatan_kekurangan,
+                    "versi_model": versi,
+                }
+                for h in hasil
+            ],
         )
     p.vektor_profil = PengemasHash().kemas(
         teks_profil(p.minat, p.program_studi, p.jenjang, p.kondisi_khusus, teks_tambahan(p))
@@ -112,13 +118,17 @@ def daftar(
     stmt = (
         select(Rekomendasi, Beasiswa)
         .join(Beasiswa, Beasiswa.id == Rekomendasi.beasiswa_id)
-        .where(Rekomendasi.pengguna_id == p.id, Beasiswa.status == "terbit", Beasiswa.tenggat >= hari_ini)
+        .where(
+            Rekomendasi.pengguna_id == p.id,
+            Beasiswa.status == "terbit",
+            or_(Beasiswa.tenggat.is_(None), Beasiswa.tenggat >= hari_ini),
+        )
     )
     if kategori:
         stmt = stmt.where(Rekomendasi.kategori == kategori)
     urutan = {"memenuhi": 0, "hampir_memenuhi": 1, "belum_memenuhi": 2}
     baris = [(r, b) for r, b in sesi.execute(stmt).all()]
-    baris.sort(key=lambda x: (urutan[x[0].kategori], -float(x[0].skor), x[1].tenggat))
+    baris.sort(key=lambda x: (urutan[x[0].kategori], -float(x[0].skor), x[1].tenggat or date.max))
     return baris
 
 

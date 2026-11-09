@@ -163,6 +163,24 @@ def terbitkan(beasiswa_id: uuid.UUID, sesi: SesiDep) -> Amplop[DetailAdmin]:
 
 
 @router.post(
+    "/beasiswa/{beasiswa_id}/validasi-ai",
+    summary="Validasi ulang satu beasiswa dengan AI (membaca laman resmi lalu menerbitkan bila terbukti)",
+    response_model=Amplop[DetailAdmin],
+)
+def validasi_ai_satu(beasiswa_id: uuid.UUID, sesi: SesiDep, settings: SettingsDep) -> Amplop[DetailAdmin]:
+    b, _, _ = layanan.detail(sesi, beasiswa_id)
+    if b.status in ("ditolak", "kedaluwarsa"):
+        raise NotFound("Hanya beasiswa terbit atau menunggu yang dapat divalidasi ulang")
+    try:
+        pemantau_ai.validasi_beasiswa(sesi, settings, b, date.today())
+    except UpstreamUnavailable:
+        sesi.rollback()
+        raise
+    sesi.commit()
+    return Amplop(data=_detail(*layanan.detail(sesi, beasiswa_id)))
+
+
+@router.post(
     "/beasiswa/{beasiswa_id}/tolak",
     summary="Tolak beasiswa dengan alasan",
     response_model=Amplop[DetailAdmin],

@@ -30,10 +30,10 @@ def _kata_kunci(pesan: str) -> list[str]:
 
 def cari_beasiswa(sesi: Session, pesan: str, hari_ini: date) -> list[Beasiswa]:
     kunci = _kata_kunci(pesan)
-    stmt = select(Beasiswa).where(Beasiswa.status == "terbit", Beasiswa.tenggat.is_not(None), Beasiswa.tenggat >= hari_ini)
+    stmt = select(Beasiswa).where(Beasiswa.status == "terbit", or_(Beasiswa.tenggat.is_(None), Beasiswa.tenggat >= hari_ini))
     if kunci:
         stmt = stmt.where(or_(*[Beasiswa.nama.ilike(f"%{k}%") | Beasiswa.penyelenggara.ilike(f"%{k}%") for k in kunci]))
-    return list(sesi.scalars(stmt.order_by(Beasiswa.tenggat).limit(KONTEKS_MAKS)))
+    return list(sesi.scalars(stmt.order_by(func.coalesce(Beasiswa.tenggat, date.max)).limit(KONTEKS_MAKS)))
 
 
 def susun_data(sesi: Session, p: Pengguna, pesan: str, hari_ini: date) -> tuple[str, list[uuid.UUID]]:
@@ -50,7 +50,8 @@ def susun_data(sesi: Session, p: Pengguna, pesan: str, hari_ini: date) -> tuple[
         rujukan.append(b.id)
     for b in cari_beasiswa(sesi, pesan, hari_ini):
         baris.append(
-            f"Beasiswa: {b.nama} oleh {b.penyelenggara}, tenggat {b.tenggat}, manfaat {b.manfaat}, tautan {b.tautan_resmi}"
+            f"Beasiswa: {b.nama} oleh {b.penyelenggara}, tenggat {b.tenggat or 'belum diumumkan'}, "
+            f"manfaat {b.manfaat}, tautan {b.tautan_resmi}"
         )
         if b.id not in rujukan:
             rujukan.append(b.id)

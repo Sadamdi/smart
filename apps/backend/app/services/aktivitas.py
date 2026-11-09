@@ -17,14 +17,13 @@ from app.models import (
     Pengguna,
     TugasPribadi,
 )
+from app.repositories.beasiswa import _terlihat, _urut_tenggat
 
 JENDELA_PENGINGAT_HARI = 7
 
 
 def _beasiswa_terlihat(sesi: Session, beasiswa_id: uuid.UUID, hari_ini: date) -> Beasiswa:
-    b = sesi.scalar(
-        select(Beasiswa).where(Beasiswa.id == beasiswa_id, Beasiswa.status == "terbit", Beasiswa.tenggat >= hari_ini)
-    )
+    b = sesi.scalar(select(Beasiswa).where(Beasiswa.id == beasiswa_id, *_terlihat(hari_ini)))
     if b is None:
         raise NotFound("Beasiswa tidak ditemukan")
     return b
@@ -67,10 +66,9 @@ def tersimpan(sesi: Session, p: Pengguna, hari_ini: date) -> list[tuple[Beasiswa
         .where(
             Interaksi.pengguna_id == p.id,
             Interaksi.aksi == "simpan",
-            Beasiswa.status == "terbit",
-            Beasiswa.tenggat >= hari_ini,
+            *_terlihat(hari_ini),
         )
-        .order_by(Beasiswa.tenggat, Beasiswa.id)
+        .order_by(_urut_tenggat(), Beasiswa.id)
     )
     beasiswa = list(sesi.scalars(stmt))
     rencana: dict[uuid.UUID, str | None] = {}
@@ -120,7 +118,7 @@ def kalender(sesi: Session, p: Pengguna, dari: date, sampai: date, hari_ini: dat
         raise ValidationFailed("rentang maksimal satu tahun")
     acara: list[dict] = []
     for b, _ in tersimpan(sesi, p, hari_ini):
-        if dari <= b.tenggat <= sampai:
+        if b.tenggat is not None and dari <= b.tenggat <= sampai:
             acara.append({"jenis": "tenggat", "tanggal": b.tenggat, "judul": b.nama, "ref_id": b.id, "selesai": False})
     for t in sesi.scalars(
         select(TugasPribadi).where(TugasPribadi.pengguna_id == p.id, TugasPribadi.tanggal.between(dari, sampai))
@@ -162,7 +160,7 @@ def buat_pengingat(sesi: Session, p: Pengguna, hari_ini: date) -> int:
     batas = hari_ini + timedelta(days=JENDELA_PENGINGAT_HARI)
     baru = 0
     for b, _ in tersimpan(sesi, p, hari_ini):
-        if b.tenggat <= batas:
+        if b.tenggat is not None and b.tenggat <= batas:
             hasil = sesi.execute(
                 pg_insert(Notifikasi)
                 .values(pengguna_id=p.id, beasiswa_id=b.id, jenis="tenggat", kanal="push", tanggal_acuan=b.tenggat)

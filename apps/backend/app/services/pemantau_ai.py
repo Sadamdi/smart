@@ -294,7 +294,12 @@ def validasi_beasiswa(sesi: Session, settings: Settings, b: Beasiswa, hari_ini: 
     if b.tenggat is None and tenggat is not None:
         b.tenggat = tenggat
     if b.tenggat is None:
-        return _selesai(b, "menunggu", "Validasi AI: tenggat tidak tertulis jelas di laman resmi. Admin perlu mengisinya.")
+        # Laman resmi memuat program ini tetapi tidak menulis tenggat (pendaftaran berkala atau rolling): terbit
+        # dengan tenggat kosong, ditampilkan sebagai "tenggat belum diumumkan" dan wajib dicek di tautan resmi.
+        if not (b.manfaat or syarat or b.penyelenggara):
+            return _selesai(b, "menunggu", "Validasi AI: isi laman tidak cukup menjelaskan program. Perlu diperiksa admin.")
+        b.status = "terbit"
+        return _selesai(b, "terbit", None)
     if b.tenggat > hari_ini + timedelta(days=TENGGAT_JAUH_HARI):
         return _selesai(b, "menunggu", "Validasi AI: tenggat terlalu jauh untuk dipercaya. Perlu diperiksa admin.")
     if b.tenggat < hari_ini:

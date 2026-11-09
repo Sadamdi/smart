@@ -92,11 +92,11 @@ def test_validasi_menerbitkan_bila_semua_terverifikasi(sesi, monkeypatch):  # no
 
 
 @pytestmark_db
-def test_tenggat_karangan_tidak_menerbitkan(sesi, monkeypatch):  # noqa: F811
+def test_tenggat_karangan_tidak_dipercaya_terbit_tanpa_tenggat(sesi, monkeypatch):  # noqa: F811
     monkeypatch.setattr(llm, "tanya", lambda *a, **k: _jawab(kutipan="kutipan yang tidak ada"))
     b = _beasiswa(sesi)
-    assert pemantau_ai.validasi_beasiswa(sesi, S, b, HARI, teks=LAMAN) == "menunggu"
-    assert b.status == "menunggu_validasi" and "tenggat" in b.alasan_ditandai
+    assert pemantau_ai.validasi_beasiswa(sesi, S, b, HARI, teks=LAMAN) == "terbit"
+    assert b.status == "terbit" and b.tenggat is None  # tenggat karangan AI tidak pernah dipakai
 
 
 @pytestmark_db
@@ -180,3 +180,19 @@ def test_pantau_sitemap_mendaftarkan_alamat_baru_saja(sesi, monkeypatch):  # noq
     assert r == {"ditemukan": 2, "baru": 1}  # alfa sudah ada (kunci ab12); hanya beta baru
     baru = sesi.query(Beasiswa).filter_by(sumber_id=s.id, status="menunggu_validasi").one()
     assert baru.nama == "Beasiswa Beta" and baru.alasan_ditandai.startswith("Dari peta situs")
+
+
+@pytestmark_db
+def test_beasiswa_terbit_tanpa_tenggat_terlihat_di_daftar_dan_rekomendasi(sesi, monkeypatch):  # noqa: F811
+    from app.repositories.beasiswa import BeasiswaRepoSql, FilterBeasiswa
+    from app.services import rekomendasi as layanan
+
+    monkeypatch.setattr(llm, "tanya", lambda *a, **k: _jawab(tenggat=None, kutipan=None))
+    b = _beasiswa(sesi)
+    b.nama = "Beasiswa Tanpa Tenggat Uji " + uuid.uuid4().hex[:6]
+    assert pemantau_ai.validasi_beasiswa(sesi, S, b, HARI, teks=LAMAN) == "terbit"
+    assert b.status == "terbit" and b.tenggat is None
+    halaman = BeasiswaRepoSql(sesi).daftar(FilterBeasiswa(q=b.nama), None, 10, HARI)
+    assert [x.id for x in halaman.item] == [b.id]
+    assert BeasiswaRepoSql(sesi).detail(b.id, HARI) is not None
+    assert b.id in {m.id for m in layanan._masukan(sesi, HARI)}
