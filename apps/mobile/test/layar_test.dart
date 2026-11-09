@@ -413,11 +413,13 @@ void main() {
         'Kampus Baru',
       );
       await t.enterText(find.widgetWithText(TextFormField, 'IPK'), '5');
+      await t.ensureVisible(find.text('Simpan perubahan'));
       await t.tap(find.text('Simpan perubahan'));
       await t.pumpAndSettle();
       expect(find.textContaining('IPK harus berupa angka'), findsOneWidget);
       expect(s.hitung('PUT /me/profil'), 0);
       await t.enterText(find.widgetWithText(TextFormField, 'IPK'), '3,8');
+      await t.ensureVisible(find.text('Simpan perubahan'));
       await t.tap(find.text('Simpan perubahan'));
       await t.pumpAndSettle();
       expect(s.terakhir('PUT /me/profil').data['ipk'], 3.8);

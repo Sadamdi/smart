@@ -106,7 +106,7 @@ class _DokumenPageState extends ConsumerState<DokumenPage> {
                           margin: const EdgeInsets.only(bottom: 10),
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: Warna.putih,
+                            color: Warna.kartu,
                             borderRadius: BorderRadius.circular(
                               Jari.kartuDalam,
                             ),

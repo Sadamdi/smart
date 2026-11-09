@@ -10,4 +10,6 @@
   <path d="M32 13L57 24.5L32 36L7 24.5Z" fill="#fff"/>
   <path d="M50 27.6V41" stroke="#F5B73B" stroke-width="2.4" stroke-linecap="round" fill="none"/>
   <path d="M50 40.5L51.7 44.4L55.6 46.1L51.7 47.8L50 51.7L48.3 47.8L44.4 46.1L48.3 44.4Z" fill="#F5B73B"/>
+  <path class="gelombang1" d="M57.7 44A8 8 0 0 0 53.4 38.9" stroke="#F5B73B" stroke-opacity=".9" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <path class="gelombang2" d="M61.1 43.1A11.5 11.5 0 0 0 54.9 35.7" stroke="#F5B73B" stroke-opacity=".55" stroke-width="1.8" stroke-linecap="round" fill="none"/>
 </svg>

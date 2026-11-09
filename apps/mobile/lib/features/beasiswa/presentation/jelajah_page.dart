@@ -147,7 +147,7 @@ class _JelajahPageState extends ConsumerState<JelajahPage> {
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
                     s.galatLagi!,
-                    style: const TextStyle(color: Warna.error),
+                    style: TextStyle(color: Warna.error),
                   ),
                 ),
               if (s.adaLagi)
