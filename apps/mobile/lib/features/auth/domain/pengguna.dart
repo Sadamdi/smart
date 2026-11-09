@@ -45,17 +45,16 @@ class Pengguna {
   final Map<String, dynamic> profilLanjutan;
   final Map<String, dynamic> skorBahasa;
 
-  /// Kelengkapan profil dari kolom yang dipakai mesin rekomendasi.
+  /// Kelengkapan profil dari tujuh syarat yang paling sering diminta beasiswa (sama dengan web). Kolom lain opsional.
   ({int terisi, int total}) get kelengkapan {
     final nilai = <bool>[
-      (kampus ?? '').isNotEmpty,
-      (jenisKampus ?? '').isNotEmpty,
-      (programStudi ?? '').isNotEmpty,
       (jenjang ?? '').isNotEmpty,
       semester != null,
       (ipk ?? '').isNotEmpty,
+      (jenisKampus ?? '').isNotEmpty,
       (kotaDomisili ?? '').isNotEmpty,
-      minat.isNotEmpty,
+      (kewarganegaraan ?? '').isNotEmpty,
+      (tanggalLahir ?? '').isNotEmpty,
     ];
     return (terisi: nilai.where((x) => x).length, total: nilai.length);
   }

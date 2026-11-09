@@ -409,7 +409,7 @@ void main() {
       await t.tap(find.text('Ubah profil'));
       await t.pumpAndSettle();
       await t.enterText(
-        find.widgetWithText(TextFormField, 'Kampus'),
+        find.widgetWithText(TextFormField, 'Kampus (opsional)'),
         'Kampus Baru',
       );
       await t.enterText(find.widgetWithText(TextFormField, 'IPK'), '5');

@@ -312,7 +312,7 @@ class _Hero extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '$terisi dari $total data akademik terisi',
+                        '$terisi dari $total data utama terisi',
                         style: t.bodySmall?.copyWith(color: Colors.white70),
                       ),
                     ],
