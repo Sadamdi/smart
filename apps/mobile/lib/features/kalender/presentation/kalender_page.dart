@@ -324,16 +324,28 @@ class _GridBulan extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 4,
             children: [
-              Icon(Icons.circle, size: 8, color: Warna.error),
-              const SizedBox(width: 4),
-              Text('Tenggat', style: t.bodySmall),
-              const SizedBox(width: 16),
-              Icon(Icons.circle, size: 8, color: Warna.primary),
-              const SizedBox(width: 4),
-              Text('Tugas pribadi', style: t.bodySmall),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.circle, size: 8, color: Warna.error),
+                  const SizedBox(width: 4),
+                  Text('Tenggat', style: t.bodySmall),
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.circle, size: 8, color: Warna.primary),
+                  const SizedBox(width: 4),
+                  Text('Tugas pribadi', style: t.bodySmall),
+                ],
+              ),
             ],
           ),
         ],
