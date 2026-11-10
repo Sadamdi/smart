@@ -99,9 +99,9 @@ def test_ipk_di_luar_toleransi_belum_memenuhi():
     assert nilai_kelayakan([("ipk_minimum", {"nilai": 3.9})], profil(), HARI).kategori == BELUM
 
 
-def test_tanpa_syarat_terukur_tetap_memenuhi_dengan_catatan():
+def test_tanpa_syarat_terukur_tidak_dinyatakan_memenuhi():
     h = nilai_kelayakan([("lainnya", {"teks": "bebas"})], profil(), HARI)
-    assert h.kategori == MEMENUHI and "tautan resmi" in h.alasan[0]
+    assert h.kategori == HAMPIR and h.catatan_kekurangan == ["Syarat belum tercatat, periksa laman resmi"]
 
 
 def test_pengemas_deterministik_dan_kemiripan_masuk_akal():
