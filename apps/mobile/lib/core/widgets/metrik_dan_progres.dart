@@ -101,7 +101,7 @@ class JudulBagian extends StatelessWidget {
             onPressed: onAksi,
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              minimumSize: const Size(48, 40),
+              minimumSize: const Size(48, 48),
             ),
             child: Text(aksi!),
           ),

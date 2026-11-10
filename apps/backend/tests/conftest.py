@@ -2,9 +2,11 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.api.deps import get_beasiswa_repo, get_pengguna_repo
+from app.api.v1.beasiswa import profil_kelayakan
 from app.core.config import Settings, get_settings
 from app.core.ratelimit import pembatas_login
 from app.main import app
+from app.rekomendasi.kelayakan import ProfilKelayakan
 from tests.fakes import BeasiswaRepoPalsu, PenggunaRepoPalsu
 
 SETTINGS_UJI = Settings(
@@ -31,6 +33,7 @@ def klien(pengguna_repo, beasiswa_repo):
     app.dependency_overrides[get_pengguna_repo] = lambda: pengguna_repo
     app.dependency_overrides[get_beasiswa_repo] = lambda: beasiswa_repo
     app.dependency_overrides[get_settings] = lambda: SETTINGS_UJI
+    app.dependency_overrides[profil_kelayakan] = lambda: ProfilKelayakan()
     pembatas_login._gagal.clear()
     yield TestClient(app)
     app.dependency_overrides.clear()

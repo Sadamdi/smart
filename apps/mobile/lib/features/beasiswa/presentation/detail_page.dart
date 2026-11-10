@@ -9,6 +9,7 @@ import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/metrik_dan_progres.dart';
 import '../../../core/widgets/state_widgets.dart';
 import '../../kalender/presentation/kalender_providers.dart';
+import '../../rekomendasi/domain/rekomendasi.dart';
 import '../domain/beasiswa.dart';
 import 'beasiswa_providers.dart';
 import 'simpan_aksi.dart';
@@ -142,6 +143,8 @@ class _Isi extends ConsumerWidget {
           spacing: 8,
           runSpacing: 6,
           children: [
+            if (detail.kategori != null)
+              ChipStatus.kategori(Kategori.dari(detail.kategori!)),
             if ((b.jenjang ?? '').isNotEmpty) ChipStatus(label: b.jenjang!),
             if (meta.isNotEmpty) ChipStatus(label: meta),
           ],
@@ -208,7 +211,7 @@ class _Isi extends ConsumerWidget {
           ),
         ),
         _Bagian(
-          judul: 'Persyaratan',
+          judul: 'Syarat dan kelayakanmu',
           anak: detail.persyaratan.isEmpty
               ? Text('Persyaratan belum tercatat.', style: t.bodyMedium)
               : Column(
@@ -217,6 +220,24 @@ class _Isi extends ConsumerWidget {
                   ],
                 ),
         ),
+        if (detail.alasan.isNotEmpty || detail.catatanKekurangan.isNotEmpty)
+          _Bagian(
+            judul: 'Alasan rekomendasi',
+            anak: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final a in detail.alasan)
+                  _BarisAlasan(a, Icons.check_circle_rounded, Warna.sukses),
+                for (final a in detail.catatanKekurangan)
+                  _BarisAlasan(a, Icons.info_rounded, Warna.error),
+                const SizedBox(height: 4),
+                Text(
+                  'Hasil ini bantuan memilih, bukan jaminan diterima.',
+                  style: t.bodySmall,
+                ),
+              ],
+            ),
+          ),
         _Bagian(
           judul: 'Berkas wajib',
           anak: detail.berkasWajib.isEmpty
@@ -356,26 +377,60 @@ class _Bagian extends StatelessWidget {
   }
 }
 
+class _BarisAlasan extends StatelessWidget {
+  const _BarisAlasan(this.teks, this.ikon, this.warna);
+
+  final String teks;
+  final IconData ikon;
+  final Color warna;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(ikon, size: 20, color: warna),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(teks, style: Theme.of(context).textTheme.bodyMedium),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _BarisSyarat extends StatelessWidget {
   const _BarisSyarat(this.p);
 
   final Persyaratan p;
 
+  (IconData, Color) get _tanda => switch (p.status) {
+    'terpenuhi' => (Icons.check_circle_rounded, Warna.sukses),
+    'dalam_toleransi' => (Icons.schedule_rounded, Warna.primary),
+    'gagal' => (Icons.cancel_rounded, Warna.error),
+    _ => (Icons.radio_button_unchecked_rounded, Warna.muted),
+  };
+
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+    final (ikon, warna) = _tanda;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        border: Border.all(color: Warna.outline),
+        borderRadius: BorderRadius.circular(Jari.kartuDalam),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.only(top: 2),
-            child: Icon(
-              Icons.check_circle_outline,
-              size: 18,
-              color: Warna.primary,
-            ),
+            padding: const EdgeInsets.only(top: 1),
+            child: Icon(ikon, size: 22, color: warna),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -384,7 +439,9 @@ class _BarisSyarat extends StatelessWidget {
               children: [
                 Text(p.label, style: t.titleSmall),
                 if (p.nilai.isNotEmpty) Text(p.nilai, style: t.bodyMedium),
-                if (!p.dapatDikejar)
+                if (p.catatan != null && p.catatan!.isNotEmpty)
+                  Text(p.catatan!, style: t.bodySmall?.copyWith(color: warna)),
+                if (!p.dapatDikejar && p.status != 'terpenuhi')
                   Text(
                     'Tidak dapat dikejar dalam waktu singkat',
                     style: t.bodySmall,

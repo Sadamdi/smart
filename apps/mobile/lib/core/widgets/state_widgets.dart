@@ -42,7 +42,7 @@ class KosongState extends StatelessWidget {
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: aksi,
-                style: FilledButton.styleFrom(minimumSize: const Size(160, 44)),
+                style: FilledButton.styleFrom(minimumSize: const Size(160, 48)),
                 child: Text(labelAksi!),
               ),
             ],
@@ -102,7 +102,7 @@ class GalatState extends StatelessWidget {
               onPressed: cobaLagi,
               icon: const Icon(Icons.refresh),
               label: const Text('Coba lagi'),
-              style: FilledButton.styleFrom(minimumSize: const Size(160, 44)),
+              style: FilledButton.styleFrom(minimumSize: const Size(160, 48)),
             ),
           ],
         ),

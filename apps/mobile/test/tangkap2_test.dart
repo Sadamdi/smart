@@ -18,18 +18,23 @@ Map<String, Penangan> _rute() => {
     'manfaat':
         'Biaya pendidikan penuh dan tunjangan hidup bulanan selama masa studi.',
     'tanggal_diperiksa': _hariKe(-1),
+    'kategori': 'hampir_memenuhi',
+    'alasan': ['IPK memenuhi batas minimum', 'Jenjang S1 sesuai'],
+    'catatan_kekurangan': ['Perlu skor TOEFL 500, skor saat ini 470'],
     'persyaratan': [
       {
-        'label': 'IPK minimum',
-        'jenis': 'ipk',
-        'nilai_batas': {'min': 3.5},
+        'jenis': 'ipk_minimum',
+        'nilai_batas': {'nilai': 3.5},
         'dapat_dikejar': false,
+        'status': 'terpenuhi',
+        'catatan': 'IPK 3,72 memenuhi batas',
       },
       {
-        'label': 'Skor TOEFL',
-        'jenis': 'toefl',
-        'nilai_batas': {'min': 500},
+        'jenis': 'sertifikat_bahasa',
+        'nilai_batas': {'nilai': 500},
         'dapat_dikejar': true,
+        'status': 'dalam_toleransi',
+        'catatan': 'Skor 470, perlu 500',
       },
     ],
     'berkas_wajib': [
@@ -37,7 +42,7 @@ Map<String, Penangan> _rute() => {
       {'id': 'b2', 'nama_berkas': 'Surat rekomendasi'},
     ],
   }),
-  'GET /dokumen': (o) => Balasan.ok([
+  'GET /me/dokumen': (o) => Balasan.ok([
     {
       'id': 'd1',
       'jenis': 'cv',
@@ -54,7 +59,16 @@ Map<String, Penangan> _rute() => {
     },
   ]),
   'GET /chat/status': (o) => Balasan.ok({'tersedia': true}),
-  'GET /chat/riwayat': (o) => Balasan.ok([]),
+  'GET /chat/riwayat': (o) => Balasan.ok([
+    {
+      'id': 'c1',
+      'pesan': 'Beasiswa apa yang tenggatnya dekat?',
+      'jawaban': 'Ada 2 beasiswa dengan tenggat kurang dari 7 hari.',
+      'rujukan': [
+        {'id': '1', 'nama': 'Beasiswa Unggulan'},
+      ],
+    },
+  ]),
   'GET /me': (o) => Balasan.ok(penggunaJson()),
   'GET /notifikasi': (o) => Balasan.ok([
     {
