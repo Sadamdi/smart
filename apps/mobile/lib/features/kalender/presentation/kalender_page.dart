@@ -110,13 +110,6 @@ class _KalenderPageState extends ConsumerState<KalenderPage> {
 
     return Scaffold(
       appBar: const SmartAppBar(),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _tambahTugas,
-        backgroundColor: Warna.primary,
-        foregroundColor: Warna.putih,
-        icon: const Icon(Icons.add),
-        label: const Text('Tugas'),
-      ),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(kalenderProvider);
@@ -164,6 +157,8 @@ class _KalenderPageState extends ConsumerState<KalenderPage> {
                     const SizedBox(height: 16),
                     JudulBagian(
                       'Agenda ${namaBulan(_bulan.month)} ${_bulan.year}',
+                      aksi: '+ Tugas',
+                      onAksi: _tambahTugas,
                     ),
                     if (bulanIni.isEmpty)
                       const Padding(

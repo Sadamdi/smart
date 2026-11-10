@@ -66,7 +66,7 @@ class _JelajahPageState extends ConsumerState<JelajahPage> {
               onChanged: _onCari,
               textInputAction: TextInputAction.search,
               decoration: const InputDecoration(
-                hintText: 'Cari nama beasiswa atau penyelenggara',
+                hintText: 'Cari beasiswa',
                 prefixIcon: Icon(Icons.search),
               ),
             ),
