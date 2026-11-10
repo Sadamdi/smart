@@ -354,10 +354,14 @@ class _Angka extends StatelessWidget {
             style: t.headlineMedium?.copyWith(color: warna, fontSize: 32),
           ),
           const SizedBox(height: 2),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: t.bodySmall?.copyWith(color: Colors.white),
+          SizedBox(
+            height: 40,
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              style: t.bodySmall?.copyWith(color: Colors.white),
+            ),
           ),
         ],
       ),
