@@ -43,7 +43,10 @@ class Metrik extends StatelessWidget {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: t.labelSmall?.copyWith(color: warna ?? Warna.primary, letterSpacing: 0),
+            style: t.labelSmall?.copyWith(
+              color: warna ?? Warna.primary,
+              letterSpacing: 0,
+            ),
           ),
           if (keterangan != null)
             Text(

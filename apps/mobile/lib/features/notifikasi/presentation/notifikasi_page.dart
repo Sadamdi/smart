@@ -86,11 +86,7 @@ class NotifikasiPage extends ConsumerWidget {
                     isThreeLine: true,
                     trailing: n.dibaca
                         ? null
-                        : Icon(
-                            Icons.circle,
-                            size: 10,
-                            color: Warna.primary,
-                          ),
+                        : Icon(Icons.circle, size: 10, color: Warna.primary),
                     onTap: () async {
                       final router = GoRouter.of(context);
                       if (!n.dibaca) await aksi(() => repo.baca(n.id));

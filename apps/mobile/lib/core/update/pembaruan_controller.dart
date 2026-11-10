@@ -81,7 +81,9 @@ class PembaruanController extends ChangeNotifier {
       // Pemeriksaan terakhir sebelum pemasang: APK harus ditandatangani kunci yang sama dengan aplikasi ini.
       final kunciApk = await AppUpdateChecker.sidikKunciApk(berkas.path);
       final kunciSendiri = await AppUpdateChecker.sidikKunciSendiri();
-      if (kunciApk == null || kunciSendiri == null || kunciApk != kunciSendiri) {
+      if (kunciApk == null ||
+          kunciSendiri == null ||
+          kunciApk != kunciSendiri) {
         await berkas.delete();
         _gagal(
           'Berkas pembaruan tidak berasal dari penerbit resmi SMART sehingga tidak dipasang.',
@@ -94,10 +96,8 @@ class PembaruanController extends ChangeNotifier {
       _gagal(switch (e.reason) {
         UpdateFailure.hostDitolak =>
           'Alamat pembaruan tidak dipercaya, jadi unduhan dibatalkan.',
-        UpdateFailure.corrupted =>
-          'Berkas pembaruan rusak saat diunduh. Tekan "Coba lagi" untuk mengunduh ulang.',
-        UpdateFailure.network =>
-          'Koneksi terputus terlalu lama. Unduhan tersimpan, tekan "Lanjutkan" saat internet kembali.',
+        UpdateFailure.corrupted => 'Berkas pembaruan rusak saat diunduh. Tekan "Coba lagi" untuk mengunduh ulang.',
+        UpdateFailure.network => 'Koneksi terputus terlalu lama. Unduhan tersimpan, tekan "Lanjutkan" saat internet kembali.',
         UpdateFailure.tidakAda =>
           'Berkas pembaruan tidak ditemukan. Tutup lalu buka lagi aplikasinya.',
       }, lanjut: e.reason == UpdateFailure.network);

@@ -131,16 +131,20 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
               kondisiKhusus: _kondisi.toList(),
               catatanTambahan: _catatan.text.trim(),
               tanggalLahir: teks(_lahir),
-              ipsTerakhir: double.tryParse(_ips.text.trim().replaceAll(',', '.')),
+              ipsTerakhir: double.tryParse(
+                _ips.text.trim().replaceAll(',', '.'),
+              ),
               penghasilanOrangTua: int.tryParse(
                 _penghasilan.text.trim().replaceAll(RegExp(r'[^0-9]'), ''),
               ),
               kewarganegaraan: teks(_warga),
               skorBahasa: {
                 if (_toefl.text.trim().isNotEmpty)
-                  'toefl': num.tryParse(_toefl.text.trim()) ?? _toefl.text.trim(),
+                  'toefl':
+                      num.tryParse(_toefl.text.trim()) ?? _toefl.text.trim(),
                 if (_ielts.text.trim().isNotEmpty)
-                  'ielts': num.tryParse(_ielts.text.trim().replaceAll(',', '.')) ??
+                  'ielts':
+                      num.tryParse(_ielts.text.trim().replaceAll(',', '.')) ??
                       _ielts.text.trim(),
               },
             ),
