@@ -5,6 +5,7 @@ Syarat yang tidak dapat dikejar (domisili, jenis kampus, jenjang, usia, kewargan
 langsung membuat kategori belum memenuhi. Syarat yang dapat dikejar dinilai dengan toleransi.
 """
 
+import re
 from dataclasses import dataclass, field
 from datetime import date
 
@@ -123,6 +124,35 @@ def _pilihan(
     return HasilSyarat(jenis, GAGAL, 0.0, kekurangan=f"Untuk {label} {', '.join(diminta)}")
 
 
+_TERBUKA = ("all countries", "semua negara", "seluruh negara", "international", "internasional", "mancanegara")
+_PENGECUALI = re.compile(r"\b(bukan|selain|kecuali|non|asing|foreign)\b")
+
+
+def _kanon_negara(teks: str) -> str:
+    """WNI, Warga Negara Indonesia, dan Indonesia dianggap sama; negara lain apa adanya dalam huruf kecil."""
+    t = teks.lower().strip()
+    return "indonesia" if re.search(r"\bwni\b|indonesia", t) else t
+
+
+def _warga(jenis: str, batas: dict | None, nilai: str | None) -> HasilSyarat | None:
+    diminta = _daftar(batas)
+    if not diminta:
+        return None
+    if any(k in d.lower() for d in diminta for k in _TERBUKA):
+        return HasilSyarat(jenis, OK, 1.0, "Terbuka untuk berbagai kewarganegaraan")
+    if not nilai:
+        return _tidak_diketahui(jenis, "kewarganegaraan")
+    k = _kanon_negara(nilai)
+    for d in diminta:
+        dl = d.lower()
+        if k != _kanon_negara(d) and k not in dl:
+            continue
+        if _PENGECUALI.search(dl) and k in dl:
+            continue  # misalnya "bukan Indonesia" atau "warga negara asing"
+        return HasilSyarat(jenis, OK, 1.0, "Kewarganegaraan sesuai")
+    return HasilSyarat(jenis, GAGAL, 0.0, kekurangan=f"Untuk warga negara {', '.join(diminta)}")
+
+
 def _bahasa(jenis: str, batas: dict | None, profil: ProfilKelayakan, tol: Toleransi) -> HasilSyarat | None:
     minimum = _angka(batas)
     nama = str((batas or {}).get("jenis", "bahasa")).lower()
@@ -155,7 +185,7 @@ def periksa_syarat(
         wilayah = ", ".join(x for x in [profil.kota_domisili, *profil.daerah_asal] if x) or None
         return _pilihan(jenis, batas, wilayah, "domisili", "Domisili atau daerah asal sesuai")
     if jenis == "kewarganegaraan":
-        return _pilihan(jenis, batas, profil.kewarganegaraan, "warga negara", "Kewarganegaraan sesuai")
+        return _warga(jenis, batas, profil.kewarganegaraan)
     if jenis == "usia_maksimum":
         maks = _angka(batas)
         if maks is None:
@@ -200,7 +230,8 @@ def nilai_kelayakan(
 ) -> HasilKelayakan:
     hasil = [h for j, b in syarat if (h := periksa_syarat(j, b, profil, hari_ini, tol)) is not None]
     if not hasil:
-        return HasilKelayakan(MEMENUHI, 0.6, ["Belum ada syarat terukur yang tercatat; periksa tautan resmi"], [])
+        # Tanpa syarat terukur tidak dapat dinyatakan memenuhi: ditandai hampir memenuhi dengan catatan yang jelas.
+        return HasilKelayakan(HAMPIR, 0.4, [], ["Syarat belum tercatat, periksa laman resmi"])
     alasan = [h.alasan for h in hasil if h.status == OK and h.alasan]
     kurang = [h.kekurangan for h in hasil if h.status in (TOLERAN, TIDAK_DIKETAHUI) and h.kekurangan]
     skor = sum(h.nilai for h in hasil) / len(hasil)

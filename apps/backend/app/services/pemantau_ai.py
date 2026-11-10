@@ -21,6 +21,7 @@ from app.core.errors import UpstreamUnavailable, ValidationFailed
 from app.models import Beasiswa, BerkasWajib, Pengaturan, Persyaratan, Sumber
 from app.services import laman, llm
 from app.services.admin import periksa_boleh_terbit
+from app.services.normalisasi import rapikan_nama, rapikan_penyelenggara
 
 KUNCI_AUTO = "auto_validasi_ai"
 JEDA_DETIK = 2.0
@@ -272,13 +273,13 @@ def validasi_beasiswa(sesi: Session, settings: Settings, b: Beasiswa, hari_ini: 
         and isinstance(data.get("nama"), str)
         and len(data["nama"].strip()) >= 4
     ):
-        b.nama = data["nama"].strip()[:300]  # nama resmi menggantikan nama sementara dari alamat
+        b.nama = rapikan_nama(data["nama"].strip()[:300])  # nama resmi menggantikan nama sementara dari alamat
     resmi = data.get("tautan_penyelenggara")
     if isinstance(resmi, str) and resmi.startswith(("http://", "https://")) and f"[{resmi}]" in teks:
         if urlparse(resmi).netloc != urlparse(b.tautan_resmi).netloc and not _media_sosial(resmi):
             b.tautan_resmi = resmi  # tautan resmi penyelenggara menggantikan tautan artikel agregator
     if not b.penyelenggara and isinstance(data.get("penyelenggara"), str):
-        b.penyelenggara = data["penyelenggara"].strip()[:200] or None
+        b.penyelenggara = rapikan_penyelenggara(data["penyelenggara"].strip()[:200]) or None
     if not b.negara and isinstance(data.get("negara"), str):
         b.negara = data["negara"].strip()[:80] or None
     if not b.manfaat and isinstance(data.get("manfaat"), str):
@@ -384,7 +385,7 @@ def pantau_sumber(sesi: Session, settings: Settings, sumber: Sumber, hari_ini: d
     for item in item_semua:
         if not isinstance(item, dict) or not isinstance(item.get("nama"), str) or len(item["nama"].strip()) < 4:
             continue
-        nama = item["nama"].strip()[:300]
+        nama = rapikan_nama(item["nama"].strip()[:300])
         tautan = item.get("tautan") if isinstance(item.get("tautan"), str) else None
         if not tautan or not tautan.startswith(("http://", "https://")) or f"[{tautan}]" not in teks:
             tautan = sumber.url  # tautan hanya dipercaya bila memang tertulis di laman
@@ -396,7 +397,9 @@ def pantau_sumber(sesi: Session, settings: Settings, sumber: Sumber, hari_ini: d
             Beasiswa(
                 sumber_id=sumber.id,
                 nama=nama,
-                penyelenggara=(item.get("penyelenggara") or None) if isinstance(item.get("penyelenggara"), str) else None,
+                penyelenggara=rapikan_penyelenggara(item.get("penyelenggara") or None)
+                if isinstance(item.get("penyelenggara"), str)
+                else None,
                 negara=sumber.negara,
                 jenjang=_jenjang_sah(item.get("jenjang")),
                 tenggat=tenggat_terverifikasi(item.get("tenggat"), item.get("kutipan_tenggat"), teks),
