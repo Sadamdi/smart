@@ -28,7 +28,8 @@ const resolver: Resolver<IsianProfil> = async (values) => {
 function Bagian({ id, judul, deskripsi, children }: { id: string; judul: string; deskripsi?: string; children: ReactNode }) {
   return (
     <Kartu>
-      <h2 id={id} className="text-lg font-bold text-navy">
+      <h2 id={id} className="flex items-center gap-2.5 text-lg font-bold text-navy">
+        <span aria-hidden className="h-5 w-1 rounded-full bg-gold" />
         {judul}
       </h2>
       {deskripsi && <p className="mt-1 text-sm text-muted">{deskripsi}</p>}
@@ -162,7 +163,7 @@ function Formulir({ saya }: { saya: Pengguna }) {
       <Bagian
         id="domisili"
         judul="Domisili"
-        deskripsi="Dipakai mencocokkan syarat domisili beasiswa pada tingkat negara, provinsi, atau kota."
+        deskripsi="Dipakai memeriksa syarat domisili beasiswa pada tingkat negara, provinsi, atau kota."
       >
         <div className="grid gap-4 sm:grid-cols-3">
           <Medan label="Negara" wajib>
@@ -204,7 +205,7 @@ function Formulir({ saya }: { saya: Pengguna }) {
           <legend className="sr-only">Kondisi khusus</legend>
           {PILIHAN_KONDISI.map(([nilai, label]) => (
             <label key={nilai} className="flex items-center gap-2 text-sm text-ink">
-              <input type="checkbox" value={nilai} {...r("kondisi_khusus")} className="h-4 w-4 accent-primary" />
+              <input type="checkbox" value={nilai} {...r("kondisi_khusus")} className="h-5 w-5 accent-primary" />
               {label}
             </label>
           ))}
@@ -222,13 +223,13 @@ function Formulir({ saya }: { saya: Pengguna }) {
               maxLength={1000}
               placeholder="Contoh: penerima KIP, tinggal di asrama, aktif di organisasi sosial"
               {...r("catatan_tambahan")}
-              className="w-full rounded-lg border border-outline bg-white px-3.5 py-2.5 text-sm text-navy placeholder:text-muted focus:border-primary"
+              className="w-full rounded-kontrol border border-line bg-card px-3.5 py-2.5 text-sm text-navy placeholder:text-muted focus:border-primary"
             />
           </Medan>
         </div>
       </Bagian>
 
-      <div className="sticky bottom-0 z-10 -mx-1 flex flex-wrap items-center gap-3 rounded-2xl border border-c4/60 bg-white/95 px-4 py-3 shadow-kartu backdrop-blur">
+      <div className="sticky bottom-0 z-10 -mx-1 flex flex-wrap items-center gap-3 rounded-kartu border border-c4/60 bg-card/95 px-4 py-3 shadow-kartu backdrop-blur">
         <Tombol type="submit" disabled={f.formState.isSubmitting}>
           {f.formState.isSubmitting ? "Menyimpan" : "Simpan profil"}
         </Tombol>
@@ -255,7 +256,7 @@ function Formulir({ saya }: { saya: Pengguna }) {
 export default function ProfilSaya() {
   const saya = useSaya().data;
   return (
-    <div className="max-w-4xl">
+    <div className="halaman-masuk max-w-4xl">
       <JudulHalaman judul="Profil Saya" deskripsi="Data ini dipakai Mesin Rekomendasi untuk menilai syarat beasiswa." />
       {saya && <Formulir saya={saya} />}
       {saya && (

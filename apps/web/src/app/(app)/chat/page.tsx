@@ -1,6 +1,6 @@
 "use client";
 import { useQueryClient } from "@tanstack/react-query";
-import { SendHorizonal, Trash2 } from "lucide-react";
+import { MessageCircle, SendHorizonal, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { GelembungChat } from "@/components/GelembungChat";
@@ -11,6 +11,7 @@ import { useAksi, useRiwayatChat, useStatusChat } from "@/lib/hooks";
 import type { Chat } from "@/lib/types";
 
 const PESAN_MAKS = 2000;
+const SARAN = ["Beasiswa apa yang tenggatnya paling dekat?", "Berkas apa yang harus saya siapkan?", "Beasiswa S2 apa yang sesuai dengan IPK saya?"];
 
 export default function ChatbotAI() {
   const qc = useQueryClient();
@@ -49,7 +50,7 @@ export default function ChatbotAI() {
   const tersedia = status.data?.tersedia;
 
   return (
-    <div>
+    <div className="halaman-masuk">
       <JudulHalaman
         judul="Chatbot AI"
         deskripsi="Tanyakan syarat, tenggat, atau berkas beasiswa. Jawaban memakai data beasiswa yang tercatat di SMART."
@@ -61,25 +62,44 @@ export default function ChatbotAI() {
           ) : undefined
         }
       />
-      <div role="status" className="mb-4 flex items-center gap-2 text-sm">
-        <span className={`h-2.5 w-2.5 rounded-full ${status.isPending ? "bg-outline" : tersedia ? "bg-ok" : "bg-danger"}`} aria-hidden />
+      <div role="status" className="mb-4 inline-flex items-center gap-2 rounded-full bg-c2 px-3 py-1.5 text-sm">
+        <span className={`h-2.5 w-2.5 rounded-full ${status.isPending ? "bg-line" : tersedia ? "bg-ok" : "bg-danger"}`} aria-hidden />
         <span className="text-ink">
           {status.isPending ? "Memeriksa layanan AI" : status.isError ? "Status layanan AI tidak diketahui" : tersedia ? "Layanan AI tersedia" : "Layanan AI sedang tidak tersedia"}
         </span>
       </div>
       {tersedia === false && (
-        <p className="mb-4 rounded-xl bg-danger-soft px-4 py-3 text-sm text-[#8c1212]">
+        <p className="mb-4 rounded-[14px] bg-danger-soft px-4 py-3 text-sm text-danger-ink">
           Chatbot belum dapat menjawab saat ini. Anda tetap dapat menelusuri beasiswa, melihat rekomendasi, dan mengisi profil secara manual.
         </p>
       )}
-      <Kartu className="flex min-h-[420px] flex-col !p-0">
-        <div className="flex-1 space-y-4 overflow-y-auto p-6" style={{ maxHeight: "60vh" }} aria-live="polite">
+      <Kartu className="flex min-h-[420px] flex-col overflow-hidden !p-0">
+        <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-6" style={{ maxHeight: "60vh" }} aria-live="polite">
           {riwayat.isPending ? (
             <MemuatState baris={2} />
           ) : riwayat.isError ? (
             <GalatState galat={riwayat.error} onCoba={() => riwayat.refetch()} />
           ) : daftar.length === 0 && !menunggu ? (
-            <p className="py-10 text-center text-sm text-ink">Belum ada percakapan. Mulai dengan bertanya, misalnya &quot;beasiswa apa yang tenggatnya paling dekat?&quot;</p>
+            <div className="flex flex-col items-center py-8 text-center">
+              <span className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-c2 text-primary">
+                <MessageCircle className="h-7 w-7" aria-hidden />
+              </span>
+              <p className="text-base font-bold text-navy">Belum ada percakapan</p>
+              <p className="mt-1 max-w-sm text-sm text-ink">Mulai dengan bertanya. Pilih salah satu saran di bawah atau tulis pertanyaan sendiri.</p>
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                {SARAN.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    disabled={tersedia === false}
+                    onClick={() => setPesan(s)}
+                    className="min-h-11 rounded-full border border-c4 bg-card px-4 py-2 text-sm font-medium text-navy transition-colors hover:bg-c2 disabled:opacity-60"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : null}
           {daftar.map((c) => (
             <div key={c.id} className="space-y-2">
@@ -113,7 +133,7 @@ export default function ChatbotAI() {
           <div ref={dasar} />
         </div>
         {galat != null && (
-          <p role="alert" className="mx-6 mb-3 rounded-lg bg-danger-soft px-3 py-2 text-sm text-[#8c1212]">
+          <p role="alert" className="mx-4 mb-3 rounded-kontrol bg-danger-soft sm:mx-6 px-3 py-2 text-sm text-danger-ink">
             {pesanGalat(galat).ai
               ? "Layanan AI sedang tidak tersedia, jadi pesan belum terjawab. Coba lagi nanti atau telusuri beasiswa secara manual."
               : pesanGalat(galat).pesan}

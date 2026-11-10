@@ -1,41 +1,160 @@
 @import "tailwindcss";
 
+/*
+ * Token warna. Terang adalah dasar; gelap dipasang lewat atribut data-theme
+ * (diatur skrip pra-render di layout) atau, bila skrip belum jalan, lewat
+ * prefers-color-scheme. Nilai gelap mengikuti PRD-REVAMP-MOBILE bagian 4.
+ */
 :root {
-  --primary: #225eaa;
+  color-scheme: light;
+  --primary: #225eaa; /* teks, tautan, ikon aksen */
+  --fill: #225eaa; /* latar tombol dan penanda aktif (teks putih di atasnya) */
+  --fill-hover: #1b4d8f;
   --primary-soft: #6c9fef;
   --navy: #051b38;
   --ink: #424751;
   --muted: #576676;
   --surface: #f9f9ff;
+  --card: #ffffff;
   --c1: #f0f3ff;
   --c2: #e7eeff;
   --c3: #dfe8ff;
   --c4: #d6e3ff;
-  --error: #ba1a1a;
-  --error-soft: #ffdad6;
   --outline: #c2c6d3;
+  --line: #7c8596; /* garis kontrol formulir, kontras bukan teks 3:1 */
+  --error: #ba1a1a;
+  --danger-fill: #ba1a1a;
+  --danger-fill-hover: #93000a;
+  --error-soft: #ffdad6;
+  --danger-ink: #8c1212;
   --ok: #1b6b3a;
   --ok-soft: #d9f2e0;
+  --warn: #8a5a00;
+  --warn-soft: #ffefd0;
+  --info-soft: #d6e3ff;
+  --info-ink: #12407a;
+  --gold: #f5b73b;
+  --hero-a: #051b38;
+  --hero-b: #1c4f94;
+  --on-hero: #ffffff;
+  --on-hero-muted: #d6e3ff;
+  --bayangan: 0 1px 2px rgba(5, 27, 56, 0.06), 0 4px 16px rgba(5, 27, 56, 0.04);
+  --scrim: rgba(5, 27, 56, 0.45);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --primary: #7fb0f5;
+  --fill: #2f6fc4;
+  --fill-hover: #3a7ad1;
+  --primary-soft: #6c9fef;
+  --navy: #e8eefa;
+  --ink: #c6cedc;
+  --muted: #9aa7bc;
+  --surface: #0c1320;
+  --card: #141e30;
+  --c1: #182338;
+  --c2: #1d2b45;
+  --c3: #243555;
+  --c4: #2c406a;
+  --outline: #34445f;
+  --line: #6b7a94;
+  --error: #ff8f86;
+  --danger-fill: #c23b32;
+  --danger-fill-hover: #d24a40;
+  --error-soft: #3b1b1f;
+  --danger-ink: #ffb4ab;
+  --ok: #6fd39a;
+  --ok-soft: #12301f;
+  --warn: #ffd27a;
+  --warn-soft: #33270f;
+  --info-soft: #243c66;
+  --info-ink: #bcd4ff;
+  --gold: #f5b73b;
+  --hero-a: #10264a;
+  --hero-b: #1b4b8a;
+  --on-hero: #ffffff;
+  --on-hero-muted: #c6d6f2;
+  --bayangan: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.25);
+  --scrim: rgba(0, 0, 0, 0.6);
+}
+
+/* Cadangan tanpa JavaScript: ikuti tema perangkat. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --primary: #7fb0f5;
+    --fill: #2f6fc4;
+    --fill-hover: #3a7ad1;
+    --navy: #e8eefa;
+    --ink: #c6cedc;
+    --muted: #9aa7bc;
+    --surface: #0c1320;
+    --card: #141e30;
+    --c1: #182338;
+    --c2: #1d2b45;
+    --c3: #243555;
+    --c4: #2c406a;
+    --outline: #34445f;
+    --line: #6b7a94;
+    --error: #ff8f86;
+    --danger-fill: #c23b32;
+    --danger-fill-hover: #d24a40;
+    --error-soft: #3b1b1f;
+    --danger-ink: #ffb4ab;
+    --ok: #6fd39a;
+    --ok-soft: #12301f;
+    --warn: #ffd27a;
+    --warn-soft: #33270f;
+    --info-soft: #243c66;
+    --info-ink: #bcd4ff;
+    --hero-a: #10264a;
+    --hero-b: #1b4b8a;
+    --on-hero-muted: #c6d6f2;
+    --bayangan: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.25);
+    --scrim: rgba(0, 0, 0, 0.6);
+  }
 }
 
 @theme inline {
   --color-primary: var(--primary);
+  --color-fill: var(--fill);
+  --color-fill-hover: var(--fill-hover);
   --color-primary-soft: var(--primary-soft);
   --color-navy: var(--navy);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-surface: var(--surface);
+  --color-card: var(--card);
   --color-c1: var(--c1);
   --color-c2: var(--c2);
   --color-c3: var(--c3);
   --color-c4: var(--c4);
   --color-danger: var(--error);
+  --color-danger-fill: var(--danger-fill);
+  --color-danger-fill-hover: var(--danger-fill-hover);
   --color-danger-soft: var(--error-soft);
+  --color-danger-ink: var(--danger-ink);
   --color-outline: var(--outline);
+  --color-line: var(--line);
   --color-ok: var(--ok);
   --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-info-soft: var(--info-soft);
+  --color-info-ink: var(--info-ink);
+  --color-gold: var(--gold);
+  --color-scrim: var(--scrim);
   --font-sans: var(--font-jakarta), system-ui, sans-serif;
-  --shadow-kartu: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-kartu: var(--bayangan);
+  --radius-kontrol: 14px;
+  --radius-kartu: 20px;
+  --radius-hero: 24px;
+  --default-transition-duration: 180ms;
+}
+
+html {
+  background: var(--surface);
 }
 
 body {
@@ -43,9 +162,54 @@ body {
   color: var(--ink);
   font-family: var(--font-jakarta), system-ui, sans-serif;
   font-size: 14px;
+  line-height: 1.5;
+  overflow-x: hidden;
 }
 
 :focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Masuk halus saat berpindah halaman. */
+@keyframes masuk-halaman {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.halaman-masuk {
+  animation: masuk-halaman 220ms ease-out both;
+}
+
+/* Kilau skeleton. */
+@keyframes kilau {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--c2) 25%, var(--c3) 50%, var(--c2) 75%);
+  background-size: 200% 100%;
+  animation: kilau 1.6s linear infinite;
+  border-radius: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

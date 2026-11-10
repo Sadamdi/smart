@@ -235,7 +235,7 @@ export function ProfilLanjutanKartu({ saya }: { saya: Pengguna }) {
                 type="checkbox"
                 checked={jenjang.includes(j)}
                 onChange={(e) => setJenjang((x) => (e.target.checked ? [...x, j] : x.filter((y) => y !== j)))}
-                className="h-4 w-4 accent-primary"
+                className="h-5 w-5 accent-primary"
               />
               {j}
             </label>

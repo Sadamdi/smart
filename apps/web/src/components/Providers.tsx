@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ApiError, aturSaatKedaluwarsa } from "@/lib/api";
+import { TemaProvider } from "./Tema";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -27,5 +28,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     return () => aturSaatKedaluwarsa(null);
   }, [client, router]);
 
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return (
+    <TemaProvider>
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    </TemaProvider>
+  );
 }

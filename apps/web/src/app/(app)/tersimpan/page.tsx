@@ -1,6 +1,7 @@
 "use client";
 import { KartuBeasiswa } from "@/components/KartuBeasiswa";
-import { KosongState, Tampil } from "@/components/state";
+import { Bookmark } from "lucide-react";
+import { KosongState, MemuatKisi, Tampil } from "@/components/state";
 import { JudulHalaman, TautanTombol } from "@/components/ui";
 import { useTersimpan } from "@/lib/hooks";
 
@@ -9,12 +10,13 @@ const RENCANA: Record<string, string> = { akan_daftar: "Akan mendaftar", sudah_d
 export default function Tersimpan() {
   const kueri = useTersimpan();
   return (
-    <div>
+    <div className="halaman-masuk">
       <JudulHalaman judul="Beasiswa Tersimpan" deskripsi="Beasiswa yang Anda simpan untuk dipantau tenggat dan berkasnya." />
       <Tampil
         kueri={kueri}
+        memuat={<MemuatKisi jumlah={3} />}
         kosong={
-          <KosongState judul="Belum ada beasiswa tersimpan" pesan="Simpan beasiswa dari halaman detail agar tenggatnya masuk kalender." aksi={<TautanTombol href="/jelajah">Jelajah beasiswa</TautanTombol>} />
+          <KosongState ikon={Bookmark} judul="Belum ada beasiswa tersimpan" pesan="Simpan beasiswa dari halaman detail agar tenggatnya masuk kalender." aksi={<TautanTombol href="/jelajah">Jelajah beasiswa</TautanTombol>} />
         }
       >
         {(daftar) => (

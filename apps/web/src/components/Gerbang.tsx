@@ -35,7 +35,7 @@ export function Gerbang({ children }: { children: React.ReactNode }) {
   if (admin && saya.data.peran !== "admin") {
     return (
       <AppShell pengguna={saya.data} admin={false}>
-        <div role="alert" className="rounded-2xl bg-white p-10 text-center shadow-kartu">
+        <div role="alert" className="rounded-kartu bg-card p-10 text-center shadow-kartu">
           <p className="text-lg font-semibold text-navy">Halaman khusus admin</p>
           <p className="mt-1 text-sm text-ink">Akun ini tidak memiliki peran admin.</p>
           <TautanTombol href="/" className="mt-4">

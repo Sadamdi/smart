@@ -1,9 +1,9 @@
 "use client";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { KartuBeasiswa } from "@/components/KartuBeasiswa";
-import { KosongState, Tampil, pesanGalat } from "@/components/state";
+import { KosongState, MemuatKisi, Tampil, pesanGalat } from "@/components/state";
 import { ChipFilter, ChipStatus, JudulHalaman, Kartu, Tombol, TautanTombol } from "@/components/ui";
 import { kirim } from "@/lib/api";
 import { kelengkapanProfil } from "@/lib/profil";
@@ -23,7 +23,7 @@ export default function Rekomendasi() {
   const jumlah = (k: string) => (k === "" ? undefined : ringkasan.data?.[k as keyof NonNullable<typeof ringkasan.data>]);
 
   return (
-    <div>
+    <div className="halaman-masuk">
       <JudulHalaman
         judul="Rekomendasi Beasiswa"
         deskripsi="Mesin Rekomendasi menilai syarat beasiswa terhadap profil Anda. Hasil ini bantuan memilih, bukan jaminan diterima."
@@ -34,13 +34,13 @@ export default function Rekomendasi() {
         }
       />
       {hitung.isError && (
-        <p role="alert" className="mb-4 rounded-lg bg-danger-soft px-3 py-2 text-sm text-[#8c1212]">
+        <p role="alert" className="mb-4 rounded-kontrol bg-danger-soft px-3 py-2 text-sm text-danger-ink">
           {pesanGalat(hitung.error).pesan}
         </p>
       )}
       {saya && (
         <Kartu className="mb-6">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">Ringkasan profil</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-muted">Ringkasan profil</p>
           <p className="mt-1 text-sm text-navy">
             {[saya.program_studi, saya.jenjang, saya.semester ? `Semester ${saya.semester}` : null, saya.ipk ? `IPK ${saya.ipk}` : null]
               .filter(Boolean)
@@ -66,9 +66,10 @@ export default function Rekomendasi() {
       </div>
       <Tampil
         kueri={kueri}
-        baris={3}
+        memuat={<MemuatKisi jumlah={4} />}
         kosong={
           <KosongState
+            ikon={Sparkles}
             judul="Belum ada rekomendasi"
             pesan="Lengkapi profil akademik (jenjang, semester, IPK), lalu hitung ulang rekomendasi."
             aksi={<TautanTombol href="/profil">Lengkapi profil</TautanTombol>}
@@ -82,7 +83,7 @@ export default function Rekomendasi() {
                 <KartuBeasiswa beasiswa={r.beasiswa} kepala={<ChipStatus kategori={r.kategori} />}>
                   {r.alasan.length > 0 && (
                     <div>
-                      <p className="text-xs font-semibold text-navy">Alasan</p>
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-muted">Alasan</p>
                       <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-ink">
                         {r.alasan.map((a) => (
                           <li key={a}>{a}</li>
@@ -91,8 +92,8 @@ export default function Rekomendasi() {
                     </div>
                   )}
                   {r.catatan_kekurangan.length > 0 && (
-                    <div className="mt-3 rounded-xl bg-c1 p-3">
-                      <p className="text-xs font-semibold text-navy">Catatan kekurangan</p>
+                    <div className="mt-3 rounded-[14px] bg-c1 p-3">
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-muted">Catatan kekurangan</p>
                       <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-ink">
                         {r.catatan_kekurangan.map((a) => (
                           <li key={a}>{a}</li>
@@ -106,8 +107,8 @@ export default function Rekomendasi() {
           </ul>
         )}
       </Tampil>
-      <div className="mt-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-c2 p-6">
-        <p className="max-w-md text-sm text-navy">Ingin penjelasan lebih rinci tentang syarat sebuah beasiswa? Tanyakan ke Chatbot AI.</p>
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-kartu border border-c4/60 bg-c2 p-5 sm:p-6">
+        <p className="max-w-md text-sm font-medium text-navy">Ingin penjelasan lebih rinci tentang syarat sebuah beasiswa? Tanyakan ke Chatbot AI.</p>
         <TautanTombol href="/chat">Buka Chatbot AI</TautanTombol>
       </div>
     </div>
