@@ -290,6 +290,9 @@ def validasi_beasiswa(sesi: Session, settings: Settings, b: Beasiswa, hari_ini: 
     if b.jenjang and not any(j == "jenjang" for j, _ in syarat):
         syarat.append(("jenjang", {"nilai": list(b.jenjang)}))  # jenjang beasiswa menjadi syarat terukur
     _simpan_syarat(sesi, b, syarat, (data.get("berkas") or [])[:15])
+    masalah = masalah_tautan_atau_jenjang(b.tautan_resmi, b.nama)
+    if masalah:
+        return _selesai(b, "menunggu", f"Validasi: {masalah}. Perlu diperiksa admin.")
 
     tenggat = tenggat_terverifikasi(data.get("tenggat"), data.get("kutipan_tenggat"), teks)
     if b.tenggat is None and tenggat is not None:
@@ -327,6 +330,22 @@ _JENIS_SYARAT = {
     "kewarganegaraan",
     "lainnya",
 }
+
+
+_PORTAL_AGREGATOR = ("indbeasiswa.com", "infobeasiswa.id", "beasiswa.id")
+_NON_KULIAH = re.compile(r"\b(SMA|SMP|SD|SMK)\b|pelajar kelas|\bsiswa\b", re.IGNORECASE)
+_KULIAH = re.compile(r"mahasiswa|\b(D3|D4|S1|S2|S3)\b|kuliah|sarjana|magister|doktor", re.IGNORECASE)
+
+
+def masalah_tautan_atau_jenjang(url: str, nama: str) -> str | None:
+    """Alasan penolakan bila tautan hanya beranda portal agregator atau beasiswa bukan jenjang kuliah."""
+    p = urlparse(url or "")
+    host = p.netloc.lower().removeprefix("www.")
+    if any(host == d or host.endswith("." + d) for d in _PORTAL_AGREGATOR) and p.path.strip("/") == "":
+        return "tautan hanya beranda portal agregator, bukan laman beasiswanya"
+    if _NON_KULIAH.search(nama or "") and not _KULIAH.search(nama or ""):
+        return "beasiswa ini bukan untuk jenjang perkuliahan"
+    return None
 
 
 def _selesai(b: Beasiswa, hasil: str, alasan: str | None) -> str:
