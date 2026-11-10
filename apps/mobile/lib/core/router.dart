@@ -9,6 +9,7 @@ import '../features/auth/presentation/auth_controller.dart';
 import '../features/auth/presentation/auth_pages.dart';
 import '../features/beasiswa/presentation/detail_page.dart';
 import '../features/beasiswa/presentation/jelajah_page.dart';
+import '../features/beasiswa/presentation/tersimpan_page.dart';
 import '../features/beranda/presentation/beranda_page.dart';
 import '../features/chat/presentation/chat_page.dart';
 import '../features/dokumen/presentation/dokumen_page.dart';
@@ -58,6 +59,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/masuk', builder: (_, _) => const LoginPage()),
       GoRoute(path: '/daftar', builder: (_, _) => const DaftarPage()),
       GoRoute(path: '/notifikasi', builder: (_, _) => const NotifikasiPage()),
+      GoRoute(path: '/tersimpan', builder: (_, _) => const TersimpanPage()),
       GoRoute(path: '/dokumen', builder: (_, _) => const DokumenPage()),
       GoRoute(path: '/chat', builder: (_, _) => const ChatPage()),
       GoRoute(

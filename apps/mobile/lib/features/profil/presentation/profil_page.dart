@@ -474,6 +474,11 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
                       'Profil Lanjutan',
                       '/profil-lanjutan',
                     ),
+                    (
+                      Icons.bookmark_border_rounded,
+                      'Beasiswa Tersimpan',
+                      '/tersimpan',
+                    ),
                     (Icons.description_outlined, 'Dokumen Saya', '/dokumen'),
                     (Icons.chat_bubble_outline, 'Chatbot AI', '/chat'),
                     (Icons.settings_outlined, 'Pengaturan', '/pengaturan'),

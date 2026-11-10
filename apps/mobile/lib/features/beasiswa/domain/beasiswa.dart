@@ -37,6 +37,16 @@ class BeasiswaRingkas {
     tenggat: urai(j['tenggat'] as String?),
     tautanResmi: (j['tautan_resmi'] ?? '') as String,
   );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'nama': nama,
+    'penyelenggara': penyelenggara,
+    'negara': negara,
+    'jenjang': jenjang?.split(', '),
+    'tenggat': tenggat == null ? null : tanggalApi(tenggat!),
+    'tautan_resmi': tautanResmi,
+  };
 }
 
 class Persyaratan {
@@ -65,6 +75,14 @@ class Persyaratan {
     status: j['status'] as String?,
     catatan: j['catatan'] as String?,
   );
+
+  Map<String, dynamic> toJson() => {
+    'jenis': jenis,
+    'nilai_batas': nilaiBatas,
+    'dapat_dikejar': dapatDikejar,
+    'status': status,
+    'catatan': catatan,
+  };
 
   static const _label = {
     'ipk_minimum': 'IPK minimum',
@@ -104,6 +122,8 @@ class BerkasWajib {
     id: j['id'] as String,
     namaBerkas: j['nama_berkas'] as String,
   );
+
+  Map<String, dynamic> toJson() => {'id': id, 'nama_berkas': namaBerkas};
 }
 
 class BeasiswaDetail {
@@ -145,6 +165,20 @@ class BeasiswaDetail {
       for (final x in (j['catatan_kekurangan'] as List? ?? [])) '$x',
     ],
   );
+
+  /// Bentuk datar seperti respons API: kolom ringkasan berada di tingkat atas.
+  Map<String, dynamic> toJson() => {
+    ...ringkas.toJson(),
+    'manfaat': manfaat,
+    'tanggal_diperiksa': tanggalDiperiksa == null
+        ? null
+        : tanggalApi(tanggalDiperiksa!),
+    'persyaratan': [for (final p in persyaratan) p.toJson()],
+    'berkas_wajib': [for (final b in berkasWajib) b.toJson()],
+    'kategori': kategori,
+    'alasan': alasan,
+    'catatan_kekurangan': catatanKekurangan,
+  };
 }
 
 class HalamanBeasiswa {

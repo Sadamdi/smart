@@ -60,7 +60,17 @@ class _JelajahPageState extends ConsumerState<JelajahPage> {
               'Beasiswa terbit yang tenggatnya belum lewat, dipantau dari laman resmi.',
               style: t.bodyMedium,
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => context.push('/tersimpan'),
+                icon: const Icon(Icons.bookmark_border_rounded),
+                label: const Text('Tersimpan'),
+                style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+              ),
+            ),
+            const SizedBox(height: 6),
             TextField(
               controller: _cari,
               onChanged: _onCari,
