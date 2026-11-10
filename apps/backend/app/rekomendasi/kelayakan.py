@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from app.rekomendasi.konfigurasi import TOLERANSI, Toleransi
+from app.rekomendasi.wilayah import BEDA, COCOK, NEGARA_ASAL, Wilayah, cocok_wilayah, negara_kanonik
 
 MEMENUHI = "memenuhi"
 HAMPIR = "hampir_memenuhi"
@@ -28,6 +29,8 @@ class ProfilKelayakan:
     ipk: float | None = None
     jenis_kampus: str | None = None
     kota_domisili: str | None = None
+    negara_domisili: str | None = None  # kosong pada profil lama: syarat tingkat negara lalu belum dapat dipastikan
+    provinsi_domisili: str | None = None
     daerah_asal: list[str] = field(default_factory=list)  # kota dan provinsi asal (profil lanjutan)
     tanggal_lahir: date | None = None
     penghasilan_orang_tua: int | None = None
@@ -114,11 +117,7 @@ def _pilihan(
         return None
     if not nilai:
         return _tidak_diketahui(jenis, label)
-    cocok = (
-        any(d.lower() in nilai.lower() or nilai.lower() in d.lower() for d in diminta)
-        if jenis == "domisili"
-        else (nilai.lower() in [d.lower() for d in diminta] if huruf_kecil else nilai in diminta)
-    )
+    cocok = nilai.lower() in [d.lower() for d in diminta] if huruf_kecil else nilai in diminta
     if cocok:
         return HasilSyarat(jenis, OK, 1.0, teks_ok.format(nilai=nilai))
     return HasilSyarat(jenis, GAGAL, 0.0, kekurangan=f"Untuk {label} {', '.join(diminta)}")
@@ -134,20 +133,54 @@ def _kanon_negara(teks: str) -> str:
     return "indonesia" if re.search(r"\bwni\b|indonesia", t) else t
 
 
-def _domisili_khusus(batas: dict | None, wilayah: str | None) -> HasilSyarat | None:
-    """Bentuk syarat domisili yang bukan nama wilayah: negara Indonesia, kalimat negatif, atau deskripsi non-geografis."""
+def _wilayah_profil(profil: ProfilKelayakan) -> Wilayah:
+    return Wilayah(
+        negara=profil.negara_domisili,
+        provinsi=profil.provinsi_domisili,
+        kota=profil.kota_domisili,
+        tambahan=tuple(x for x in profil.daerah_asal if x),
+    )
+
+
+def _domisili_khusus(batas: dict | None, profil: ProfilKelayakan | None = None) -> HasilSyarat | None:
+    """Bentuk syarat domisili yang bukan nama wilayah: kalimat negatif atau deskripsi non-geografis.
+
+    Syarat "Indonesia" terpenuhi bila negara domisili Indonesia (atau belum diisi pada profil lama); domisili di
+    luar negeri menggagalkannya.
+    """
     diminta = _daftar(batas)
     if not diminta:
         return None
     for d in diminta:
         dl = d.lower().strip()
         if dl in ("indonesia", "wilayah indonesia", "seluruh indonesia") or dl.startswith("berdomisili di indonesia"):
+            negara = negara_kanonik(profil.negara_domisili) if profil else None
+            if negara and negara != NEGARA_ASAL:
+                return HasilSyarat("domisili", GAGAL, 0.0, kekurangan="Untuk domisili di Indonesia")
             return HasilSyarat("domisili", OK, 1.0, "Berdomisili di Indonesia")
         if dl.startswith(("tidak ", "bukan ")):
             return HasilSyarat("domisili", OK, 1.0, "Syarat domisili tidak membatasi domisili Anda")
         if re.search(r"pesantren|pondok|sekolah|naungan|organisasi", dl) or len(dl.split()) > 5:
             return HasilSyarat("domisili", TOLERAN, 0.7, kekurangan="Periksa syarat domisili di laman resmi")
     return None
+
+
+def _domisili(batas: dict | None, profil: ProfilKelayakan) -> HasilSyarat | None:
+    diminta = _daftar(batas)
+    if not diminta:
+        return None
+    khusus = _domisili_khusus(batas, profil)
+    if khusus is not None:
+        return khusus
+    w = _wilayah_profil(profil)
+    if w.kosong():
+        return _tidak_diketahui("domisili", "negara, provinsi, dan kota domisili")
+    hasil = [cocok_wilayah(d, w) for d in diminta]
+    if COCOK in hasil:
+        return HasilSyarat("domisili", OK, 1.0, "Domisili atau daerah asal sesuai")
+    if BEDA in hasil:
+        return HasilSyarat("domisili", GAGAL, 0.0, kekurangan=f"Untuk domisili {', '.join(diminta)}")
+    return _tidak_diketahui("domisili", "negara, provinsi, dan kota domisili")
 
 
 def _warga(jenis: str, batas: dict | None, nilai: str | None) -> HasilSyarat | None:
@@ -208,11 +241,7 @@ def periksa_syarat(
     if jenis == "jenis_kampus":
         return _pilihan(jenis, batas, profil.jenis_kampus, "kampus", "Kampus {nilai} sesuai")
     if jenis == "domisili":
-        wilayah = ", ".join(x for x in [profil.kota_domisili, *profil.daerah_asal] if x) or None
-        khusus = _domisili_khusus(batas, wilayah)
-        if khusus is not None:
-            return khusus
-        return _pilihan(jenis, batas, wilayah, "domisili", "Domisili atau daerah asal sesuai")
+        return _domisili(batas, profil)
     if jenis == "kewarganegaraan":
         return _warga(jenis, batas, profil.kewarganegaraan)
     if jenis == "usia_maksimum":

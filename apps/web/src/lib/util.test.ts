@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { labelSisa, sisaHari, tanggalIndo } from "./format";
-import { isianDariPengguna, kelengkapanProfil, muatanProfil } from "./profil";
+import { galatProfil, isianDariPengguna, kelengkapanProfil, muatanProfil } from "./profil";
 import { muatanPerbaikan } from "./validasi";
 import type { Pengguna } from "./types";
 
@@ -36,6 +36,26 @@ describe("profil", () => {
     expect(m.minat).toEqual(["riset", "teknologi"]);
     expect(m.skor_bahasa).toEqual({ toefl: 550 });
     expect(m.kampus).toBeNull();
+  });
+});
+
+describe("domisili terstruktur", () => {
+  it("negara bawaan Indonesia dan provinsi dikirim hanya untuk Indonesia", () => {
+    const dasar = isianDariPengguna(pengguna);
+    expect(dasar.negara_domisili).toBe("Indonesia");
+    const id = muatanProfil({ ...dasar, provinsi_domisili: "Jawa Timur", kota_domisili: "Malang" });
+    expect([id.negara_domisili, id.provinsi_domisili, id.kota_domisili]).toEqual(["Indonesia", "Jawa Timur", "Malang"]);
+    const luar = muatanProfil({ ...dasar, negara_domisili: "Malaysia", provinsi_domisili: "Jawa Timur", kota_domisili: "Kuala Lumpur" });
+    expect([luar.negara_domisili, luar.provinsi_domisili]).toEqual(["Malaysia", null]);
+  });
+  it("memvalidasi rentang dengan pesan Indonesia", () => {
+    const dasar = isianDariPengguna(pengguna);
+    expect(galatProfil(dasar)).toEqual({});
+    const g = galatProfil({ ...dasar, ipk: "4,5", semester: "0", ielts: "10", nama: " " });
+    expect(g.ipk).toMatch(/IPK/);
+    expect(g.semester).toMatch(/Semester/);
+    expect(g.ielts).toMatch(/IELTS/);
+    expect(g.nama).toMatch(/wajib/);
   });
 });
 
