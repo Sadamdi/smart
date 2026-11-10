@@ -147,3 +147,33 @@ def test_rapikan_penyelenggara_menyeragamkan_varian():
     assert rapikan_penyelenggara("Pertamina Foundation ") == "Pertamina Foundation"
     assert rapikan_penyelenggara("  ") is None
     assert rapikan_penyelenggara(None) is None
+
+
+def test_syarat_deskriptif_tidak_menyilang_wni_dan_domisili_indonesia():
+    from datetime import date
+
+    from app.rekomendasi.kelayakan import GAGAL, OK, TOLERAN, ProfilKelayakan, periksa_syarat
+
+    p = ProfilKelayakan(kota_domisili="Malang", kewarganegaraan="Indonesia")
+    h = date(2026, 11, 10)
+    r = periksa_syarat("kewarganegaraan", {"nilai": "citizens from developing member countries of ADB"}, p, h)
+    assert r.status == TOLERAN
+    r = periksa_syarat("kewarganegaraan", {"nilai": "negara/teritori peserta yang terdaftar pada daftar dropdown"}, p, h)
+    assert r.status == TOLERAN
+    assert periksa_syarat("kewarganegaraan", {"nilai": "Canada (and Israel)"}, p, h).status == GAGAL
+    assert periksa_syarat("kewarganegaraan", {"nilai": "Warga Negara Indonesia (WNI)"}, p, h).status == OK
+    assert periksa_syarat("domisili", {"nilai": ["Indonesia"]}, p, h).status == OK
+    assert periksa_syarat("domisili", {"nilai": ["Tidak berdomisili di Jerman lebih dari 15 bulan"]}, p, h).status == OK
+    assert periksa_syarat("domisili", {"nilai": ["Kota Blitar"]}, p, h).status == GAGAL
+    assert periksa_syarat("domisili", {"nilai": ["Kota Malang"]}, p, h).status == OK
+
+
+def test_masalah_tautan_atau_jenjang():
+    from app.services.pemantau_ai import masalah_tautan_atau_jenjang as m
+
+    assert m("https://indbeasiswa.com/", "Beasiswa HKPFS S3") is not None
+    assert m("https://indbeasiswa.com/beasiswa-hkpfs/", "Beasiswa HKPFS S3") is None
+    assert m("https://www.lpdp.kemenkeu.go.id/", "Beasiswa LPDP") is None
+    assert m("https://x.org/a", "Pendaftaran SMA Unggul Garuda") is not None
+    assert m("https://x.org/a", "Beasiswa S1 untuk lulusan SMA") is None
+    assert m("https://x.org/a", "Beasiswa JIS untuk pelajar kelas 8") is not None
