@@ -56,37 +56,55 @@ class DetailPage extends ConsumerWidget {
     final tersimpan = ref.watch(tersimpanProvider).value?.contains(id) ?? false;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detail Beasiswa'),
-        actions: [
-          IconButton(
-            tooltip: tersimpan ? 'Hapus dari tersimpan' : 'Simpan beasiswa',
-            onPressed: () => ubahSimpan(context, ref, id, tersimpan: tersimpan),
-            icon: Icon(
-              tersimpan ? Icons.bookmark : Icons.bookmark_border,
-              color: Warna.primary,
-            ),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Detail Beasiswa')),
       body: AsyncIsi<BeasiswaDetail>(
         nilai: nilai,
         ulang: () => ref.invalidate(detailBeasiswaProvider(id)),
-        bangun: (d) => _Isi(
-          detail: d,
-          tersimpan: tersimpan,
-          onBuka: () => _bukaPortal(context, ref, d.ringkas),
-        ),
+        bangun: (d) => _Isi(detail: d, tersimpan: tersimpan),
       ),
       bottomNavigationBar: nilai.hasValue
-          ? SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                child: FilledButton.icon(
-                  onPressed: () =>
-                      _bukaPortal(context, ref, nilai.value!.ringkas),
-                  icon: const Icon(Icons.open_in_new, size: 18),
-                  label: const Text('Buka Laman Resmi'),
+          ? DecoratedBox(
+              decoration: BoxDecoration(
+                color: Warna.kartu,
+                border: Border(top: BorderSide(color: Warna.outline)),
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                  child: Row(
+                    children: [
+                      Semantics(
+                        button: true,
+                        label: tersimpan ? 'Hapus dari tersimpan' : 'Simpan',
+                        child: OutlinedButton(
+                          onPressed: () => ubahSimpan(
+                            context,
+                            ref,
+                            id,
+                            tersimpan: tersimpan,
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(52, 52),
+                            padding: EdgeInsets.zero,
+                          ),
+                          child: Icon(
+                            tersimpan
+                                ? Icons.bookmark_rounded
+                                : Icons.bookmark_border_rounded,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () =>
+                              _bukaPortal(context, ref, nilai.value!.ringkas),
+                          icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                          label: const Text('Kunjungi Laman Resmi'),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             )
@@ -96,15 +114,10 @@ class DetailPage extends ConsumerWidget {
 }
 
 class _Isi extends ConsumerWidget {
-  const _Isi({
-    required this.detail,
-    required this.tersimpan,
-    required this.onBuka,
-  });
+  const _Isi({required this.detail, required this.tersimpan});
 
   final BeasiswaDetail detail;
   final bool tersimpan;
-  final VoidCallback onBuka;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -171,36 +184,18 @@ class _Isi extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Warna.primary,
-            borderRadius: BorderRadius.circular(Jari.kartu),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Pendaftaran dilakukan di laman resmi',
-                style: t.titleMedium?.copyWith(color: Warna.putih),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.info_outline_rounded, size: 18, color: Warna.muted),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Pendaftaran dilakukan di laman resmi. SMART tidak mengurus pendaftaran, jadi periksa kembali syarat dan tenggat di sana.',
+                style: t.bodySmall,
               ),
-              const SizedBox(height: 6),
-              Text(
-                'SMART tidak mengurus pendaftaran. Periksa kembali syarat dan tenggat di laman penyelenggara.',
-                style: t.bodyMedium?.copyWith(color: Warna.putih),
-              ),
-              const SizedBox(height: 12),
-              FilledButton.icon(
-                onPressed: onBuka,
-                style: FilledButton.styleFrom(
-                  backgroundColor: Warna.putih,
-                  foregroundColor: Warna.primary,
-                ),
-                icon: const Icon(Icons.open_in_new, size: 18),
-                label: const Text('Kunjungi Laman Resmi'),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
         const SizedBox(height: 20),
         _Bagian(
@@ -266,7 +261,7 @@ class _Isi extends ConsumerWidget {
                         ListTile(
                           dense: true,
                           contentPadding: EdgeInsets.zero,
-                          leading: const Icon(
+                          leading: Icon(
                             Icons.description_outlined,
                             color: Warna.primary,
                           ),
@@ -345,7 +340,7 @@ class _Bagian extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Warna.putih,
+        color: Warna.kartu,
         borderRadius: BorderRadius.circular(Jari.kartu),
         boxShadow: bayanganKartu,
       ),
@@ -374,7 +369,7 @@ class _BarisSyarat extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(top: 2),
             child: Icon(
               Icons.check_circle_outline,

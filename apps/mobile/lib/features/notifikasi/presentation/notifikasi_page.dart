@@ -59,7 +59,7 @@ class NotifikasiPage extends ConsumerWidget {
                 final n = daftar[i];
                 final tenggat = n.jenis == 'tenggat';
                 return Material(
-                  color: n.dibaca ? Warna.putih : Warna.container2,
+                  color: n.dibaca ? Warna.kartu : Warna.container2,
                   borderRadius: BorderRadius.circular(Jari.kartu),
                   child: ListTile(
                     shape: RoundedRectangleBorder(
@@ -86,11 +86,7 @@ class NotifikasiPage extends ConsumerWidget {
                     isThreeLine: true,
                     trailing: n.dibaca
                         ? null
-                        : const Icon(
-                            Icons.circle,
-                            size: 10,
-                            color: Warna.primary,
-                          ),
+                        : Icon(Icons.circle, size: 10, color: Warna.primary),
                     onTap: () async {
                       final router = GoRouter.of(context);
                       if (!n.dibaca) await aksi(() => repo.baca(n.id));

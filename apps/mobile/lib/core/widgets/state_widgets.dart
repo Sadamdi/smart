@@ -88,7 +88,7 @@ class GalatState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircleAvatar(
+            CircleAvatar(
               radius: 32,
               backgroundColor: Warna.errorSoft,
               child: Icon(Icons.cloud_off_outlined, color: Warna.error),

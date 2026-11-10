@@ -49,33 +49,33 @@ class ChipStatus extends StatelessWidget {
     super.key,
     required this.label,
     this.ikon,
-    this.latar = Warna.container2,
-    this.warna = Warna.navy,
+    this.latar,
+    this.warna,
   });
 
   final String label;
   final IconData? ikon;
-  final Color latar;
-  final Color warna;
+  final Color? latar;
+  final Color? warna;
 
   factory ChipStatus.kategori(Kategori k) {
     switch (k) {
       case Kategori.memenuhi:
-        return const ChipStatus(
+        return ChipStatus(
           label: 'Memenuhi syarat',
           ikon: Icons.check_circle,
           latar: Warna.suksesSoft,
           warna: Warna.sukses,
         );
       case Kategori.hampirMemenuhi:
-        return const ChipStatus(
+        return ChipStatus(
           label: 'Hampir memenuhi',
           ikon: Icons.timelapse,
           latar: Warna.container3,
           warna: Warna.primary,
         );
       case Kategori.belumMemenuhi:
-        return const ChipStatus(
+        return ChipStatus(
           label: 'Belum memenuhi',
           ikon: Icons.lock_outline,
           latar: Warna.container2,
@@ -96,21 +96,23 @@ class ChipStatus extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: latar,
+        color: latar ?? Warna.container2,
         borderRadius: BorderRadius.circular(Jari.bulat),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (ikon != null) ...[
-            Icon(ikon, size: 14, color: warna),
+            Icon(ikon, size: 14, color: warna ?? Warna.navy),
             const SizedBox(width: 4),
           ],
           Flexible(
             child: Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: warna, fontWeight: FontWeight.w600),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: warna ?? Warna.navy,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

@@ -58,7 +58,7 @@ class SmartAppBar extends ConsumerWidget implements PreferredSizeWidget {
           icon: Badge(
             isLabelVisible: belumDibaca > 0,
             label: Text('$belumDibaca'),
-            child: const Icon(Icons.notifications_none, color: Warna.ink),
+            child: Icon(Icons.notifications_none, color: Warna.ink),
           ),
         ),
         Padding(
@@ -66,7 +66,7 @@ class SmartAppBar extends ConsumerWidget implements PreferredSizeWidget {
           child: InkWell(
             onTap: () => context.go('/profil'),
             customBorder: const CircleBorder(),
-            child: const CircleAvatar(
+            child: CircleAvatar(
               radius: 18,
               backgroundColor: Warna.primary,
               child: Icon(Icons.person, size: 20, color: Warna.putih),
