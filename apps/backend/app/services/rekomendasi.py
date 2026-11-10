@@ -4,7 +4,7 @@ import uuid
 from collections import defaultdict
 from datetime import date
 
-from sqlalchemy import delete, insert, or_, select
+from sqlalchemy import delete, func, insert, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -109,11 +109,25 @@ def hitung(sesi: Session, p: Pengguna, hari_ini: date) -> list[HasilRekomendasi]
     return hasil
 
 
+def _usang(sesi: Session, p: Pengguna) -> bool:
+    """Hasil tersimpan dihitung ulang bila belum ada, profil berubah setelahnya, atau versi aturan berganti."""
+    terbaru = sesi.scalar(select(func.max(Rekomendasi.diubah_pada)).where(Rekomendasi.pengguna_id == p.id))
+    if terbaru is None:
+        return True
+    if p.diubah_pada is not None and p.diubah_pada > terbaru:
+        return True
+    lama = sesi.scalar(
+        select(Rekomendasi.id)
+        .where(Rekomendasi.pengguna_id == p.id, ~func.coalesce(Rekomendasi.versi_model, "").like(f"{VERSI_MODEL}%"))
+        .limit(1)
+    )
+    return lama is not None
+
+
 def daftar(
     sesi: Session, p: Pengguna, hari_ini: date, kategori: str | None, paksa: bool = False
 ) -> list[tuple[Rekomendasi, Beasiswa]]:
-    ada = sesi.scalar(select(Rekomendasi.id).where(Rekomendasi.pengguna_id == p.id).limit(1))
-    if paksa or ada is None:
+    if paksa or _usang(sesi, p):
         hitung(sesi, p, hari_ini)
     stmt = (
         select(Rekomendasi, Beasiswa)

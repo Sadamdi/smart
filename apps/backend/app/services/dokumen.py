@@ -20,6 +20,22 @@ from app.services import llm
 
 TIPE_DIIZINKAN = {".pdf", ".docx", ".txt", ".png", ".jpg", ".jpeg"}
 TEKS_MAKS = 20000
+ROMAWI = {
+    "I": 1,
+    "II": 2,
+    "III": 3,
+    "IV": 4,
+    "V": 5,
+    "VI": 6,
+    "VII": 7,
+    "VIII": 8,
+    "IX": 9,
+    "X": 10,
+    "XI": 11,
+    "XII": 12,
+    "XIII": 13,
+    "XIV": 14,
+}
 
 
 def ekstrak_teks(nama: str, isi: bytes) -> str:
@@ -41,7 +57,7 @@ def ekstrak_teks(nama: str, isi: bytes) -> str:
 def baca_dengan_aturan(teks: str) -> dict:
     """Pembacaan cadangan tanpa AI: hanya mengambil nilai yang tertulis jelas."""
     hasil: dict = {}
-    ipk = re.search(r"(?:IPK|GPA)\D{0,12}([0-4][.,]\d{1,2})", teks, re.IGNORECASE)
+    ipk = re.search(r"(?:IPK|GPA|Indeks\s+Prestasi\s+Kumulatif)\D{0,12}([0-4][.,]\d{1,2})", teks, re.IGNORECASE)
     if ipk:
         hasil["ipk"] = float(ipk.group(1).replace(",", "."))
     bahasa: dict[str, float] = {}
@@ -51,9 +67,12 @@ def baca_dengan_aturan(teks: str) -> dict:
             bahasa[nama] = float(m.group(1).replace(",", "."))
     if bahasa:
         hasil["skor_bahasa"] = bahasa
-    sem = re.search(r"semester\D{0,5}(\d{1,2})", teks, re.IGNORECASE)
-    if sem and 1 <= int(sem.group(1)) <= 14:
-        hasil["semester"] = int(sem.group(1))
+    sem = re.search(r"\b(?:semester|smt|sem)\b\.?\s*(?:ke)?\s*[-:]?\s*(\d{1,2}|[ivx]{1,4})\b", teks, re.IGNORECASE)
+    if sem:
+        nilai = sem.group(1).upper()
+        angka = int(nilai) if nilai.isdigit() else ROMAWI.get(nilai)
+        if angka and 1 <= angka <= 14:
+            hasil["semester"] = angka
     organisasi = [
         m.strip()[:120]
         for m in re.findall(r"((?:BEM|HMJ|UKM|Himpunan|Organisasi|Ketua|Wakil Ketua|Sekretaris)[^\n.;]{3,100})", teks)
