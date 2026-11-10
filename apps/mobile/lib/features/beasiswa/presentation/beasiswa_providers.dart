@@ -118,3 +118,8 @@ final detailBeasiswaProvider = FutureProvider.autoDispose
 final tersimpanProvider = FutureProvider.autoDispose<Set<String>>(
   (ref) => ref.watch(beasiswaRepositoryProvider).idTersimpan(),
 );
+
+final daftarTersimpanProvider =
+    FutureProvider.autoDispose<List<BeasiswaRingkas>>(
+      (ref) => ref.watch(beasiswaRepositoryProvider).daftarTersimpan(),
+    );

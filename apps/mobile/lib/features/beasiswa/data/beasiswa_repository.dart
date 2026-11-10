@@ -49,4 +49,15 @@ class BeasiswaRepository {
             as String,
     };
   }
+
+  /// Beasiswa yang disimpan pengguna, sesuai urutan dari server.
+  Future<List<BeasiswaRingkas>> daftarTersimpan() async {
+    final r = await _api.get('/me/tersimpan');
+    return [
+      for (final x in r.data as List)
+        BeasiswaRingkas.fromJson(
+          (x as Map<String, dynamic>)['beasiswa'] as Map<String, dynamic>,
+        ),
+    ];
+  }
 }
