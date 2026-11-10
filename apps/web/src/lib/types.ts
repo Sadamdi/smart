@@ -9,6 +9,8 @@ export type Pengguna = {
   peran: "mahasiswa" | "admin" | string;
   nama: string;
   tanggal_lahir?: string | null;
+  negara_domisili?: string | null;
+  provinsi_domisili?: string | null;
   kota_domisili?: string | null;
   kampus?: string | null;
   jenis_kampus?: string | null;
@@ -26,6 +28,7 @@ export type Pengguna = {
   profil_lanjutan?: ProfilLanjutan | null;
   preferensi_notifikasi: { email?: boolean; push?: boolean };
 };
+export type ReferensiWilayah = { negara: string[]; provinsi: string[]; negara_asal: string };
 export type ProfilLanjutan = {
   provinsi_asal?: string | null;
   kota_asal?: string | null;

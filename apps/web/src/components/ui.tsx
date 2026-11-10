@@ -48,11 +48,31 @@ export function TautanTombol({
   );
 }
 
-export function Medan({ label, galat, children }: { label: string; galat?: string; children: ReactNode }) {
+export function Medan({
+  label,
+  galat,
+  wajib,
+  bantuan,
+  children,
+}: {
+  label: string;
+  galat?: string;
+  /** true: wajib untuk rekomendasi; false: opsional; tanpa nilai: tanpa penanda. */
+  wajib?: boolean;
+  bantuan?: string;
+  children: ReactNode;
+}) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</span>
+      <span className="mb-1.5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
+        {label}
+        {wajib === true && (
+          <span className="rounded-full bg-c3 px-2 py-0.5 text-[10px] normal-case tracking-normal text-primary">Wajib untuk rekomendasi</span>
+        )}
+        {wajib === false && <span className="text-[10px] font-medium normal-case tracking-normal">opsional</span>}
+      </span>
       {children}
+      {bantuan && !galat && <span className="mt-1 block text-xs text-muted">{bantuan}</span>}
       {galat && (
         <span role="alert" className="mt-1 block text-xs text-danger">
           {galat}

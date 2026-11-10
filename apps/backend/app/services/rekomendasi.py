@@ -43,6 +43,8 @@ def profil_dari(sesi: Session, p: Pengguna) -> ProfilKelayakan:
         ipk=float(p.ipk) if p.ipk is not None else None,
         jenis_kampus=p.jenis_kampus,
         kota_domisili=p.kota_domisili,
+        negara_domisili=p.negara_domisili,
+        provinsi_domisili=p.provinsi_domisili,
         daerah_asal=[x for x in (lanjutan(p).get("kota_asal"), lanjutan(p).get("provinsi_asal")) if x],
         tanggal_lahir=p.tanggal_lahir,
         penghasilan_orang_tua=p.penghasilan_orang_tua,

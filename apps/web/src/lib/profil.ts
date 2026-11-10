@@ -21,9 +21,13 @@ export function kelengkapanProfil(p: Pengguna): { nilai: number; kosong: string[
   return { nilai: Math.round(((BUTIR.length - kosong.length) / BUTIR.length) * 100), kosong };
 }
 
+export const NEGARA_ASAL = "Indonesia";
+
 export type IsianProfil = {
   nama: string;
   tanggal_lahir: string;
+  negara_domisili: string;
+  provinsi_domisili: string;
   kota_domisili: string;
   kampus: string;
   jenis_kampus: string;
@@ -55,6 +59,8 @@ export function isianDariPengguna(p: Pengguna): IsianProfil {
   return {
     nama: p.nama,
     tanggal_lahir: s(p.tanggal_lahir),
+    negara_domisili: s(p.negara_domisili) || NEGARA_ASAL,
+    provinsi_domisili: s(p.provinsi_domisili),
     kota_domisili: s(p.kota_domisili),
     kampus: s(p.kampus),
     jenis_kampus: s(p.jenis_kampus),
@@ -86,6 +92,9 @@ export function muatanProfil(i: IsianProfil) {
   return {
     nama: teks(i.nama) ?? undefined,
     tanggal_lahir: teks(i.tanggal_lahir),
+    negara_domisili: teks(i.negara_domisili),
+    // provinsi hanya berlaku untuk domisili di Indonesia
+    provinsi_domisili: i.negara_domisili === NEGARA_ASAL ? teks(i.provinsi_domisili) : null,
     kota_domisili: teks(i.kota_domisili),
     kampus: teks(i.kampus),
     jenis_kampus: teks(i.jenis_kampus),
@@ -101,4 +110,26 @@ export function muatanProfil(i: IsianProfil) {
     kondisi_khusus: i.kondisi_khusus.length ? i.kondisi_khusus : null,
     catatan_tambahan: teks(i.catatan_tambahan),
   };
+}
+
+/** Pesan galat per kolom (kosong bila valid). Hanya rentang dan format; kolom boleh kosong. */
+export function galatProfil(i: IsianProfil): Partial<Record<keyof IsianProfil, string>> {
+  const g: Partial<Record<keyof IsianProfil, string>> = {};
+  const angka = (v: string) => (v.trim() === "" ? null : Number(v.replace(",", ".")));
+  const rentang = (kunciKolom: keyof IsianProfil, v: string, min: number, maks: number, nama: string, bulat = false) => {
+    const n = angka(v);
+    if (n === null) return;
+    if (Number.isNaN(n) || n < min || n > maks) g[kunciKolom] = `${nama} harus antara ${min} dan ${maks}.`;
+    else if (bulat && !Number.isInteger(n)) g[kunciKolom] = `${nama} harus bilangan bulat.`;
+  };
+  if (!i.nama.trim()) g.nama = "Nama lengkap wajib diisi.";
+  rentang("semester", i.semester, 1, 14, "Semester", true);
+  rentang("ipk", i.ipk, 0, 4, "IPK");
+  rentang("ips_terakhir", i.ips_terakhir, 0, 4, "IPS");
+  rentang("toefl", i.toefl, 0, 677, "Skor TOEFL");
+  rentang("ielts", i.ielts, 0, 9, "Skor IELTS");
+  const gaji = angka(i.penghasilan_orang_tua);
+  if (gaji !== null && (Number.isNaN(gaji) || gaji < 0)) g.penghasilan_orang_tua = "Penghasilan tidak boleh negatif.";
+  if (i.tanggal_lahir && new Date(i.tanggal_lahir) > new Date()) g.tanggal_lahir = "Tanggal lahir tidak boleh di masa depan.";
+  return g;
 }
