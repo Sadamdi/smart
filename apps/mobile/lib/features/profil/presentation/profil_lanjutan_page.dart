@@ -1,29 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/domain/pengguna.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../domain/profil_lanjutan.dart';
+import 'profil_controller.dart';
 
 const _jenjang = ['D3', 'D4', 'S1', 'S2', 'S3'];
 const _jenisSekolah = ['SMA', 'SMK', 'MA', 'Pesantren', 'Lainnya'];
 
-class ProfilLanjutanPage extends ConsumerStatefulWidget {
+class ProfilLanjutanPage extends StatefulWidget {
   const ProfilLanjutanPage({super.key});
 
   @override
-  ConsumerState<ProfilLanjutanPage> createState() => _ProfilLanjutanPageState();
+  State<ProfilLanjutanPage> createState() => _ProfilLanjutanPageState();
 }
 
-class _ProfilLanjutanPageState extends ConsumerState<ProfilLanjutanPage> {
+class _ProfilLanjutanPageState extends State<ProfilLanjutanPage> {
+  final _ctrl = Get.find<ProfilController>();
   final _c = <String, TextEditingController>{};
   String? _jenisSekolahPilih;
   final Set<String> _jenjangPilih = {};
-  bool _kirim = false;
-  String? _galat;
+  bool get _kirim => _ctrl.mengirim.value;
   bool _terisi = false;
 
   TextEditingController _ctl(String k) =>
@@ -85,10 +85,6 @@ class _ProfilLanjutanPageState extends ConsumerState<ProfilLanjutanPage> {
   }
 
   Future<void> _simpan() async {
-    setState(() {
-      _kirim = true;
-      _galat = null;
-    });
     final peta = <String, dynamic>{
       'provinsi_asal': _teks('provinsi_asal'),
       'kota_asal': _teks('kota_asal'),
@@ -124,20 +120,12 @@ class _ProfilLanjutanPageState extends ConsumerState<ProfilLanjutanPage> {
         'bidang': uraiDaftarKoma(_ctl('bidang').text),
       },
     };
-    try {
-      await ref
-          .read(authControllerProvider.notifier)
-          .ubahProfil(ProfilMasukan(profilLanjutan: peta));
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profil lanjutan disimpan.')),
-        );
-        context.pop();
-      }
-    } catch (e) {
-      if (mounted) setState(() => _galat = pesanGalat(e));
-    } finally {
-      if (mounted) setState(() => _kirim = false);
+    final ok = await _ctrl.simpan(ProfilMasukan(profilLanjutan: peta));
+    if (ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profil lanjutan disimpan.')),
+      );
+      context.pop();
     }
   }
 
@@ -159,8 +147,16 @@ class _ProfilLanjutanPageState extends ConsumerState<ProfilLanjutanPage> {
   );
 
   @override
-  Widget build(BuildContext context) {
-    final p = ref.watch(authControllerProvider).pengguna;
+  void initState() {
+    super.initState();
+    _ctrl.bersihkanGalat();
+  }
+
+  @override
+  Widget build(BuildContext context) => Obx(() => _bangun(context));
+
+  Widget _bangun(BuildContext context) {
+    final p = Get.find<AuthController>().pengguna;
     if (p != null && !_terisi) {
       _isi(p);
       _terisi = true;
@@ -249,10 +245,13 @@ class _ProfilLanjutanPageState extends ConsumerState<ProfilLanjutanPage> {
           const SizedBox(height: 12),
           _kolom('negara', 'Negara tujuan (koma; kosong bila dalam negeri)'),
           _kolom('bidang', 'Bidang yang diminati (pisahkan dengan koma)'),
-          if (_galat != null)
+          if (_ctrl.galat.value != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Text(_galat!, style: TextStyle(color: Warna.error)),
+              child: Text(
+                _ctrl.galat.value!,
+                style: TextStyle(color: Warna.error),
+              ),
             ),
           FilledButton(
             onPressed: _kirim ? null : _simpan,

@@ -1,25 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/format.dart';
-import '../../../core/providers.dart';
+import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/metrik_dan_progres.dart';
 import '../../../core/widgets/smart_app_bar.dart';
 import '../../../core/widgets/state_widgets.dart';
 import '../domain/kalender.dart';
-import 'kalender_providers.dart';
+import 'kalender_controller.dart';
 
-class KalenderPage extends ConsumerStatefulWidget {
+class KalenderPage extends StatefulWidget {
   const KalenderPage({super.key});
 
   @override
-  ConsumerState<KalenderPage> createState() => _KalenderPageState();
+  State<KalenderPage> createState() => _KalenderPageState();
 }
 
-class _KalenderPageState extends ConsumerState<KalenderPage> {
+class _KalenderPageState extends State<KalenderPage> {
+  final _c = Get.find<KalenderController>();
+
+  @override
+  void initState() {
+    super.initState();
+    _c.pastikanSemua();
+  }
+
   late DateTime _bulan = DateTime(DateTime.now().year, DateTime.now().month);
 
   void _geser(int n) =>
@@ -85,36 +93,30 @@ class _KalenderPageState extends ConsumerState<KalenderPage> {
       );
       return;
     }
-    await _jalankan(() async {
-      await ref.read(kalenderRepositoryProvider).tambahTugas(teks, tanggal);
-    });
+    await _jalankan(() => _c.tambahTugas(teks, tanggal));
   }
 
   Future<void> _jalankan(Future<void> Function() aksi) async {
     final pesan = ScaffoldMessenger.of(context);
     try {
       await aksi();
-      ref.invalidate(kalenderProvider);
-      ref.invalidate(checklistProvider);
     } catch (e) {
       pesan.showSnackBar(SnackBar(content: Text(pesanGalat(e))));
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Obx(() => _bangun(context));
+
+  Widget _bangun(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final kalender = ref.watch(kalenderProvider);
-    final checklist = ref.watch(checklistProvider);
-    final repo = ref.read(kalenderRepositoryProvider);
+    final kalender = _c.acara.state.value;
+    final checklist = _c.checklist.state.value;
 
     return Scaffold(
       appBar: const SmartAppBar(),
       body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(kalenderProvider);
-          ref.invalidate(checklistProvider);
-        },
+        onRefresh: _c.muatSemua,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
           children: [
@@ -134,7 +136,7 @@ class _KalenderPageState extends ConsumerState<KalenderPage> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: GalatState(
                   pesan: pesanGalat(e),
-                  cobaLagi: () => ref.invalidate(kalenderProvider),
+                  cobaLagi: _c.acara.muat,
                 ),
               ),
               data: (acara) {
@@ -176,11 +178,11 @@ class _KalenderPageState extends ConsumerState<KalenderPage> {
                         onSelesai: a.tenggat
                             ? null
                             : (v) => _jalankan(
-                                () => repo.selesaikanTugas(a.refId, v),
+                                () => _c.selesaikanTugas(a.refId, v),
                               ),
                         onHapus: a.tenggat
                             ? null
-                            : () => _jalankan(() => repo.hapusTugas(a.refId)),
+                            : () => _jalankan(() => _c.hapusTugas(a.refId)),
                       ),
                   ],
                 );
@@ -195,7 +197,7 @@ class _KalenderPageState extends ConsumerState<KalenderPage> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: GalatState(
                   pesan: pesanGalat(e),
-                  cobaLagi: () => ref.invalidate(checklistProvider),
+                  cobaLagi: _c.checklist.muat,
                 ),
               ),
               data: (daftar) {
@@ -217,7 +219,7 @@ class _KalenderPageState extends ConsumerState<KalenderPage> {
                       _KartuChecklist(
                         data: c,
                         onCentang: (b, v) =>
-                            _jalankan(() => repo.centang(b.id, v)),
+                            _jalankan(() => _c.centang(b.id, v)),
                         onBuka: () =>
                             context.push('/beasiswa/${c.beasiswa.id}'),
                       ),

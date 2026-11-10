@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../providers.dart';
+import '../async_state.dart';
+import '../dependensi.dart';
 import '../theme/app_theme.dart';
 
 class KosongState extends StatelessWidget {
@@ -111,7 +111,7 @@ class GalatState extends StatelessWidget {
   }
 }
 
-/// Merangkum tiga keadaan layar untuk [AsyncValue]: memuat, galat, dan data.
+/// Merangkum tiga keadaan layar untuk [AsyncState]: memuat, galat, dan data.
 class AsyncIsi<T> extends StatelessWidget {
   const AsyncIsi({
     super.key,
@@ -120,7 +120,7 @@ class AsyncIsi<T> extends StatelessWidget {
     required this.bangun,
   });
 
-  final AsyncValue<T> nilai;
+  final AsyncState<T> nilai;
   final VoidCallback ulang;
   final Widget Function(T data) bangun;
 
