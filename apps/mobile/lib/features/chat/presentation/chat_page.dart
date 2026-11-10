@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/providers.dart';
 import '../../../core/theme/app_theme.dart';
@@ -55,7 +56,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     ref.invalidate(chatRiwayatProvider);
   }
 
-  Widget _gelembung(String teks, {required bool saya, TextStyle? gaya}) {
+  Widget _gelembung(
+    String teks, {
+    required bool saya,
+    TextStyle? gaya,
+    List<({String id, String nama})> rujukan = const [],
+  }) {
     return Align(
       alignment: saya ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -74,9 +80,35 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           ),
           boxShadow: saya ? null : bayanganKartu,
         ),
-        child: Text(
-          teks,
-          style: saya ? const TextStyle(color: Colors.white) : gaya,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              teks,
+              style: saya ? const TextStyle(color: Colors.white) : gaya,
+            ),
+            if (rujukan.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Sumber: data beasiswa SMART',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final r in rujukan.take(3))
+                    ActionChip(
+                      label: Text(r.nama, overflow: TextOverflow.ellipsis),
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => context.push('/beasiswa/${r.id}'),
+                    ),
+                ],
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -115,26 +147,25 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             child: riwayat.when(
               loading: () => const MemuatState(),
               error: (e, _) => Center(child: Text(pesanGalat(e))),
-              data: (daftar) => daftar.isEmpty
-                  ? _Saran(
-                      onPilih: (s) {
-                        _isi.text = s;
-                        _kirimPesan();
-                      },
-                    )
-                  : ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        for (final p in daftar) ...[
-                          _gelembung(p.pesan, saya: true),
-                          _gelembung(
-                            p.jawaban ?? 'Belum ada jawaban.',
-                            saya: false,
-                            gaya: t.bodyMedium,
-                          ),
-                        ],
-                      ],
+              data: (daftar) => ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _gelembung(
+                    'Halo! Tanyakan syarat, tenggat, atau berkas beasiswa. Jawaban saya berdasarkan data di SMART.',
+                    saya: false,
+                    gaya: t.bodyMedium,
+                  ),
+                  for (final p in daftar) ...[
+                    _gelembung(p.pesan, saya: true),
+                    _gelembung(
+                      p.jawaban ?? 'Belum ada jawaban.',
+                      saya: false,
+                      gaya: t.bodyMedium,
+                      rujukan: p.rujukan,
                     ),
+                  ],
+                ],
+              ),
             ),
           ),
           if (_galat != null)
@@ -142,6 +173,26 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(_galat!, style: TextStyle(color: Warna.error)),
             ),
+          SizedBox(
+            height: 44,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                for (final q in _Saran.daftar)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ActionChip(
+                      label: Text(q),
+                      onPressed: () {
+                        _isi.text = q;
+                        _kirimPesan();
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -187,42 +238,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 }
 
-class _Saran extends StatelessWidget {
-  const _Saran({required this.onPilih});
-
-  final void Function(String) onPilih;
-
-  static const _daftar = [
+class _Saran {
+  static const daftar = [
     'Beasiswa apa yang tenggatnya paling dekat?',
-    'Beasiswa apa yang cocok untuk IPK saya?',
-    'Berkas apa saja yang biasanya diminta?',
+    'Syarat IPK',
+    'Berkas apa saja?',
+    'Cocok untuk saya?',
   ];
-
-  @override
-  Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        const SizedBox(height: 24),
-        Icon(Icons.forum_rounded, size: 40, color: Warna.primary),
-        const SizedBox(height: 12),
-        Text('Tanya seputar beasiswa', style: t.titleLarge),
-        const SizedBox(height: 4),
-        Text(
-          'Jawaban disusun dari data beasiswa di SMART, bukan dari tebakan.',
-          style: t.bodyMedium,
-        ),
-        const SizedBox(height: 20),
-        for (final s in _daftar)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: ActionChip(label: Text(s), onPressed: () => onPilih(s)),
-            ),
-          ),
-      ],
-    );
-  }
 }
