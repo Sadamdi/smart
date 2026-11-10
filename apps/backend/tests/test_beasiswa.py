@@ -72,3 +72,23 @@ def test_detail_dan_404(klien, beasiswa_repo):
     assert klien.get(f"{B}/beasiswa/{tersembunyi.id}", headers=h).status_code == 404
     assert klien.get(f"{B}/beasiswa/00000000-0000-0000-0000-000000000000", headers=h).status_code == 404
     assert klien.get(f"{B}/beasiswa/bukan-uuid", headers=h).status_code == 422
+
+
+def test_detail_menilai_syarat_terhadap_profil(klien, beasiswa_repo):
+    from app.api.v1.beasiswa import profil_kelayakan
+    from app.main import app
+    from app.models import Persyaratan
+    from app.rekomendasi.kelayakan import ProfilKelayakan
+
+    b = buat_beasiswa("Dinilai", HARI_INI + timedelta(days=9))
+    beasiswa_repo.semua.append(b)
+    beasiswa_repo.syarat[b.id] = [
+        Persyaratan(beasiswa_id=b.id, jenis="ipk_minimum", nilai_batas={"nilai": 3.5}, dapat_dikejar=False),
+        Persyaratan(beasiswa_id=b.id, jenis="jenjang", nilai_batas={"nilai": ["S1"]}, dapat_dikejar=False),
+    ]
+    app.dependency_overrides[profil_kelayakan] = lambda: ProfilKelayakan(ipk=3.7, jenjang="S1")
+    h = _masuk(klien)
+    d = klien.get(f"{B}/beasiswa/{b.id}", headers=h).json()["data"]
+    assert [s["status"] for s in d["persyaratan"]] == ["terpenuhi", "terpenuhi"]
+    assert d["kategori"] == "memenuhi" and d["alasan"] and d["catatan_kekurangan"] == []
+    assert all(s["catatan"] for s in d["persyaratan"])
