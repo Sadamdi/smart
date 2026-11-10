@@ -100,8 +100,8 @@ class KartuBeasiswa extends StatelessWidget {
                         onPressed: onSimpan,
                         icon: Icon(
                           tersimpan == true
-                              ? Icons.bookmark
-                              : Icons.bookmark_border,
+                              ? Icons.bookmark_rounded
+                              : Icons.bookmark_border_rounded,
                           color: Warna.primary,
                         ),
                       ),
