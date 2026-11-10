@@ -5,6 +5,7 @@ import '../../../core/dependensi.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/pengguna.dart';
 import '../../auth/presentation/auth_controller.dart';
+import '../../rekomendasi/presentation/rekomendasi_controller.dart';
 
 /// Keadaan penyuntingan profil: apakah formulir terbuka, sedang menyimpan, dan galat penyimpanan.
 /// Nilai kolom formulir tetap di TextEditingController layar; controller ini memegang keadaan bersama.
@@ -27,6 +28,10 @@ class ProfilController extends GetxController {
     galat.value = null;
     try {
       await Get.find<AuthController>().ubahProfil(masukan);
+      // Profil menentukan rekomendasi: muat ulang ringkasan dan daftar agar Beranda dan Rekomendasi ikut berubah.
+      if (Get.isRegistered<RekomendasiController>()) {
+        Get.find<RekomendasiController>().muatSemua();
+      }
       return true;
     } catch (e) {
       galat.value = pesanGalat(e);
