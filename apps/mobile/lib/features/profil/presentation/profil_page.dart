@@ -17,6 +17,20 @@ const _labelKondisi = {
   'anak_tenaga_kesehatan': 'Anak tenaga kesehatan',
 };
 
+/// Benar selama formulir "Ubah profil" terbuka; dipakai cangkang navigasi agar Back menutup formulir lebih dulu.
+final ValueNotifier<bool> profilSedangDiubah = ValueNotifier(false);
+
+/// Menulis rupiah dengan pemisah ribuan, misalnya 3500000 menjadi Rp3.500.000.
+String formatRupiah(int nilai) {
+  final angka = nilai.abs().toString();
+  final buf = StringBuffer();
+  for (var i = 0; i < angka.length; i++) {
+    if (i > 0 && (angka.length - i) % 3 == 0) buf.write('.');
+    buf.write(angka[i]);
+  }
+  return '${nilai < 0 ? '-' : ''}Rp$buf';
+}
+
 class ProfilPage extends ConsumerStatefulWidget {
   const ProfilPage({super.key});
 
@@ -47,8 +61,66 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
   String? _jenisKampus;
   String? _jenjang;
 
+  String _awal = '';
+
+  String _potret() => [
+    for (final c in [
+      _nama,
+      _kampus,
+      _prodi,
+      _semester,
+      _ipk,
+      _kota,
+      _minat,
+      _catatan,
+      _lahir,
+      _ips,
+      _penghasilan,
+      _warga,
+      _toefl,
+      _ielts,
+    ])
+      c.text.trim(),
+    _jenisKampus ?? '',
+    _jenjang ?? '',
+    (_kondisi.toList()..sort()).join(','),
+  ].join('|');
+
+  void _aturUbah(bool nilai) {
+    setState(() => _ubah = nilai);
+    profilSedangDiubah.value = nilai;
+  }
+
+  /// Back atau Batal: bila ada perubahan belum disimpan, minta konfirmasi dulu.
+  Future<void> _tutupFormulir() async {
+    if (_kirim) return;
+    if (_potret() == _awal) {
+      _aturUbah(false);
+      return;
+    }
+    final buang = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Buang perubahan?'),
+        content: const Text('Perubahan pada profil belum disimpan.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Lanjut mengubah'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Buang'),
+          ),
+        ],
+      ),
+    );
+    if (buang == true && mounted) _aturUbah(false);
+  }
+
   @override
   void dispose() {
+    profilSedangDiubah.value = false;
     for (final c in [
       _nama,
       _kampus,
@@ -150,7 +222,7 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
             ),
           );
       if (mounted) {
-        setState(() => _ubah = false);
+        _aturUbah(false);
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text('Profil disimpan.')));
       }
@@ -168,266 +240,276 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
     if (p == null) return const Scaffold(body: SizedBox.shrink());
     final kel = p.kelengkapan;
 
-    return Scaffold(
-      appBar: const SmartAppBar(),
-      body: ListView(
-        // Semua kolom form tetap terpasang agar validasi mencakup kolom yang di luar layar.
-        // ignore: deprecated_member_use
-        cacheExtent: 6000,
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        children: [
-          Text('Profil Saya', style: t.headlineMedium),
-          const SizedBox(height: 12),
-          _HeaderProfil(
-            nama: p.nama,
-            email: p.email,
-            terisi: kel.terisi,
-            total: kel.total,
-          ),
-          const SizedBox(height: 16),
-          if (!_ubah) ...[
-            _KartuData(
-              judul: 'Data akademik',
-              baris: [
-                ('Kampus', p.kampus),
-                ('Jenis kampus', p.jenisKampus),
-                ('Program studi', p.programStudi),
-                ('Jenjang', p.jenjang),
-                ('Semester', p.semester?.toString()),
-                ('IPK', p.ipk),
-                ('IPS terakhir (opsional)', p.ipsTerakhir),
-                ('TOEFL', p.skorBahasa['toefl']?.toString()),
-                ('IELTS', p.skorBahasa['ielts']?.toString()),
-              ],
-            ),
+    return PopScope(
+      canPop: !_ubah,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _tutupFormulir();
+      },
+      child: Scaffold(
+        appBar: const SmartAppBar(),
+        body: ListView(
+          // Semua kolom form tetap terpasang agar validasi mencakup kolom yang di luar layar.
+          // ignore: deprecated_member_use
+          cacheExtent: 6000,
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          children: [
+            Text('Profil Saya', style: t.headlineMedium),
             const SizedBox(height: 12),
-            _KartuData(
-              judul: 'Lainnya',
-              baris: [
-                ('Tanggal lahir', p.tanggalLahir),
-                ('Kewarganegaraan', p.kewarganegaraan),
-                (
-                  'Penghasilan orang tua',
-                  p.penghasilanOrangTua == null
-                      ? null
-                      : 'Rp${p.penghasilanOrangTua}',
-                ),
-                ('Kota domisili', p.kotaDomisili),
-                ('Minat', p.minat.isEmpty ? null : p.minat.join(', ')),
-                (
-                  'Kondisi khusus',
-                  p.kondisiKhusus.isEmpty
-                      ? null
-                      : p.kondisiKhusus
-                            .map((k) => _labelKondisi[k] ?? k)
-                            .join(', '),
-                ),
-                ('Catatan khusus', p.catatanTambahan),
-              ],
+            _HeaderProfil(
+              nama: p.nama,
+              email: p.email,
+              terisi: kel.terisi,
+              total: kel.total,
             ),
             const SizedBox(height: 16),
-            FilledButton.tonalIcon(
-              onPressed: () => setState(() {
-                _isi(p);
-                _ubah = true;
-              }),
-              icon: const Icon(Icons.edit_outlined, size: 18),
-              label: const Text('Ubah profil'),
-            ),
-          ] else
-            Form(
-              key: _kunci,
-              child: Column(
-                children: [
-                  _Kolom(
-                    _nama,
-                    'Nama lengkap',
-                    validator: (v) => (v ?? '').trim().isEmpty
-                        ? 'Nama tidak boleh kosong.'
-                        : null,
+            if (!_ubah) ...[
+              _KartuData(
+                judul: 'Data akademik',
+                baris: [
+                  ('Kampus', p.kampus),
+                  ('Jenis kampus', p.jenisKampus),
+                  ('Program studi', p.programStudi),
+                  ('Jenjang', p.jenjang),
+                  ('Semester', p.semester?.toString()),
+                  ('IPK', p.ipk),
+                  ('IPS terakhir (opsional)', p.ipsTerakhir),
+                  ('TOEFL', p.skorBahasa['toefl']?.toString()),
+                  ('IELTS', p.skorBahasa['ielts']?.toString()),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _KartuData(
+                judul: 'Lainnya',
+                baris: [
+                  ('Tanggal lahir', p.tanggalLahir),
+                  ('Kewarganegaraan', p.kewarganegaraan),
+                  (
+                    'Penghasilan orang tua',
+                    p.penghasilanOrangTua == null
+                        ? null
+                        : formatRupiah(p.penghasilanOrangTua!),
                   ),
-                  _Kolom(_kampus, 'Kampus (opsional)'),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _jenisKampus,
-                      decoration: const InputDecoration(
-                        labelText: 'Jenis kampus',
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'negeri',
-                          child: Text('Negeri'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'swasta',
-                          child: Text('Swasta'),
-                        ),
-                      ],
-                      onChanged: (v) => setState(() => _jenisKampus = v),
+                  ('Kota domisili', p.kotaDomisili),
+                  ('Minat', p.minat.isEmpty ? null : p.minat.join(', ')),
+                  (
+                    'Kondisi khusus',
+                    p.kondisiKhusus.isEmpty
+                        ? null
+                        : p.kondisiKhusus
+                              .map((k) => _labelKondisi[k] ?? k)
+                              .join(', '),
+                  ),
+                  ('Catatan khusus', p.catatanTambahan),
+                ],
+              ),
+              const SizedBox(height: 16),
+              FilledButton.tonalIcon(
+                onPressed: () {
+                  _isi(p);
+                  _awal = _potret();
+                  _aturUbah(true);
+                },
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Ubah profil'),
+              ),
+            ] else
+              Form(
+                key: _kunci,
+                child: Column(
+                  children: [
+                    _Kolom(
+                      _nama,
+                      'Nama lengkap',
+                      validator: (v) => (v ?? '').trim().isEmpty
+                          ? 'Nama tidak boleh kosong.'
+                          : null,
                     ),
-                  ),
-                  _Kolom(_prodi, 'Program studi (opsional)'),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _jenjang,
-                      decoration: const InputDecoration(labelText: 'Jenjang'),
-                      items: [
-                        for (final j in ['D3', 'D4', 'S1', 'S2', 'S3'])
-                          DropdownMenuItem(value: j, child: Text(j)),
-                      ],
-                      onChanged: (v) => setState(() => _jenjang = v),
-                    ),
-                  ),
-                  _Kolom(
-                    _semester,
-                    'Semester',
-                    angka: true,
-                    validator: (v) => _wajibAngka(v, 1, 14, 'Semester'),
-                  ),
-                  _Kolom(
-                    _ipk,
-                    'IPK',
-                    angka: true,
-                    validator: (v) => _wajibAngka(v, 0, 4, 'IPK'),
-                  ),
-                  _Kolom(
-                    _ips,
-                    'IPS terakhir (opsional)',
-                    angka: true,
-                    validator: (v) => _wajibAngka(v, 0, 4, 'IPS'),
-                  ),
-                  _Kolom(
-                    _toefl,
-                    'Skor TOEFL (opsional)',
-                    angka: true,
-                    validator: (v) => _wajibAngka(v, 0, 677, 'TOEFL'),
-                  ),
-                  _Kolom(
-                    _ielts,
-                    'Skor IELTS (opsional)',
-                    angka: true,
-                    validator: (v) => _wajibAngka(v, 0, 9, 'IELTS'),
-                  ),
-                  _Kolom(
-                    _lahir,
-                    'Tanggal lahir (TTTT-BB-HH)',
-                    hint: '2004-08-17',
-                    validator: (v) {
-                      final s = (v ?? '').trim();
-                      if (s.isEmpty) return null;
-                      return DateTime.tryParse(s) == null
-                          ? 'Tulis tanggal seperti 2004-08-17.'
-                          : null;
-                    },
-                  ),
-                  _Kolom(_warga, 'Kewarganegaraan', hint: 'Indonesia'),
-                  _Kolom(
-                    _penghasilan,
-                    'Penghasilan orang tua per bulan, Rp (opsional)',
-                    angka: true,
-                  ),
-                  _Kolom(_kota, 'Kota domisili'),
-                  _Kolom(
-                    _minat,
-                    'Minat, pisahkan dengan koma (opsional)',
-                    hint: 'teknologi, riset, kepemimpinan',
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Profil tambahan (opsional, tidak dikirim ke layanan AI)',
-                      style: t.titleSmall,
-                    ),
-                  ),
-                  for (final e in _labelKondisi.entries)
-                    CheckboxListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(e.value),
-                      value: _kondisi.contains(e.key),
-                      onChanged: (v) => setState(
-                        () => v == true
-                            ? _kondisi.add(e.key)
-                            : _kondisi.remove(e.key),
-                      ),
-                    ),
-                  _Kolom(
-                    _catatan,
-                    'Catatan khusus',
-                    hint: 'Contoh: penerima KIP',
-                  ),
-                  if (_galat != null)
+                    _Kolom(_kampus, 'Kampus (opsional)'),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: Text(
-                        _galat!,
-                        style: TextStyle(color: Warna.error),
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _jenisKampus,
+                        decoration: const InputDecoration(
+                          labelText: 'Jenis kampus',
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'negeri',
+                            child: Text('Negeri'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'swasta',
+                            child: Text('Swasta'),
+                          ),
+                        ],
+                        onChanged: (v) => setState(() => _jenisKampus = v),
                       ),
                     ),
-                  FilledButton(
-                    onPressed: _kirim ? null : _simpan,
-                    child: _kirim
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Simpan perubahan'),
-                  ),
-                  TextButton(
-                    onPressed: _kirim
-                        ? null
-                        : () => setState(() => _ubah = false),
-                    child: const Text('Batal'),
-                  ),
+                    _Kolom(_prodi, 'Program studi (opsional)'),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _jenjang,
+                        decoration: const InputDecoration(labelText: 'Jenjang'),
+                        items: [
+                          for (final j in ['D3', 'D4', 'S1', 'S2', 'S3'])
+                            DropdownMenuItem(value: j, child: Text(j)),
+                        ],
+                        onChanged: (v) => setState(() => _jenjang = v),
+                      ),
+                    ),
+                    _Kolom(
+                      _semester,
+                      'Semester',
+                      angka: true,
+                      validator: (v) => _wajibAngka(v, 1, 14, 'Semester'),
+                    ),
+                    _Kolom(
+                      _ipk,
+                      'IPK',
+                      angka: true,
+                      validator: (v) => _wajibAngka(v, 0, 4, 'IPK'),
+                    ),
+                    _Kolom(
+                      _ips,
+                      'IPS terakhir (opsional)',
+                      angka: true,
+                      validator: (v) => _wajibAngka(v, 0, 4, 'IPS'),
+                    ),
+                    _Kolom(
+                      _toefl,
+                      'Skor TOEFL (opsional)',
+                      angka: true,
+                      validator: (v) => _wajibAngka(v, 0, 677, 'TOEFL'),
+                    ),
+                    _Kolom(
+                      _ielts,
+                      'Skor IELTS (opsional)',
+                      angka: true,
+                      validator: (v) => _wajibAngka(v, 0, 9, 'IELTS'),
+                    ),
+                    _Kolom(
+                      _lahir,
+                      'Tanggal lahir (TTTT-BB-HH)',
+                      hint: '2004-08-17',
+                      validator: (v) {
+                        final s = (v ?? '').trim();
+                        if (s.isEmpty) return null;
+                        return DateTime.tryParse(s) == null
+                            ? 'Tulis tanggal seperti 2004-08-17.'
+                            : null;
+                      },
+                    ),
+                    _Kolom(_warga, 'Kewarganegaraan', hint: 'Indonesia'),
+                    _Kolom(
+                      _penghasilan,
+                      'Penghasilan orang tua per bulan, Rp (opsional)',
+                      angka: true,
+                    ),
+                    _Kolom(_kota, 'Kota domisili'),
+                    _Kolom(
+                      _minat,
+                      'Minat, pisahkan dengan koma (opsional)',
+                      hint: 'teknologi, riset, kepemimpinan',
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Profil tambahan (opsional, tidak dikirim ke layanan AI)',
+                        style: t.titleSmall,
+                      ),
+                    ),
+                    for (final e in _labelKondisi.entries)
+                      CheckboxListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(e.value),
+                        value: _kondisi.contains(e.key),
+                        onChanged: (v) => setState(
+                          () => v == true
+                              ? _kondisi.add(e.key)
+                              : _kondisi.remove(e.key),
+                        ),
+                      ),
+                    _Kolom(
+                      _catatan,
+                      'Catatan khusus',
+                      hint: 'Contoh: penerima KIP',
+                    ),
+                    if (_galat != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          _galat!,
+                          style: TextStyle(color: Warna.error),
+                        ),
+                      ),
+                    FilledButton(
+                      onPressed: _kirim ? null : _simpan,
+                      child: _kirim
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Simpan perubahan'),
+                    ),
+                    TextButton(
+                      onPressed: _kirim ? null : _tutupFormulir,
+                      child: const Text('Batal'),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 16),
+            Material(
+              color: Warna.kartu,
+              borderRadius: BorderRadius.circular(Jari.kartu),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  for (final (i, m) in [
+                    (
+                      Icons.badge_outlined,
+                      'Profil Lanjutan',
+                      '/profil-lanjutan',
+                    ),
+                    (Icons.description_outlined, 'Dokumen Saya', '/dokumen'),
+                    (Icons.chat_bubble_outline, 'Chatbot AI', '/chat'),
+                    (Icons.settings_outlined, 'Pengaturan', '/pengaturan'),
+                  ].indexed) ...[
+                    if (i > 0) const Divider(indent: 64),
+                    ListTile(
+                      leading: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Warna.container3,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(m.$1, size: 20, color: Warna.primary),
+                      ),
+                      title: Text(m.$2),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.push(m.$3),
+                    ),
+                  ],
                 ],
               ),
             ),
-          const SizedBox(height: 16),
-          Material(
-            color: Warna.kartu,
-            borderRadius: BorderRadius.circular(Jari.kartu),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: [
-                for (final (i, m) in [
-                  (Icons.badge_outlined, 'Profil Lanjutan', '/profil-lanjutan'),
-                  (Icons.description_outlined, 'Dokumen Saya', '/dokumen'),
-                  (Icons.chat_bubble_outline, 'Chatbot AI', '/chat'),
-                  (Icons.settings_outlined, 'Pengaturan', '/pengaturan'),
-                ].indexed) ...[
-                  if (i > 0) const Divider(indent: 64),
-                  ListTile(
-                    leading: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Warna.container3,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(m.$1, size: 20, color: Warna.primary),
-                    ),
-                    title: Text(m.$2),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push(m.$3),
-                  ),
-                ],
-              ],
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Warna.error,
+                side: BorderSide(color: Warna.error.withValues(alpha: 0.5)),
+              ),
+              onPressed: () =>
+                  ref.read(authControllerProvider.notifier).keluar(),
+              icon: const Icon(Icons.logout, size: 18),
+              label: const Text('Keluar'),
             ),
-          ),
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Warna.error,
-              side: BorderSide(color: Warna.error.withValues(alpha: 0.5)),
-            ),
-            onPressed: () => ref.read(authControllerProvider.notifier).keluar(),
-            icon: const Icon(Icons.logout, size: 18),
-            label: const Text('Keluar'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
