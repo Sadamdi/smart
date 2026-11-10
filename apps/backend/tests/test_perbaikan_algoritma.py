@@ -177,3 +177,51 @@ def test_masalah_tautan_atau_jenjang():
     assert m("https://x.org/a", "Pendaftaran SMA Unggul Garuda") is not None
     assert m("https://x.org/a", "Beasiswa S1 untuk lulusan SMA") is None
     assert m("https://x.org/a", "Beasiswa JIS untuk pelajar kelas 8") is not None
+
+
+def test_hitung_ulang_memakai_kunci_per_pengguna(monkeypatch):
+    """Hitung ulang yang serentak (Beranda memuat beberapa daftar sekaligus) diserialkan per pengguna."""
+    from app.services import rekomendasi as r
+
+    kunci: list[str] = []
+
+    class Dialek:
+        name = "postgresql"
+
+    class Ikat:
+        dialect = Dialek()
+
+    class Sesi:
+        def get_bind(self):
+            return Ikat()
+
+        def execute(self, stmt, params=None):
+            kunci.append(str(params["k"]))
+
+    class P:
+        id = "u-1"
+
+    r._kunci_hitung(Sesi(), P())
+    assert kunci == ["u-1"]
+
+
+def test_kunci_hitung_dilewati_di_basis_data_lain():
+    from app.services import rekomendasi as r
+
+    class Dialek:
+        name = "sqlite"
+
+    class Ikat:
+        dialect = Dialek()
+
+    class Sesi:
+        def get_bind(self):
+            return Ikat()
+
+        def execute(self, *a, **k):
+            raise AssertionError("tidak boleh dipanggil")
+
+    class P:
+        id = "u-1"
+
+    r._kunci_hitung(Sesi(), P())
