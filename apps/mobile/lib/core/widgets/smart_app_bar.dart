@@ -1,31 +1,44 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/auth_controller.dart';
-import '../../features/notifikasi/presentation/notifikasi_providers.dart';
+import '../../features/notifikasi/presentation/notifikasi_controller.dart';
 import '../theme/app_theme.dart';
 import 'logo_smart.dart';
 
 /// Kepala halaman tab: logo SMART, program studi, lonceng notifikasi, avatar.
-class SmartAppBar extends ConsumerWidget implements PreferredSizeWidget {
+class SmartAppBar extends StatefulWidget implements PreferredSizeWidget {
   const SmartAppBar({super.key});
 
   @override
   Size get preferredSize => const Size.fromHeight(64);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  State<SmartAppBar> createState() => _SmartAppBarState();
+}
+
+class _SmartAppBarState extends State<SmartAppBar> {
+  @override
+  void initState() {
+    super.initState();
+    // Lencana notifikasi dimuat sekali saat kepala halaman pertama tampil.
+    Get.find<NotifikasiController>().daftar.pastikan();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final p = ref.watch(authControllerProvider).pengguna;
-    final belumDibaca =
-        ref.watch(notifikasiProvider).value?.where((n) => !n.dibaca).length ??
-        0;
+    return Obx(() => _bangun(context, t));
+  }
+
+  Widget _bangun(BuildContext context, TextTheme t) {
+    final p = Get.find<AuthController>().pengguna;
+    final belumDibaca = Get.find<NotifikasiController>().belumDibaca;
     final sub = [
       if ((p?.jenjang ?? '').isNotEmpty) p!.jenjang!,
       if ((p?.programStudi ?? '').isNotEmpty) p!.programStudi!,
     ].join(' ');
-
     return AppBar(
       toolbarHeight: 64,
       titleSpacing: 16,

@@ -1,28 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 
-import '../../../core/providers.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/tema_provider.dart';
+import '../../../core/tema_controller.dart';
 import '../../../core/update/app_update_checker.dart';
 import '../../../core/update/versi_aplikasi.dart';
 import '../../auth/presentation/auth_controller.dart';
+import 'pengaturan_controller.dart';
 
-class PengaturanPage extends ConsumerWidget {
+class PengaturanPage extends StatefulWidget {
   const PengaturanPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final p = ref.watch(authControllerProvider).pengguna;
+  State<PengaturanPage> createState() => _PengaturanPageState();
+}
+
+class _PengaturanPageState extends State<PengaturanPage> {
+  final _ctrl = Get.put(PengaturanController());
+
+  @override
+  void dispose() {
+    Get.delete<PengaturanController>();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Obx(() => _bangun(context));
+
+  Widget _bangun(BuildContext context) {
+    final p = Get.find<AuthController>().pengguna;
+    final tema = Get.find<TemaController>();
     final pesan = ScaffoldMessenger.of(context);
 
     Future<void> ubah({required bool email, required bool push}) async {
-      try {
-        await ref
-            .read(authControllerProvider.notifier)
-            .ubahPreferensi(email: email, push: push);
-      } catch (e) {
-        pesan.showSnackBar(SnackBar(content: Text(pesanGalat(e))));
+      final galat = await _ctrl.ubahPreferensi(email: email, push: push);
+      if (galat != null) {
+        pesan.showSnackBar(SnackBar(content: Text(galat)));
       }
     }
 
@@ -73,9 +86,8 @@ class PengaturanPage extends ConsumerWidget {
                           label: Text('Gelap'),
                         ),
                       ],
-                      selected: {ref.watch(temaProvider)},
-                      onSelectionChanged: (s) =>
-                          ref.read(temaProvider.notifier).atur(s.first),
+                      selected: {tema.mode.value},
+                      onSelectionChanged: (s) => tema.atur(s.first),
                     ),
                   ),
                 ),

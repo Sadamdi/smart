@@ -1,66 +1,70 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:get/get.dart';
 
 import '../../../core/format.dart';
-import '../../../core/providers.dart';
+import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/metrik_dan_progres.dart';
 import '../../../core/widgets/state_widgets.dart';
-import '../../kalender/presentation/kalender_providers.dart';
+import '../../kalender/presentation/kalender_controller.dart';
 import '../../rekomendasi/domain/rekomendasi.dart';
 import '../domain/beasiswa.dart';
-import 'beasiswa_providers.dart';
+import 'detail_controller.dart';
 import 'simpan_aksi.dart';
+import 'tersimpan_controller.dart';
 
-/// Pembuka tautan luar; diganti pada uji.
-final bukaTautanProvider = Provider<Future<bool> Function(Uri)>(
-  (ref) =>
-      (uri) => launchUrl(uri, mode: LaunchMode.externalApplication),
-);
-
-class DetailPage extends ConsumerWidget {
+class DetailPage extends StatefulWidget {
   const DetailPage({super.key, required this.id});
 
   final String id;
 
-  Future<void> _bukaPortal(
-    BuildContext context,
-    WidgetRef ref,
-    BeasiswaRingkas b,
-  ) async {
+  @override
+  State<DetailPage> createState() => _DetailPageState();
+}
+
+class _DetailPageState extends State<DetailPage> {
+  late final DetailController _c;
+  final _simpan = Get.find<TersimpanController>();
+  final _kalender = Get.find<KalenderController>();
+
+  String get id => widget.id;
+
+  @override
+  void initState() {
+    super.initState();
+    // Satu controller per beasiswa (tag = id); dibuang saat halaman ditutup.
+    _c = Get.put(DetailController(id), tag: id);
+    _simpan.idTersimpan.pastikan();
+    _kalender.checklist.pastikan();
+  }
+
+  @override
+  void dispose() {
+    Get.delete<DetailController>(tag: id);
+    super.dispose();
+  }
+
+  Future<void> _bukaPortal(BuildContext context, BeasiswaRingkas b) async {
     final pesan = ScaffoldMessenger.of(context);
-    final uri = Uri.tryParse(b.tautanResmi);
-    if (uri == null || !(uri.scheme == 'https' || uri.scheme == 'http')) {
-      pesan.showSnackBar(
-        const SnackBar(content: Text('Tautan resmi tidak valid.')),
-      );
-      return;
-    }
-    try {
-      await ref.read(beasiswaRepositoryProvider).catatKlik(b.id);
-    } catch (_) {
-      // Pencatatan klik tidak boleh menghalangi pembukaan tautan.
-    }
-    final ok = await ref.read(bukaTautanProvider)(uri);
-    if (!ok) {
-      pesan.showSnackBar(
-        const SnackBar(content: Text('Tautan tidak dapat dibuka.')),
-      );
+    final galat = await _c.bukaPortal(b);
+    if (galat != null) {
+      pesan.showSnackBar(SnackBar(content: Text(galat)));
     }
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final nilai = ref.watch(detailBeasiswaProvider(id));
-    final tersimpan = ref.watch(tersimpanProvider).value?.contains(id) ?? false;
+  Widget build(BuildContext context) => Obx(() => _bangun(context));
+
+  Widget _bangun(BuildContext context) {
+    final nilai = _c.detail.state.value;
+    final tersimpan = _simpan.apakahTersimpan(id);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Detail Beasiswa')),
       body: AsyncIsi<BeasiswaDetail>(
         nilai: nilai,
-        ulang: () => ref.invalidate(detailBeasiswaProvider(id)),
+        ulang: _c.detail.muat,
         bangun: (d) => _Isi(detail: d, tersimpan: tersimpan),
       ),
       bottomNavigationBar: nilai.hasValue
@@ -78,12 +82,8 @@ class DetailPage extends ConsumerWidget {
                         button: true,
                         label: tersimpan ? 'Hapus dari tersimpan' : 'Simpan',
                         child: OutlinedButton(
-                          onPressed: () => ubahSimpan(
-                            context,
-                            ref,
-                            id,
-                            tersimpan: tersimpan,
-                          ),
+                          onPressed: () =>
+                              ubahSimpan(context, id, tersimpan: tersimpan),
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size(52, 52),
                             padding: EdgeInsets.zero,
@@ -99,7 +99,7 @@ class DetailPage extends ConsumerWidget {
                       Expanded(
                         child: FilledButton.icon(
                           onPressed: () =>
-                              _bukaPortal(context, ref, nilai.value!.ringkas),
+                              _bukaPortal(context, nilai.value!.ringkas),
                           icon: const Icon(Icons.open_in_new_rounded, size: 18),
                           label: const Text('Kunjungi Laman Resmi'),
                         ),
@@ -114,14 +114,16 @@ class DetailPage extends ConsumerWidget {
   }
 }
 
-class _Isi extends ConsumerWidget {
+class _Isi extends StatelessWidget {
   const _Isi({required this.detail, required this.tersimpan});
 
   final BeasiswaDetail detail;
   final bool tersimpan;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) => Obx(() => _bangun(context));
+
+  Widget _bangun(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final b = detail.ringkas;
     final tenggat = b.tenggat;
@@ -130,9 +132,8 @@ class _Isi extends ConsumerWidget {
       if ((b.penyelenggara ?? '').isNotEmpty) b.penyelenggara!,
       if ((b.negara ?? '').isNotEmpty) b.negara!,
     ].join(' · ');
-    final checklist = ref
-        .watch(checklistProvider)
-        .value
+    final kalender = Get.find<KalenderController>();
+    final checklist = kalender.checklist.value
         ?.where((c) => c.beasiswa.id == b.id)
         .firstOrNull;
 
@@ -266,10 +267,7 @@ class _Isi extends ConsumerWidget {
                           onChanged: (v) async {
                             final pesan = ScaffoldMessenger.of(context);
                             try {
-                              await ref
-                                  .read(kalenderRepositoryProvider)
-                                  .centang(k.id, v ?? false);
-                              ref.invalidate(checklistProvider);
+                              await kalender.centang(k.id, v ?? false);
                             } catch (e) {
                               pesan.showSnackBar(
                                 SnackBar(content: Text(pesanGalat(e))),
@@ -299,7 +297,7 @@ class _Isi extends ConsumerWidget {
         ),
         _Bagian(
           judul: 'Rencana pendaftaran',
-          anak: _RencanaDaftar(id: b.id, tersimpan: tersimpan, ref: ref),
+          anak: _RencanaDaftar(id: b.id, tersimpan: tersimpan),
         ),
         Text(
           'Rekomendasi SMART hanya membantu menyaring; penyelenggara yang menentukan hasil seleksi.',
@@ -456,15 +454,10 @@ class _BarisSyarat extends StatelessWidget {
 }
 
 class _RencanaDaftar extends StatelessWidget {
-  const _RencanaDaftar({
-    required this.id,
-    required this.tersimpan,
-    required this.ref,
-  });
+  const _RencanaDaftar({required this.id, required this.tersimpan});
 
   final String id;
   final bool tersimpan;
-  final WidgetRef ref;
 
   static const _opsi = [
     ('akan_daftar', 'Akan daftar'),
@@ -484,9 +477,7 @@ class _RencanaDaftar extends StatelessWidget {
             onPressed: () async {
               final pesan = ScaffoldMessenger.of(context);
               try {
-                await ref
-                    .read(beasiswaRepositoryProvider)
-                    .rencanaDaftar(id, kode);
+                await Get.find<DetailController>(tag: id).rencanaDaftar(kode);
                 pesan.showSnackBar(
                   SnackBar(content: Text('Rencana dicatat: $label.')),
                 );
