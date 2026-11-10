@@ -78,11 +78,11 @@ function Formulir({ d }: { d: DetailAdmin }) {
             </div>
           </div>
           <fieldset className="mt-4">
-            <legend className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">Jenjang</legend>
+            <legend className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-muted">Jenjang</legend>
             <div className="flex flex-wrap gap-4">
               {JENJANG.map((j) => (
                 <label key={j} className="flex items-center gap-2 text-sm text-navy">
-                  <input type="checkbox" className="h-4 w-4 accent-primary" checked={i.jenjang.includes(j)} onChange={(e) => set("jenjang", e.target.checked ? [...i.jenjang, j] : i.jenjang.filter((x) => x !== j))} />
+                  <input type="checkbox" className="h-5 w-5 accent-primary" checked={i.jenjang.includes(j)} onChange={(e) => set("jenjang", e.target.checked ? [...i.jenjang, j] : i.jenjang.filter((x) => x !== j))} />
                   {j}
                 </label>
               ))}
@@ -90,7 +90,7 @@ function Formulir({ d }: { d: DetailAdmin }) {
           </fieldset>
           <div className="mt-4">
             <Medan label="Manfaat">
-              <textarea rows={4} value={i.manfaat} onChange={(e) => set("manfaat", e.target.value)} className="w-full rounded-lg border border-outline bg-white px-3.5 py-2.5 text-sm text-navy" />
+              <textarea rows={4} value={i.manfaat} onChange={(e) => set("manfaat", e.target.value)} className="w-full rounded-kontrol border border-line bg-card px-3.5 py-2.5 text-sm text-navy" />
             </Medan>
           </div>
         </Kartu>
@@ -110,10 +110,10 @@ function Formulir({ d }: { d: DetailAdmin }) {
                 </Pilihan>
                 <Masukan aria-label="Nilai batas" value={s.nilai} onChange={(e) => set("persyaratan", i.persyaratan.map((x, k) => (k === n ? { ...x, nilai: e.target.value } : x)))} />
                 <label className="flex items-center gap-2 text-sm text-navy">
-                  <input type="checkbox" className="h-4 w-4 accent-primary" checked={s.dapat_dikejar} onChange={(e) => set("persyaratan", i.persyaratan.map((x, k) => (k === n ? { ...x, dapat_dikejar: e.target.checked } : x)))} />
+                  <input type="checkbox" className="h-5 w-5 accent-primary" checked={s.dapat_dikejar} onChange={(e) => set("persyaratan", i.persyaratan.map((x, k) => (k === n ? { ...x, dapat_dikejar: e.target.checked } : x)))} />
                   Dapat dikejar
                 </label>
-                <button type="button" aria-label="Hapus syarat" onClick={() => set("persyaratan", i.persyaratan.filter((_, k) => k !== n))} className="rounded-full p-2 text-muted hover:bg-danger-soft hover:text-danger">
+                <button type="button" aria-label="Hapus syarat" onClick={() => set("persyaratan", i.persyaratan.filter((_, k) => k !== n))} className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-danger-soft hover:text-danger">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
@@ -127,7 +127,7 @@ function Formulir({ d }: { d: DetailAdmin }) {
         <Kartu>
           <h2 className="mb-3 text-lg font-bold text-navy">Berkas wajib</h2>
           <Medan label="Satu berkas per baris">
-            <textarea rows={4} value={i.berkas} onChange={(e) => set("berkas", e.target.value)} className="w-full rounded-lg border border-outline bg-white px-3.5 py-2.5 text-sm text-navy" />
+            <textarea rows={4} value={i.berkas} onChange={(e) => set("berkas", e.target.value)} className="w-full rounded-kontrol border border-line bg-card px-3.5 py-2.5 text-sm text-navy" />
           </Medan>
         </Kartu>
       </div>
@@ -139,7 +139,7 @@ function Formulir({ d }: { d: DetailAdmin }) {
             Status: <span className="font-semibold text-navy">{d.status}</span>
           </p>
           <p className="text-xs text-muted">Terakhir diperiksa sumber: {tanggalIndo(d.tanggal_diperiksa)}</p>
-          {d.alasan_ditandai && <p className="mt-3 rounded-xl bg-danger-soft px-3 py-2 text-sm text-[#8c1212]">{d.alasan_ditandai}</p>}
+          {d.alasan_ditandai && <p className="mt-3 rounded-[14px] bg-danger-soft px-3 py-2 text-sm text-danger-ink">{d.alasan_ditandai}</p>}
           <a href={d.tautan_resmi} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary underline">
             Bandingkan dengan laman asal <ExternalLink className="h-4 w-4" aria-hidden />
           </a>
@@ -181,7 +181,7 @@ function Formulir({ d }: { d: DetailAdmin }) {
           </div>
           <div className="mt-5 border-t border-c4/60 pt-4">
             <Medan label="Alasan penolakan">
-              <textarea rows={3} value={alasan} onChange={(e) => setAlasan(e.target.value)} className="w-full rounded-lg border border-outline bg-white px-3.5 py-2.5 text-sm text-navy" />
+              <textarea rows={3} value={alasan} onChange={(e) => setAlasan(e.target.value)} className="w-full rounded-kontrol border border-line bg-card px-3.5 py-2.5 text-sm text-navy" />
             </Medan>
             <Tombol varian="bahaya" className="mt-2 w-full" disabled={!alasan.trim() || tolak.isPending} onClick={() => tolak.mutate(undefined, { onSuccess: selesai })}>
               Tolak

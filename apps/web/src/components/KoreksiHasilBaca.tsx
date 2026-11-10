@@ -52,7 +52,7 @@ export function KoreksiHasilBaca({
 
   return (
     <form
-      className="mt-4 space-y-4 rounded-xl bg-c1 p-4"
+      className="mt-4 space-y-4 rounded-[14px] bg-c1 p-4"
       onSubmit={(e) => {
         e.preventDefault();
         onSimpan(susunHasil(h, f));
@@ -78,7 +78,7 @@ export function KoreksiHasilBaca({
           rows={3}
           value={f.organisasi}
           onChange={ubah("organisasi")}
-          className="w-full rounded-lg border border-outline bg-white px-3.5 py-2.5 text-sm text-navy"
+          className="w-full rounded-kontrol border border-line bg-card px-3.5 py-2.5 text-sm text-navy"
         />
       </Medan>
       <div className="flex gap-2">

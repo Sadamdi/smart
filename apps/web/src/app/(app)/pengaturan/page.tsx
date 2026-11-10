@@ -1,12 +1,15 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
+import { Monitor, Moon, Sun } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { pesanGalat } from "@/components/state";
-import { JudulHalaman, Kartu, Masukan, Medan, Tombol } from "@/components/ui";
+import { useTema } from "@/components/Tema";
+import { JudulHalaman, Kartu, Masukan, MasukanSandi, Medan, Tombol, cx } from "@/components/ui";
+import type { PilihanTema } from "@/lib/tema";
 import { kirim } from "@/lib/api";
 import { kunci, useAksi, useSaya } from "@/lib/hooks";
 import { tokenStore } from "@/lib/token";
@@ -20,6 +23,45 @@ const skemaSandi = z
   })
   .refine((v) => v.baru === v.ulang, { path: ["ulang"], message: "Kata sandi tidak sama" });
 type IsianSandi = z.infer<typeof skemaSandi>;
+
+const OPSI_TEMA: { nilai: PilihanTema; label: string; deskripsi: string; ikon: typeof Sun }[] = [
+  { nilai: "sistem", label: "Sistem", deskripsi: "Mengikuti pengaturan perangkat", ikon: Monitor },
+  { nilai: "terang", label: "Terang", deskripsi: "Latar terang", ikon: Sun },
+  { nilai: "gelap", label: "Gelap", deskripsi: "Latar gelap, nyaman di malam hari", ikon: Moon },
+];
+
+function Tampilan() {
+  const { pilihan, terpakai, atur } = useTema();
+  return (
+    <Kartu>
+      <h2 className="mb-1 text-lg font-bold text-navy">Tampilan</h2>
+      <p className="mb-4 text-sm text-ink">
+        Pilih tema aplikasi. Saat ini yang dipakai: <strong className="text-navy">{terpakai === "gelap" ? "gelap" : "terang"}</strong>. Pilihan disimpan di peramban ini.
+      </p>
+      <div role="radiogroup" aria-label="Tema" className="grid gap-3 sm:grid-cols-3">
+        {OPSI_TEMA.map((o) => {
+          const aktif = pilihan === o.nilai;
+          return (
+            <label
+              key={o.nilai}
+              className={cx(
+                "flex min-h-11 cursor-pointer items-start gap-3 rounded-kontrol border p-3.5 transition-colors duration-150 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary",
+                aktif ? "border-fill bg-c2" : "border-c4 bg-card hover:bg-c1",
+              )}
+            >
+              <input type="radio" name="tema" value={o.nilai} checked={aktif} onChange={() => atur(o.nilai)} className="sr-only" />
+              <o.ikon className={cx("mt-0.5 h-5 w-5 shrink-0", aktif ? "text-primary" : "text-muted")} aria-hidden />
+              <span>
+                <span className="block text-sm font-bold text-navy">{o.label}</span>
+                <span className="block text-xs text-muted">{o.deskripsi}</span>
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </Kartu>
+  );
+}
 
 function GantiSandi() {
   const f = useForm<IsianSandi>({ resolver: zodResolver(skemaSandi) });
@@ -46,13 +88,13 @@ function GantiSandi() {
         })}
       >
         <Medan label="Kata sandi lama" galat={e.lama?.message}>
-          <Masukan type="password" autoComplete="current-password" {...f.register("lama")} />
+          <MasukanSandi autoComplete="current-password" {...f.register("lama")} />
         </Medan>
         <Medan label="Kata sandi baru" galat={e.baru?.message}>
-          <Masukan type="password" autoComplete="new-password" {...f.register("baru")} />
+          <MasukanSandi autoComplete="new-password" {...f.register("baru")} />
         </Medan>
         <Medan label="Ulangi kata sandi baru" galat={e.ulang?.message}>
-          <Masukan type="password" autoComplete="new-password" {...f.register("ulang")} />
+          <MasukanSandi autoComplete="new-password" {...f.register("ulang")} />
         </Medan>
         <Tombol type="submit" disabled={f.formState.isSubmitting}>
           Ganti kata sandi
@@ -100,8 +142,9 @@ export default function Pengaturan() {
   }
 
   return (
-    <div className="space-y-6">
-      <JudulHalaman judul="Pengaturan" deskripsi="Pengingat, keamanan akun, dan data pribadi Anda." />
+    <div className="halaman-masuk space-y-6">
+      <JudulHalaman judul="Pengaturan" deskripsi="Tampilan, pengingat, keamanan akun, dan data pribadi Anda." />
+      <Tampilan />
       <Kartu>
         <h2 className="mb-1 text-lg font-bold text-navy">Preferensi pengingat</h2>
         <p className="mb-4 text-sm text-ink">Pilih kanal untuk pengingat tenggat beasiswa tersimpan.</p>
@@ -112,10 +155,10 @@ export default function Pengaturan() {
               ["email", "Email", email],
             ] as const
           ).map(([k, label, nilai]) => (
-            <label key={k} className="flex items-center gap-3 text-sm text-navy">
+            <label key={k} className="flex min-h-11 items-center gap-3 text-sm text-navy">
               <input
                 type="checkbox"
-                className="h-4 w-4 accent-primary"
+                className="h-5 w-5 accent-primary"
                 checked={nilai}
                 disabled={pref.isPending || !saya}
                 onChange={(e) => pref.mutate({ email: k === "email" ? e.target.checked : email, push: k === "push" ? e.target.checked : push })}

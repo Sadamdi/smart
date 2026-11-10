@@ -75,7 +75,7 @@ export function FormSumber({
           </Medan>
         </div>
         <label className="flex items-center gap-2 text-sm text-navy">
-          <input type="checkbox" className="h-4 w-4 accent-primary" checked={i.aktif} onChange={(e) => set("aktif", e.target.checked)} />
+          <input type="checkbox" className="h-5 w-5 accent-primary" checked={i.aktif} onChange={(e) => set("aktif", e.target.checked)} />
           Sumber aktif dipantau
         </label>
         {(lokal || galat != null) && (

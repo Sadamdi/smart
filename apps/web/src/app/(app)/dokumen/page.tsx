@@ -4,7 +4,7 @@ import { useState } from "react";
 import { KoreksiHasilBaca } from "@/components/KoreksiHasilBaca";
 import { KolomUnggah } from "@/components/KolomUnggah";
 import { KosongState, Tampil, pesanGalat } from "@/components/state";
-import { JudulHalaman, Kartu, Medan, Pilihan, Tombol } from "@/components/ui";
+import { JudulHalaman, Kartu, Lencana, Medan, Metrik, Pilihan, Tombol } from "@/components/ui";
 import { api, kirim } from "@/lib/api";
 import { kunci, useAksi, useDokumen } from "@/lib/hooks";
 import { tanggalIndo } from "@/lib/format";
@@ -43,18 +43,19 @@ function BarisDokumen({ d }: { d: Dokumen }) {
   const galat = hapus.error ?? simpan.error ?? terapkan.error;
 
   return (
-    <li className="rounded-2xl border border-c4/60 bg-white p-5 shadow-kartu">
+    <li className="rounded-kartu border border-c4/60 bg-card p-5 shadow-kartu">
       <div className="flex flex-wrap items-start gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-c2 text-primary">
+        <span className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-c2 text-primary">
           <FileText className="h-5 w-5" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold text-navy">{d.nama_berkas}</p>
-          <p className="text-xs text-muted">
-            {JENIS[d.jenis] ?? d.jenis} | diunggah {tanggalIndo(d.tanggal_unggah)} | {STATUS[d.status_baca] ?? d.status_baca}
+          <p className="truncate font-bold text-navy">{d.nama_berkas}</p>
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+            {JENIS[d.jenis] ?? d.jenis} <span aria-hidden>·</span> diunggah {tanggalIndo(d.tanggal_unggah)}
+            <Lencana nada={d.status_baca === "selesai" ? "ok" : d.status_baca === "gagal" ? "bahaya" : "waspada"}>{STATUS[d.status_baca] ?? d.status_baca}</Lencana>
           </p>
         </div>
-        <button type="button" aria-label={`Hapus ${d.nama_berkas}`} onClick={() => hapus.mutate()} disabled={hapus.isPending} className="rounded-full p-2 text-muted hover:bg-danger-soft hover:text-danger">
+        <button type="button" aria-label={`Hapus ${d.nama_berkas}`} onClick={() => hapus.mutate()} disabled={hapus.isPending} className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-danger-soft hover:text-danger">
           <Trash2 className="h-4 w-4" />
         </button>
       </div>
@@ -120,21 +121,12 @@ export default function DokumenSaya() {
   const d = kueri.data ?? [];
 
   return (
-    <div>
+    <div className="halaman-masuk">
       <JudulHalaman judul="Dokumen Saya" deskripsi="Unggah CV atau sertifikat. Sistem membaca nilai penting, lalu Anda dapat memeriksa dan menerapkannya ke profil." />
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <Kartu className="!p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">Total dokumen</p>
-          <p className="mt-1 text-2xl font-bold text-navy">{kueri.data ? d.length : "-"}</p>
-        </Kartu>
-        <Kartu className="!p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">Terbaca</p>
-          <p className="mt-1 text-2xl font-bold text-navy">{kueri.data ? d.filter((x) => x.status_baca === "selesai").length : "-"}</p>
-        </Kartu>
-        <Kartu className="!p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">Perlu diisi manual</p>
-          <p className="mt-1 text-2xl font-bold text-navy">{kueri.data ? d.filter((x) => x.status_baca === "gagal").length : "-"}</p>
-        </Kartu>
+      <div className="mb-6 grid grid-cols-3 gap-3 sm:gap-4">
+        <Metrik label="Total" nilai={kueri.data ? d.length : "-"} memuat={kueri.isPending} />
+        <Metrik label="Terbaca" nilai={kueri.data ? d.filter((x) => x.status_baca === "selesai").length : "-"} nada="utama" memuat={kueri.isPending} />
+        <Metrik label="Isi manual" nilai={kueri.data ? d.filter((x) => x.status_baca === "gagal").length : "-"} memuat={kueri.isPending} />
       </div>
       <Kartu className="mb-6">
         <div className="mb-4 max-w-xs">
@@ -155,7 +147,7 @@ export default function DokumenSaya() {
           </p>
         )}
       </Kartu>
-      <Tampil kueri={kueri} kosong={<KosongState judul="Belum ada dokumen" pesan="Unggah CV atau sertifikat untuk mengisi profil lebih cepat." />}>
+      <Tampil kueri={kueri} kosong={<KosongState judul="Belum ada dokumen" pesan="Pilih jenis dokumen, lalu unggah CV atau sertifikat di kotak atas. Sistem akan membaca nilai pentingnya untuk mengisi profil lebih cepat." />}>
         {(daftar) => (
           <ul className="space-y-4">
             {daftar.map((x) => (
