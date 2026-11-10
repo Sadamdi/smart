@@ -134,6 +134,22 @@ def _kanon_negara(teks: str) -> str:
     return "indonesia" if re.search(r"\bwni\b|indonesia", t) else t
 
 
+def _domisili_khusus(batas: dict | None, wilayah: str | None) -> HasilSyarat | None:
+    """Bentuk syarat domisili yang bukan nama wilayah: negara Indonesia, kalimat negatif, atau deskripsi non-geografis."""
+    diminta = _daftar(batas)
+    if not diminta:
+        return None
+    for d in diminta:
+        dl = d.lower().strip()
+        if dl in ("indonesia", "wilayah indonesia", "seluruh indonesia") or dl.startswith("berdomisili di indonesia"):
+            return HasilSyarat("domisili", OK, 1.0, "Berdomisili di Indonesia")
+        if dl.startswith(("tidak ", "bukan ")):
+            return HasilSyarat("domisili", OK, 1.0, "Syarat domisili tidak membatasi domisili Anda")
+        if re.search(r"pesantren|pondok|sekolah|naungan|organisasi", dl) or len(dl.split()) > 5:
+            return HasilSyarat("domisili", TOLERAN, 0.7, kekurangan="Periksa syarat domisili di laman resmi")
+    return None
+
+
 def _warga(jenis: str, batas: dict | None, nilai: str | None) -> HasilSyarat | None:
     diminta = _daftar(batas)
     if not diminta:
@@ -143,6 +159,14 @@ def _warga(jenis: str, batas: dict | None, nilai: str | None) -> HasilSyarat | N
     if not nilai:
         return _tidak_diketahui(jenis, "kewarganegaraan")
     k = _kanon_negara(nilai)
+    # Syarat berupa kalimat deskriptif (daftar negara di laman, "negara berkembang", dst.) tidak dapat dipastikan
+    # dari satu kata; jangan menyilang, minta pengguna memeriksa laman resmi.
+    deskriptif = [
+        d
+        for d in diminta
+        if not _PENGECUALI.search(d.lower())
+        and (len(d.split()) > 4 or re.search(r"\b(negara|countries|country|dropdown|daftar|list)\b", d.lower()))
+    ]
     for d in diminta:
         dl = d.lower()
         if k != _kanon_negara(d) and k not in dl:
@@ -150,6 +174,8 @@ def _warga(jenis: str, batas: dict | None, nilai: str | None) -> HasilSyarat | N
         if _PENGECUALI.search(dl) and k in dl:
             continue  # misalnya "bukan Indonesia" atau "warga negara asing"
         return HasilSyarat(jenis, OK, 1.0, "Kewarganegaraan sesuai")
+    if deskriptif:
+        return HasilSyarat(jenis, TOLERAN, 0.7, kekurangan="Periksa daftar negara yang memenuhi syarat di laman resmi")
     return HasilSyarat(jenis, GAGAL, 0.0, kekurangan=f"Untuk warga negara {', '.join(diminta)}")
 
 
@@ -183,6 +209,9 @@ def periksa_syarat(
         return _pilihan(jenis, batas, profil.jenis_kampus, "kampus", "Kampus {nilai} sesuai")
     if jenis == "domisili":
         wilayah = ", ".join(x for x in [profil.kota_domisili, *profil.daerah_asal] if x) or None
+        khusus = _domisili_khusus(batas, wilayah)
+        if khusus is not None:
+            return khusus
         return _pilihan(jenis, batas, wilayah, "domisili", "Domisili atau daerah asal sesuai")
     if jenis == "kewarganegaraan":
         return _warga(jenis, batas, profil.kewarganegaraan)
