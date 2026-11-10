@@ -1,51 +1,57 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/providers.dart';
+import '../../../core/dependensi.dart';
 import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/kartu_beasiswa.dart';
 import '../../../core/widgets/smart_app_bar.dart';
 import '../../../core/widgets/state_widgets.dart';
-import '../../beasiswa/presentation/beasiswa_providers.dart';
+import '../../beasiswa/presentation/tersimpan_controller.dart';
 import '../../beasiswa/presentation/simpan_aksi.dart';
 import '../domain/rekomendasi.dart';
-import 'rekomendasi_providers.dart';
+import 'rekomendasi_controller.dart';
 
-class RekomendasiPage extends ConsumerStatefulWidget {
+class RekomendasiPage extends StatefulWidget {
   const RekomendasiPage({super.key});
 
   @override
-  ConsumerState<RekomendasiPage> createState() => _RekomendasiPageState();
+  State<RekomendasiPage> createState() => _RekomendasiPageState();
 }
 
-class _RekomendasiPageState extends ConsumerState<RekomendasiPage> {
-  Kategori? _kategori;
-  bool _menghitung = false;
+class _RekomendasiPageState extends State<RekomendasiPage> {
+  final _c = Get.find<RekomendasiController>();
+  final _tersimpan = Get.find<TersimpanController>();
+
+  @override
+  void initState() {
+    super.initState();
+    _c.pastikan();
+    _tersimpan.idTersimpan.pastikan();
+  }
 
   Future<void> _hitungUlang() async {
-    setState(() => _menghitung = true);
     final pesan = ScaffoldMessenger.of(context);
     try {
-      await ref.read(rekomendasiRepositoryProvider).hitungUlang();
-      ref.invalidate(rekomendasiProvider);
-      ref.invalidate(ringkasanRekomendasiProvider);
+      await _c.hitungUlang();
       pesan.showSnackBar(
         const SnackBar(content: Text('Rekomendasi dihitung ulang.')),
       );
     } catch (e) {
       pesan.showSnackBar(SnackBar(content: Text(pesanGalat(e))));
-    } finally {
-      if (mounted) setState(() => _menghitung = false);
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Obx(() => _bangun(context));
+
+  Widget _bangun(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final nilai = ref.watch(rekomendasiProvider(_kategori));
-    final ringkasan = ref.watch(ringkasanRekomendasiProvider).value;
-    final tersimpan = ref.watch(tersimpanProvider).value ?? <String>{};
+    final kategori = _c.kategori.value;
+    final nilai = _c.daftarUntuk(kategori).state.value;
+    final ringkasan = _c.ringkasan.value;
+    final tersimpan = _tersimpan.ids;
+    final menghitung = _c.menghitung.value;
 
     String hitung(Kategori? k, String label) {
       if (ringkasan == null) return label;
@@ -65,11 +71,7 @@ class _RekomendasiPageState extends ConsumerState<RekomendasiPage> {
       appBar: const SmartAppBar(),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(rekomendasiProvider);
-          ref.invalidate(ringkasanRekomendasiProvider);
-          await ref
-              .read(rekomendasiProvider(_kategori).future)
-              .catchError((_) => <Rekomendasi>[]);
+          await _c.muatSemua();
         },
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -87,15 +89,15 @@ class _RekomendasiPageState extends ConsumerState<RekomendasiPage> {
                 children: [
                   ChipFilter(
                     label: hitung(null, 'Semua'),
-                    terpilih: _kategori == null,
-                    onTap: () => setState(() => _kategori = null),
+                    terpilih: kategori == null,
+                    onTap: () => _c.pilih(null),
                   ),
                   for (final k in Kategori.values) ...[
                     const SizedBox(width: 8),
                     ChipFilter(
                       label: hitung(k, k.label),
-                      terpilih: _kategori == k,
-                      onTap: () => setState(() => _kategori = k),
+                      terpilih: kategori == k,
+                      onTap: () => _c.pilih(k),
                     ),
                   ],
                 ],
@@ -105,8 +107,8 @@ class _RekomendasiPageState extends ConsumerState<RekomendasiPage> {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
-                onPressed: _menghitung ? null : _hitungUlang,
-                icon: _menghitung
+                onPressed: menghitung ? null : _hitungUlang,
+                icon: menghitung
                     ? const SizedBox(
                         height: 16,
                         width: 16,
@@ -125,8 +127,7 @@ class _RekomendasiPageState extends ConsumerState<RekomendasiPage> {
                 padding: const EdgeInsets.only(top: 40),
                 child: GalatState(
                   pesan: pesanGalat(e),
-                  cobaLagi: () =>
-                      ref.invalidate(rekomendasiProvider(_kategori)),
+                  cobaLagi: _c.daftarUntuk(kategori).muat,
                 ),
               ),
               data: (daftar) {
@@ -154,7 +155,6 @@ class _RekomendasiPageState extends ConsumerState<RekomendasiPage> {
                         tersimpan: tersimpan.contains(r.beasiswa.id),
                         onSimpan: () => ubahSimpan(
                           context,
-                          ref,
                           r.beasiswa.id,
                           tersimpan: tersimpan.contains(r.beasiswa.id),
                         ),

@@ -135,6 +135,7 @@ Future<void> _muatHuruf() async {
 }
 
 void main() {
+  siapkanGet();
   final aktif = Platform.environment['TANGKAP'] == '1';
   const jalur = {
     'Detail': '/beasiswa/1',

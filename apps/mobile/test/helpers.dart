@@ -4,9 +4,10 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:smart_mobile/core/api_client.dart';
-import 'package:smart_mobile/core/providers.dart';
+import 'package:smart_mobile/core/dependensi.dart';
 import 'package:smart_mobile/core/token_storage.dart';
 import 'package:smart_mobile/main.dart';
 
@@ -126,21 +127,38 @@ Dio dioPalsu(ServerPalsu s) =>
     Dio(BaseOptions(baseUrl: 'http://x/api/v1', validateStatus: (_) => true))
       ..httpClientAdapter = s;
 
+/// Mengosongkan GetX sebelum dan sesudah tiap tes agar tidak ada controller yang bocor antar tes.
+/// Panggil sekali di awal `main()` tiap berkas tes yang memakai [aplikasi] atau [pasangGetUji].
+void siapkanGet() {
+  setUp(() {
+    Get.testMode = true;
+    Get.reset();
+  });
+  tearDown(Get.reset);
+}
+
+/// Memasang semua dependensi GetX dengan Dio palsu dan penyimpanan token di memori.
+void pasangGetUji(
+  ServerPalsu s, {
+  TokenStorage? storage,
+  Future<bool> Function(Uri)? bukaTautan,
+}) {
+  Get.testMode = true;
+  Get.reset();
+  pasangDependensi(
+    dio: dioPalsu(s),
+    storage: storage ?? MemoryTokenStorage(),
+    bukaTautan: bukaTautan,
+  );
+}
+
 /// Aplikasi lengkap dengan server palsu dan token tersimpan.
 Widget aplikasi(ServerPalsu s, {bool sudahMasuk = true}) {
-  final storage = MemoryTokenStorage(
-    sudahMasuk ? const PasanganToken(akses: 'a', penyegar: 'p') : null,
+  pasangGetUji(
+    s,
+    storage: MemoryTokenStorage(
+      sudahMasuk ? const PasanganToken(akses: 'a', penyegar: 'p') : null,
+    ),
   );
-  return ProviderScope(
-    retry: (_, _) => null,
-    overrides: [
-      tokenStorageProvider.overrideWithValue(storage),
-      dioProvider.overrideWithValue(
-        Dio(
-          BaseOptions(baseUrl: 'http://x/api/v1', validateStatus: (_) => true),
-        )..httpClientAdapter = s,
-      ),
-    ],
-    child: const SmartApp(googleFonts: false, pembuka: false),
-  );
+  return const SmartApp(googleFonts: false, pembuka: false);
 }

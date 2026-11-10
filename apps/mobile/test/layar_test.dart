@@ -46,6 +46,7 @@ Future<void> _tab(WidgetTester t, String label) async {
 }
 
 void main() {
+  siapkanGet();
   group('KartuBeasiswa', () {
     testWidgets(
       'menampilkan kategori, alasan, catatan; tanpa persen atau peluang',
