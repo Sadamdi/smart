@@ -21,6 +21,7 @@ Future<void> ubahSimpan(
       await repo.simpan(id);
     }
     ref.invalidate(tersimpanProvider);
+    ref.invalidate(daftarTersimpanProvider);
     ref.invalidate(checklistProvider);
     pesan.showSnackBar(
       SnackBar(
