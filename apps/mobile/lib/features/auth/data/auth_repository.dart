@@ -49,6 +49,12 @@ class AuthRepository {
     return Pengguna.fromJson(r.data as Map<String, dynamic>);
   }
 
+  /// Daftar negara dan provinsi untuk pilihan domisili (tanpa autentikasi, data tetap).
+  Future<ReferensiWilayah> wilayah() async {
+    final r = await _api.get('/referensi/wilayah');
+    return ReferensiWilayah.fromJson(r.data as Map<String, dynamic>);
+  }
+
   Future<Pengguna> ubahPreferensi({
     required bool email,
     required bool push,

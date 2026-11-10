@@ -9,6 +9,7 @@ import 'helpers.dart';
 String _hariKe(int n) => tanggalApi(DateTime.now().add(Duration(days: n)));
 
 Map<String, Penangan> _rute() => {
+  'GET /referensi/wilayah': (o) => Balasan.ok(wilayahJson()),
   'GET /me': (o) => Balasan.ok(
     penggunaJson(nama: 'Muhammad Nabila Putri Ramadhani Sekali Panjang'),
   ),
@@ -102,6 +103,37 @@ void main() {
         expect(t.takeException(), isNull, reason: 'overflow di $layar');
       });
     }
+    testWidgets(
+      'tanpa overflow: form Ubah profil ${gelap ? 'gelap' : 'terang'}',
+      (t) async {
+        t.view.physicalSize = const Size(320 * 2, 640 * 2);
+        t.view.devicePixelRatio = 2;
+        t.platformDispatcher.textScaleFactorTestValue = 1.3;
+        t.platformDispatcher.platformBrightnessTestValue = gelap
+            ? Brightness.dark
+            : Brightness.light;
+        addTearDown(t.view.reset);
+        addTearDown(t.platformDispatcher.clearAllTestValues);
+        await t.pumpWidget(aplikasi(ServerPalsu(_rute())));
+        await t.pumpAndSettle();
+        await t.tap(
+          find.descendant(
+            of: find.byType(NavigationBar),
+            matching: find.text('Profil'),
+          ),
+        );
+        await t.pumpAndSettle();
+        await t.scrollUntilVisible(find.text('Ubah profil'), 300);
+        await t.tap(find.text('Ubah profil'));
+        await t.pumpAndSettle();
+        // Gulir seluruh formulir agar semua bagian (termasuk Domisili) ikut diukur.
+        for (final judul in ['Domisili', 'Minat', 'Simpan perubahan']) {
+          await t.scrollUntilVisible(find.text(judul), 300);
+          await t.pumpAndSettle();
+        }
+        expect(t.takeException(), isNull, reason: 'overflow di form profil');
+      },
+    );
     for (final kosong in [false, true]) {
       testWidgets(
         'tanpa overflow: Beasiswa Tersimpan ${kosong ? 'kosong' : 'berisi'} ${gelap ? 'gelap' : 'terang'}',
