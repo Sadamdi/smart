@@ -88,7 +88,12 @@ class KartuBeasiswa extends StatelessWidget {
                               style: t.labelSmall,
                             ),
                           const SizedBox(height: 4),
-                          Text(beasiswa.nama, style: t.titleMedium),
+                          Text(
+                            beasiswa.nama,
+                            style: t.titleMedium,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ],
                       ),
                     ),
