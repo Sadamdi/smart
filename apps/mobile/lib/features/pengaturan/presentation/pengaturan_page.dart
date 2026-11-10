@@ -5,6 +5,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/tema_controller.dart';
 import '../../../core/update/app_update_checker.dart';
 import '../../../core/update/versi_aplikasi.dart';
+import '../../../core/widgets/tombol_bulat.dart';
 import '../../auth/presentation/auth_controller.dart';
 import 'pengaturan_controller.dart';
 
@@ -39,84 +40,184 @@ class _PengaturanPageState extends State<PengaturanPage> {
       }
     }
 
+    final t = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Pengaturan')),
+      appBar: AppBar(
+        leadingWidth: 56,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: TombolBulat.kembali(context),
+        ),
+      ),
       body: p == null
           ? const SizedBox.shrink()
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
               children: [
+                Text('Pengaturan', style: t.headlineMedium),
+                const SizedBox(height: 16),
+                _Grup(
+                  judul: 'Tampilan',
+                  anak: _Segmen(nilai: tema.mode.value, onPilih: tema.atur),
+                ),
                 _Grup(
                   judul: 'Pengingat tenggat',
                   anak: Column(
                     children: [
-                      SwitchListTile(
-                        title: const Text('Pengingat lewat surel'),
-                        value: p.notifEmail,
-                        onChanged: (v) => ubah(email: v, push: p.notifPush),
+                      _Kartu(
+                        child: SwitchListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                          ),
+                          title: Text(
+                            'Pengingat lewat surel',
+                            style: _judulBaris(t),
+                          ),
+                          value: p.notifEmail,
+                          onChanged: (v) => ubah(email: v, push: p.notifPush),
+                        ),
                       ),
-                      SwitchListTile(
-                        title: const Text('Pengingat push di ponsel'),
-                        value: p.notifPush,
-                        onChanged: (v) => ubah(email: p.notifEmail, push: v),
+                      const SizedBox(height: 8),
+                      _Kartu(
+                        child: SwitchListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                          ),
+                          title: Text(
+                            'Pengingat push di ponsel',
+                            style: _judulBaris(t),
+                          ),
+                          value: p.notifPush,
+                          onChanged: (v) => ubah(email: p.notifEmail, push: v),
+                        ),
                       ),
                     ],
-                  ),
-                ),
-                _Grup(
-                  judul: 'Tampilan',
-                  anak: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: SegmentedButton<ThemeMode>(
-                      showSelectedIcon: false,
-                      segments: const [
-                        ButtonSegment(
-                          value: ThemeMode.system,
-                          icon: Icon(Icons.brightness_auto),
-                          label: Text('Sistem'),
-                        ),
-                        ButtonSegment(
-                          value: ThemeMode.light,
-                          icon: Icon(Icons.light_mode_outlined),
-                          label: Text('Terang'),
-                        ),
-                        ButtonSegment(
-                          value: ThemeMode.dark,
-                          icon: Icon(Icons.dark_mode_outlined),
-                          label: Text('Gelap'),
-                        ),
-                      ],
-                      selected: {tema.mode.value},
-                      onSelectionChanged: (s) => tema.atur(s.first),
-                    ),
                   ),
                 ),
                 _Grup(
                   judul: 'Aplikasi',
                   anak: Column(
                     children: [
-                      const TileVersiAplikasi(),
-                      ListTile(
-                        leading: const Icon(Icons.system_update_alt),
-                        title: const Text('Periksa pembaruan'),
-                        subtitle: const Text(
-                          'Unduh versi terbaru bila tersedia',
+                      const _Kartu(child: TileVersiAplikasi()),
+                      const SizedBox(height: 8),
+                      _Kartu(
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                          ),
+                          title: Text(
+                            'Periksa pembaruan',
+                            style: _judulBaris(t),
+                          ),
+                          subtitle: Text(
+                            'Unduh versi terbaru bila tersedia',
+                            style: t.bodySmall?.copyWith(fontSize: 11),
+                          ),
+                          onTap: () => AppUpdateChecker.manual(context),
                         ),
-                        onTap: () => AppUpdateChecker.manual(context),
                       ),
-                      ListTile(
-                        leading: const Icon(Icons.history),
-                        title: const Text('Catatan rilis'),
-                        onTap: () => AppUpdateChecker.tampilkanCatatan(context),
+                      const SizedBox(height: 8),
+                      _Kartu(
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                          ),
+                          title: Text('Catatan rilis', style: _judulBaris(t)),
+                          onTap: () =>
+                              AppUpdateChecker.tampilkanCatatan(context),
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const Text(
+                Text(
                   'Pengingat di dalam aplikasi selalu aktif. Sistem tidak pernah menyatakan Anda pasti diterima pada suatu beasiswa.',
+                  style: t.bodySmall,
                 ),
               ],
             ),
+    );
+  }
+}
+
+TextStyle? _judulBaris(TextTheme t) =>
+    t.bodyMedium?.copyWith(fontWeight: FontWeight.w500);
+
+/// Kartu putih bergaris tipis, radius 14, untuk satu baris pengaturan.
+class _Kartu extends StatelessWidget {
+  const _Kartu({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Warna.kartu,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Warna.container4),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Material(type: MaterialType.transparency, child: child),
+    );
+  }
+}
+
+/// Pilihan tampilan: latar kapsul lembut, segmen aktif berwarna utama.
+class _Segmen extends StatelessWidget {
+  const _Segmen({required this.nilai, required this.onPilih});
+
+  final ThemeMode nilai;
+  final ValueChanged<ThemeMode> onPilih;
+
+  static const _opsi = [
+    (ThemeMode.system, 'Sistem'),
+    (ThemeMode.light, 'Terang'),
+    (ThemeMode.dark, 'Gelap'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Warna.container2,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        children: [
+          for (final (mode, label) in _opsi)
+            Expanded(
+              child: Semantics(
+                button: true,
+                selected: nilai == mode,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () => onPilih(mode),
+                  child: Container(
+                    height: 40,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: nilai == mode ? Warna.primary : null,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      label,
+                      style: t.labelLarge?.copyWith(
+                        color: nilai == mode ? Warna.putih : Warna.ink,
+                        fontWeight: nilai == mode
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -135,15 +236,10 @@ class _Grup extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(4, 0, 0, 8),
+            padding: const EdgeInsets.only(bottom: 10),
             child: Text(judul, style: Theme.of(context).textTheme.titleMedium),
           ),
-          Material(
-            color: Warna.kartu,
-            borderRadius: BorderRadius.circular(Jari.kartu),
-            clipBehavior: Clip.antiAlias,
-            child: anak,
-          ),
+          anak,
         ],
       ),
     );

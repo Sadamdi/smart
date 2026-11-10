@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/metrik_dan_progres.dart';
 import '../../../core/widgets/state_widgets.dart';
+import '../../../core/widgets/tombol_bulat.dart';
 import '../../kalender/presentation/kalender_controller.dart';
 import '../../rekomendasi/domain/rekomendasi.dart';
 import '../domain/beasiswa.dart';
@@ -61,7 +62,26 @@ class _DetailPageState extends State<DetailPage> {
     final tersimpan = _simpan.apakahTersimpan(id);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail Beasiswa')),
+      appBar: AppBar(
+        leadingWidth: 56,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: TombolBulat.kembali(context),
+        ),
+        actions: [
+          if (nilai.hasValue)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: TombolBulat(
+                ikon: tersimpan
+                    ? Icons.bookmark_rounded
+                    : Icons.bookmark_border_rounded,
+                tooltip: tersimpan ? 'Hapus dari tersimpan' : 'Simpan beasiswa',
+                onTap: () => ubahSimpan(context, id, tersimpan: tersimpan),
+              ),
+            ),
+        ],
+      ),
       body: AsyncIsi<BeasiswaDetail>(
         nilai: nilai,
         ulang: _c.detail.muat,
@@ -69,42 +89,19 @@ class _DetailPageState extends State<DetailPage> {
       ),
       bottomNavigationBar: nilai.hasValue
           ? DecoratedBox(
-              decoration: BoxDecoration(
-                color: Warna.kartu,
-                border: Border(top: BorderSide(color: Warna.outline)),
-              ),
+              decoration: BoxDecoration(color: Warna.surface),
               child: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-                  child: Row(
-                    children: [
-                      Semantics(
-                        button: true,
-                        label: tersimpan ? 'Hapus dari tersimpan' : 'Simpan',
-                        child: OutlinedButton(
-                          onPressed: () =>
-                              ubahSimpan(context, id, tersimpan: tersimpan),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(52, 52),
-                            padding: EdgeInsets.zero,
-                          ),
-                          child: Icon(
-                            tersimpan
-                                ? Icons.bookmark_rounded
-                                : Icons.bookmark_border_rounded,
-                          ),
-                        ),
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+                  child: FilledButton.icon(
+                    onPressed: () => _bukaPortal(context, nilai.value!.ringkas),
+                    icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                    label: const Text('Buka Laman Resmi'),
+                    style: FilledButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: () =>
-                              _bukaPortal(context, nilai.value!.ringkas),
-                          icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                          label: const Text('Kunjungi Laman Resmi'),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -137,80 +134,46 @@ class _Isi extends StatelessWidget {
         ?.where((c) => c.beasiswa.id == b.id)
         .firstOrNull;
 
+    final dekat = sisa != null && sisa >= 0 && sisa <= 7;
+    final warnaTenggat = dekat ? Warna.error : Warna.navy;
+    final catatan = detail.catatanKekurangan;
+
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
       children: [
+        Text(
+          b.nama,
+          style: t.headlineMedium?.copyWith(fontSize: 24, height: 1.3),
+        ),
+        if (meta.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(meta, style: t.bodySmall?.copyWith(fontSize: 13)),
+        ],
+        const SizedBox(height: 10),
         Wrap(
-          spacing: 8,
+          spacing: 6,
           runSpacing: 6,
           children: [
+            if ((b.jenjang ?? '').isNotEmpty) Lencana(b.jenjang!),
             if (detail.kategori != null)
-              ChipStatus.kategori(Kategori.dari(detail.kategori!)),
-            if ((b.jenjang ?? '').isNotEmpty) ChipStatus(label: b.jenjang!),
-            if (meta.isNotEmpty) ChipStatus(label: meta),
+              Lencana.kategori(Kategori.dari(detail.kategori!)),
           ],
         ),
-        const SizedBox(height: 12),
-        Text(b.nama, style: t.headlineMedium?.copyWith(fontSize: 24)),
         const SizedBox(height: 16),
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: _KotakInfo(
-                  warnaLatar: sisa != null && sisa <= 7
-                      ? Warna.errorSoft
-                      : Warna.container2,
-                  warnaTeks: sisa != null && sisa <= 7
-                      ? Warna.error
-                      : Warna.navy,
-                  label: 'TENGGAT PENDAFTARAN',
-                  nilai: tenggat == null
-                      ? 'Belum diumumkan'
-                      : formatTanggal(tenggat),
-                  keterangan: teksSisaHari(tenggat),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _KotakInfo(
-                  warnaLatar: Warna.container1,
-                  warnaTeks: Warna.navy,
-                  label: 'DIPERIKSA TERAKHIR',
-                  nilai: detail.tanggalDiperiksa == null
-                      ? 'Belum tercatat'
-                      : formatTanggal(detail.tanggalDiperiksa!),
-                  keterangan: 'Dari laman sumber resmi',
-                ),
-              ),
-            ],
-          ),
+        _KotakInfo(
+          warnaLatar: dekat ? Warna.errorSoft : Warna.container2,
+          warnaTeks: warnaTenggat,
+          label: 'TENGGAT',
+          nilai: tenggat == null
+              ? 'Belum diumumkan'
+              : sisa! < 0
+              ? 'Sudah lewat'
+              : sisa == 0
+              ? 'Hari ini'
+              : '$sisa hari lagi',
+          keterangan: tenggat == null ? null : formatTanggal(tenggat),
         ),
-        const SizedBox(height: 16),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(Icons.info_outline_rounded, size: 18, color: Warna.muted),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Pendaftaran dilakukan di laman resmi. SMART tidak mengurus pendaftaran, jadi periksa kembali syarat dan tenggat di sana.',
-                style: t.bodySmall,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        _Bagian(
-          judul: 'Manfaat',
-          anak: Text(
-            (detail.manfaat ?? '').trim().isEmpty
-                ? 'Rincian manfaat belum tercatat. Lihat laman resmi.'
-                : detail.manfaat!,
-            style: t.bodyMedium,
-          ),
-        ),
+        const SizedBox(height: 24),
         _Bagian(
           judul: 'Syarat dan kelayakanmu',
           anak: detail.persyaratan.isEmpty
@@ -221,24 +184,26 @@ class _Isi extends StatelessWidget {
                   ],
                 ),
         ),
-        if (detail.alasan.isNotEmpty || detail.catatanKekurangan.isNotEmpty)
+        if (detail.alasan.isNotEmpty || catatan.isNotEmpty)
           _Bagian(
             judul: 'Alasan rekomendasi',
-            anak: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final a in detail.alasan)
-                  _BarisAlasan(a, Icons.check_circle_rounded, Warna.sukses),
-                for (final a in detail.catatanKekurangan)
-                  _BarisAlasan(a, Icons.info_rounded, Warna.error),
-                const SizedBox(height: 4),
-                Text(
-                  'Hasil ini bantuan memilih, bukan jaminan diterima.',
-                  style: t.bodySmall,
-                ),
-              ],
+            anak: Text(
+              [
+                ...detail.alasan,
+                ...catatan,
+              ].map((e) => e.endsWith('.') ? e : '$e.').join(' '),
+              style: t.bodyMedium?.copyWith(fontSize: 13, height: 1.5),
             ),
           ),
+        _Bagian(
+          judul: 'Manfaat',
+          anak: Text(
+            (detail.manfaat ?? '').trim().isEmpty
+                ? 'Rincian manfaat belum tercatat. Lihat laman resmi.'
+                : detail.manfaat!,
+            style: t.bodyMedium?.copyWith(fontSize: 13, height: 1.5),
+          ),
+        ),
         _Bagian(
           judul: 'Berkas wajib',
           anak: detail.berkasWajib.isEmpty
@@ -299,8 +264,16 @@ class _Isi extends StatelessWidget {
           judul: 'Rencana pendaftaran',
           anak: _RencanaDaftar(id: b.id, tersimpan: tersimpan),
         ),
+        if (detail.tanggalDiperiksa != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              'Diperiksa terakhir ${formatTanggal(detail.tanggalDiperiksa!)} dari laman sumber resmi. Pendaftaran dilakukan di laman resmi; SMART tidak mengurus pendaftaran.',
+              style: t.bodySmall,
+            ),
+          ),
         Text(
-          'Rekomendasi SMART hanya membantu menyaring; penyelenggara yang menentukan hasil seleksi.',
+          'Hasil ini bantuan memilih, bukan jaminan diterima. Penyelenggara yang menentukan hasil seleksi.',
           style: t.bodySmall,
         ),
       ],
@@ -314,32 +287,36 @@ class _KotakInfo extends StatelessWidget {
     required this.warnaTeks,
     required this.label,
     required this.nilai,
-    required this.keterangan,
+    this.keterangan,
   });
 
   final Color warnaLatar;
   final Color warnaTeks;
   final String label;
   final String nilai;
-  final String keterangan;
+  final String? keterangan;
 
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.all(12),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: warnaLatar,
-        borderRadius: BorderRadius.circular(Jari.kartuDalam),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: t.labelSmall?.copyWith(color: warnaTeks)),
-          const SizedBox(height: 6),
-          Text(nilai, style: t.titleSmall?.copyWith(color: warnaTeks)),
-          const SizedBox(height: 2),
-          Text(keterangan, style: t.bodySmall?.copyWith(color: warnaTeks)),
+          Text(
+            label,
+            style: t.labelSmall?.copyWith(color: warnaTeks, letterSpacing: 0.5),
+          ),
+          const SizedBox(height: 4),
+          Text(nilai, style: t.titleMedium?.copyWith(color: warnaTeks)),
+          if (keterangan != null)
+            Text(keterangan!, style: t.bodySmall?.copyWith(color: warnaTeks)),
         ],
       ),
     );
@@ -354,15 +331,8 @@ class _Bagian extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Warna.kartu,
-        borderRadius: BorderRadius.circular(Jari.kartu),
-        boxShadow: bayanganKartu,
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -375,70 +345,67 @@ class _Bagian extends StatelessWidget {
   }
 }
 
-class _BarisAlasan extends StatelessWidget {
-  const _BarisAlasan(this.teks, this.ikon, this.warna);
-
-  final String teks;
-  final IconData ikon;
-  final Color warna;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(ikon, size: 20, color: warna),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(teks, style: Theme.of(context).textTheme.bodyMedium),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _BarisSyarat extends StatelessWidget {
   const _BarisSyarat(this.p);
 
   final Persyaratan p;
 
-  (IconData, Color) get _tanda => switch (p.status) {
-    'terpenuhi' => (Icons.check_circle_rounded, Warna.sukses),
-    'dalam_toleransi' => (Icons.schedule_rounded, Warna.primary),
-    'gagal' => (Icons.cancel_rounded, Warna.error),
-    _ => (Icons.radio_button_unchecked_rounded, Warna.muted),
-  };
-
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final (ikon, warna) = _tanda;
+    final warna = switch (p.status) {
+      'terpenuhi' => Warna.sukses,
+      'dalam_toleransi' => Warna.primary,
+      'gagal' => Warna.error,
+      _ => Warna.outline,
+    };
+    final Widget tanda = switch (p.status) {
+      'terpenuhi' => Container(
+        width: 22,
+        height: 22,
+        decoration: BoxDecoration(color: Warna.sukses, shape: BoxShape.circle),
+        child: Icon(Icons.check_rounded, size: 16, color: Warna.putih),
+      ),
+      'dalam_toleransi' => Icon(Icons.schedule_rounded, size: 22, color: warna),
+      'gagal' => Icon(Icons.cancel_rounded, size: 22, color: warna),
+      _ => Container(
+        width: 22,
+        height: 22,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: Warna.outline, width: 1.5),
+        ),
+      ),
+    };
+    final judul = p.nilai.isEmpty ? p.label : '${p.label} ${p.nilai}';
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
-        border: Border.all(color: Warna.outline),
+        color: Warna.kartu,
+        border: Border.all(color: Warna.container4),
         borderRadius: BorderRadius.circular(Jari.kartuDalam),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 1),
-            child: Icon(ikon, size: 22, color: warna),
-          ),
-          const SizedBox(width: 10),
+          tanda,
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(p.label, style: t.titleSmall),
-                if (p.nilai.isNotEmpty) Text(p.nilai, style: t.bodyMedium),
+                Text(
+                  judul,
+                  style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                ),
                 if (p.catatan != null && p.catatan!.isNotEmpty)
-                  Text(p.catatan!, style: t.bodySmall?.copyWith(color: warna)),
+                  Text(
+                    p.catatan!,
+                    style: t.bodySmall?.copyWith(
+                      color: p.status == 'terpenuhi' ? Warna.sukses : warna,
+                    ),
+                  ),
                 if (!p.dapatDikejar && p.status != 'terpenuhi')
                   Text(
                     'Tidak dapat dikejar dalam waktu singkat',
