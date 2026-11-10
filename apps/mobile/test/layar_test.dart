@@ -19,6 +19,7 @@ Map<String, Penangan> _rutePokok({
   Map<String, Penangan> tambahan = const {},
 }) => {
   'GET /me': (o) => Balasan.ok(penggunaJson()),
+  'GET /referensi/wilayah': (o) => Balasan.ok(wilayahJson()),
   'GET /notifikasi': (o) => Balasan.ok([]),
   'GET /me/tersimpan': (o) => Balasan.ok([]),
   'GET /me/checklist': (o) => Balasan.ok([]),
@@ -29,6 +30,15 @@ Map<String, Penangan> _rutePokok({
   'GET /beasiswa': (o) => Balasan.ok([]),
   ...tambahan,
 };
+
+Future<void> _bukaUbahProfil(WidgetTester t) async {
+  await t.scrollUntilVisible(
+    find.text('Ubah profil'),
+    300,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await _bukaUbahProfil(t);
+}
 
 Future<void> _pasang(WidgetTester t, ServerPalsu s, {bool masuk = true}) async {
   t.view.physicalSize = const Size(390 * 2, 1400 * 2);
@@ -407,28 +417,97 @@ void main() {
       await _pasang(t, s);
       await _tab(t, 'Profil');
       expect(find.text('Universitas Contoh'), findsOneWidget);
-      await t.tap(find.text('Ubah profil'));
-      await t.pumpAndSettle();
+      await _bukaUbahProfil(t);
       await t.enterText(
         find.widgetWithText(TextFormField, 'Kampus (opsional)'),
         'Kampus Baru',
       );
-      await t.enterText(find.widgetWithText(TextFormField, 'IPK'), '5');
+      await t.enterText(find.widgetWithText(TextFormField, 'IPK *'), '5');
       await t.ensureVisible(find.text('Simpan perubahan'));
       await t.pumpAndSettle();
       await t.tap(find.text('Simpan perubahan'));
       await t.pumpAndSettle();
-      await t.ensureVisible(find.widgetWithText(TextFormField, 'IPK'));
+      await t.ensureVisible(find.widgetWithText(TextFormField, 'IPK *'));
       await t.pumpAndSettle();
       expect(find.textContaining('IPK harus berupa angka'), findsOneWidget);
       expect(s.hitung('PUT /me/profil'), 0);
-      await t.enterText(find.widgetWithText(TextFormField, 'IPK'), '3,8');
+      await t.enterText(find.widgetWithText(TextFormField, 'IPK *'), '3,8');
       await t.ensureVisible(find.text('Simpan perubahan'));
       await t.pumpAndSettle();
       await t.tap(find.text('Simpan perubahan'));
       await t.pumpAndSettle();
       expect(s.terakhir('PUT /me/profil').data['ipk'], 3.8);
       expect(find.text('Kampus Baru'), findsOneWidget);
+    });
+
+    testWidgets(
+      'profil: domisili tampil, referensi dimuat sekali, provinsi mengikuti negara',
+      (t) async {
+        final s = ServerPalsu(
+          _rutePokok(
+            tambahan: {
+              'PUT /me/profil': (o) => Balasan.ok({
+                ...penggunaJson(),
+                'negara_domisili': 'Malaysia',
+                'provinsi_domisili': null,
+              }),
+            },
+          ),
+        );
+        await _pasang(t, s);
+        await _tab(t, 'Profil');
+        expect(find.text('Provinsi'), findsOneWidget);
+        expect(find.text('Jawa Timur'), findsOneWidget);
+        expect(s.hitung('GET /referensi/wilayah'), 0);
+        await _bukaUbahProfil(t);
+        expect(s.hitung('GET /referensi/wilayah'), 1);
+        expect(find.text('Domisili'), findsWidgets);
+        await t.scrollUntilVisible(
+          find.text('Provinsi (opsional)'),
+          300,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(find.text('Provinsi (opsional)'), findsOneWidget);
+        await t.tap(find.text('Negara domisili *'));
+        await t.pumpAndSettle();
+        await t.tap(find.text('Malaysia').last);
+        await t.pumpAndSettle();
+        expect(find.text('Provinsi (opsional)'), findsNothing);
+        await t.ensureVisible(find.text('Simpan perubahan'));
+        await t.pumpAndSettle();
+        await t.tap(find.text('Simpan perubahan'));
+        await t.pumpAndSettle();
+        final body = s.terakhir('PUT /me/profil').data as Map;
+        expect(body['negara_domisili'], 'Malaysia');
+        expect(body.containsKey('provinsi_domisili'), isFalse);
+        expect(find.text('Malaysia'), findsOneWidget);
+        expect(find.text('Provinsi'), findsNothing);
+      },
+    );
+
+    testWidgets('profil: referensi gagal memberi tombol Coba lagi', (t) async {
+      var gagal = true;
+      final s = ServerPalsu(
+        _rutePokok(
+          tambahan: {
+            'GET /referensi/wilayah': (o) =>
+                gagal ? Balasan.putus() : Balasan.ok(wilayahJson()),
+          },
+        ),
+      );
+      await _pasang(t, s);
+      await _tab(t, 'Profil');
+      await _bukaUbahProfil(t);
+      await t.scrollUntilVisible(
+        find.text('Coba lagi'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      gagal = false;
+      await t.tap(find.text('Coba lagi'));
+      await t.pumpAndSettle();
+      expect(find.text('Coba lagi'), findsNothing);
+      expect(s.hitung('GET /referensi/wilayah'), 2);
     });
 
     testWidgets('notifikasi: daftar dan tandai semua dibaca', (t) async {
