@@ -123,12 +123,20 @@ void main() {
           ),
         );
         await t.pumpAndSettle();
-        await t.scrollUntilVisible(find.text('Ubah profil'), 300);
+        await t.scrollUntilVisible(
+          find.text('Ubah profil'),
+          300,
+          scrollable: find.byType(Scrollable).first,
+        );
         await t.tap(find.text('Ubah profil'));
         await t.pumpAndSettle();
         // Gulir seluruh formulir agar semua bagian (termasuk Domisili) ikut diukur.
         for (final judul in ['Domisili', 'Minat', 'Simpan perubahan']) {
-          await t.scrollUntilVisible(find.text(judul), 300);
+          await t.scrollUntilVisible(
+            find.text(judul),
+            300,
+            scrollable: find.byType(Scrollable).first,
+          );
           await t.pumpAndSettle();
         }
         expect(t.takeException(), isNull, reason: 'overflow di form profil');
