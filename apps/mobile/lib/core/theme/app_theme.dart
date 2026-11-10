@@ -93,6 +93,11 @@ class Warna {
   static void pakai(Palet p) => _p = p;
   static bool get gelap => _p.brightness == Brightness.dark;
 
+  /// Biru tua datar untuk kartu hero (Beranda, kepala Profil) dan teks lembut di atasnya.
+  static Color get hero =>
+      gelap ? const Color(0xFF143F7C) : const Color(0xFF1E4F94);
+  static const heroTeks = Color(0xFFD5E2F6);
+
   static Color get primary => _p.primary;
   static Color get primarySoft => _p.primarySoft;
   static Color get navy => _p.navy;
@@ -192,7 +197,7 @@ ThemeData buatTema({bool googleFonts = true, Palet w = Palet.terang}) {
   );
   final tema = teks.copyWith(
     headlineMedium: teks.headlineMedium?.copyWith(
-      fontSize: 28,
+      fontSize: 26,
       fontWeight: FontWeight.w700,
       color: w.navy,
     ),
@@ -289,8 +294,15 @@ ThemeData buatTema({bool googleFonts = true, Palet w = Palet.terang}) {
           color: s.contains(WidgetState.selected) ? w.primary : w.muted,
         ),
       ),
-      labelTextStyle: WidgetStatePropertyAll(
-        tema.labelSmall?.copyWith(letterSpacing: 0),
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (s) => tema.labelSmall?.copyWith(
+          fontSize: 11,
+          letterSpacing: 0,
+          fontWeight: s.contains(WidgetState.selected)
+              ? FontWeight.w700
+              : FontWeight.w500,
+          color: s.contains(WidgetState.selected) ? w.primary : w.muted,
+        ),
       ),
     ),
     dividerTheme: DividerThemeData(color: w.container4, space: 1),
