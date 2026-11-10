@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ApiError } from "@/lib/api";
 import { daftar } from "@/lib/auth";
-import { Medan, Masukan, Tombol } from "./ui";
+import { Medan, Masukan, MasukanSandi, Tombol } from "./ui";
 
 export const skemaDaftar = z
   .object({
@@ -44,13 +44,13 @@ export function FormDaftar() {
         <Masukan type="email" autoComplete="email" placeholder="nama@kampus.ac.id" {...f.register("email")} />
       </Medan>
       <Medan label="Kata sandi" galat={e.kata_sandi?.message}>
-        <Masukan type="password" autoComplete="new-password" {...f.register("kata_sandi")} />
+        <MasukanSandi autoComplete="new-password" {...f.register("kata_sandi")} />
       </Medan>
       <Medan label="Ulangi kata sandi" galat={e.ulang?.message}>
-        <Masukan type="password" autoComplete="new-password" {...f.register("ulang")} />
+        <MasukanSandi autoComplete="new-password" {...f.register("ulang")} />
       </Medan>
       {galat && (
-        <p role="alert" className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-[#8c1212]">
+        <p role="alert" className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger-ink">
           {galat}
         </p>
       )}

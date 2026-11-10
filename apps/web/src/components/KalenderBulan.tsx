@@ -39,15 +39,15 @@ export function KalenderBulan({
           {NAMA_BULAN[bulan]} {tahun}
         </h3>
         <div className="flex gap-1">
-          <button type="button" aria-label="Bulan sebelumnya" onClick={() => onGeser(-1)} className="rounded-full p-2 text-navy hover:bg-c2">
+          <button type="button" aria-label="Bulan sebelumnya" onClick={() => onGeser(-1)} className="flex h-11 w-11 items-center justify-center rounded-full text-navy hover:bg-c2">
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <button type="button" aria-label="Bulan berikutnya" onClick={() => onGeser(1)} className="rounded-full p-2 text-navy hover:bg-c2">
+          <button type="button" aria-label="Bulan berikutnya" onClick={() => onGeser(1)} className="flex h-11 w-11 items-center justify-center rounded-full text-navy hover:bg-c2">
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
       </div>
-      <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase text-muted">
+      <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold uppercase text-muted">
         {HARI.map((h) => (
           <div key={h} className="py-1">
             {h}
@@ -68,8 +68,8 @@ export function KalenderBulan({
               aria-label={`${h} ${NAMA_BULAN[bulan]}${ada.length ? `, ${ada.length} acara` : ""}`}
               aria-pressed={dipilih === iso}
               className={cx(
-                "relative flex aspect-square flex-col items-center justify-center rounded-xl text-sm font-medium",
-                dipilih === iso ? "bg-primary text-white" : iso === iniIso ? "bg-c3 text-navy" : "text-navy hover:bg-c1",
+                "relative flex h-11 min-w-0 flex-col items-center justify-center rounded-[14px] text-sm font-medium transition-colors duration-150",
+                dipilih === iso ? "bg-fill text-white" : iso === iniIso ? "bg-c3 text-navy" : "text-navy hover:bg-c1",
               )}
             >
               {h}
