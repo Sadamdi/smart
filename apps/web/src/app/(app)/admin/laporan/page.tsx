@@ -29,7 +29,7 @@ function Sebaran({ judul, data, label }: { judul: string; data: Record<string, n
 export default function Laporan() {
   const kueri = useLaporan();
   return (
-    <div>
+    <div className="halaman-masuk">
       <JudulHalaman judul="Laporan Sistem" deskripsi="Kondisi data beasiswa dan keandalan sumber pemantauan." />
       <Tampil kueri={kueri} adaIsi={() => true}>
         {(l) => (

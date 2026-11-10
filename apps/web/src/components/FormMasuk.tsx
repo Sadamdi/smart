@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ApiError } from "@/lib/api";
 import { masuk } from "@/lib/auth";
-import { Medan, Masukan, Tombol } from "./ui";
+import { Medan, Masukan, MasukanSandi, Tombol } from "./ui";
 
 export const skemaMasuk = z.object({
   email: z.string().min(1, "Email wajib diisi").email("Format email tidak valid"),
@@ -37,10 +37,10 @@ export function FormMasuk({ onSelesai }: { onSelesai?: () => void }) {
         <Masukan type="email" autoComplete="email" placeholder="nama@kampus.ac.id" {...f.register("email")} />
       </Medan>
       <Medan label="Kata sandi" galat={f.formState.errors.kata_sandi?.message}>
-        <Masukan type="password" autoComplete="current-password" {...f.register("kata_sandi")} />
+        <MasukanSandi autoComplete="current-password" {...f.register("kata_sandi")} />
       </Medan>
       {galat && (
-        <p role="alert" className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-[#8c1212]">
+        <p role="alert" className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger-ink">
           {galat}
         </p>
       )}

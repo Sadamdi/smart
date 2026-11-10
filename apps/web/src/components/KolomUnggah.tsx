@@ -1,7 +1,7 @@
 "use client";
 import { Upload } from "lucide-react";
 import { useRef, useState } from "react";
-import { cx } from "./ui";
+import { Tombol, cx } from "./ui";
 
 export const BATAS_BYTE = 5 * 1024 * 1024;
 export const EKSTENSI = [".pdf", ".docx", ".txt", ".png", ".jpg", ".jpeg"];
@@ -41,21 +41,16 @@ export function KolomUnggah({ onPilih, sibuk }: { onPilih: (f: File) => void; si
           tangani(e.dataTransfer.files[0]);
         }}
         className={cx(
-          "flex flex-col items-center rounded-2xl border-2 border-dashed px-6 py-8 text-center",
-          seret ? "border-primary bg-c2" : "border-outline bg-c1",
+          "flex flex-col items-center rounded-kartu border-2 border-dashed px-6 py-8 text-center",
+          seret ? "border-primary bg-c2" : "border-line/60 bg-c1",
         )}
       >
         <Upload className="mb-2 h-7 w-7 text-primary" aria-hidden />
         <p className="text-sm font-semibold text-navy">Tarik berkas ke sini atau pilih dari perangkat</p>
         <p className="mt-1 text-xs text-muted">PDF, DOCX, TXT, PNG, atau JPG. Maksimal 5 MB.</p>
-        <button
-          type="button"
-          disabled={sibuk}
-          onClick={() => ref.current?.click()}
-          className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-[#1b4d8f] disabled:bg-outline disabled:text-muted"
-        >
+        <Tombol disabled={sibuk} onClick={() => ref.current?.click()} className="mt-4">
           {sibuk ? "Mengunggah" : "Pilih berkas"}
-        </button>
+        </Tombol>
         <input
           ref={ref}
           type="file"

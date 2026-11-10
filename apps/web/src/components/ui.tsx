@@ -1,19 +1,20 @@
 "use client";
 import Link from "next/link";
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { useState, type ButtonHTMLAttributes, type ComponentProps, type ReactNode, type SelectHTMLAttributes } from "react";
 import { LABEL_KATEGORI } from "@/lib/format";
 
 export const cx = (...k: (string | false | null | undefined)[]) => k.filter(Boolean).join(" ");
 
 type Varian = "utama" | "sekunder" | "hantu" | "bahaya";
 const VARIAN: Record<Varian, string> = {
-  utama: "bg-primary text-white hover:bg-[#1b4d8f] disabled:bg-outline disabled:text-muted",
+  utama: "bg-fill text-white shadow-sm hover:bg-fill-hover disabled:bg-c3 disabled:text-muted disabled:shadow-none",
   sekunder: "bg-c2 text-primary hover:bg-c3 disabled:opacity-60",
   hantu: "bg-transparent text-primary hover:bg-c2 disabled:opacity-60",
-  bahaya: "bg-danger text-white hover:bg-[#93000a] disabled:opacity-60",
+  bahaya: "bg-danger-fill text-white hover:bg-danger-fill-hover disabled:opacity-60",
 };
 const DASAR =
-  "inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed";
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-kontrol px-5 py-2.5 text-sm font-semibold transition-colors duration-150 active:scale-[0.99] disabled:cursor-not-allowed";
 
 export function Tombol({
   varian = "utama",
@@ -64,7 +65,7 @@ export function Medan({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
+      <span className="mb-1.5 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-muted">
         {label}
         {wajib === true && (
           <span className="rounded-full bg-c3 px-2 py-0.5 text-[10px] normal-case tracking-normal text-primary">Wajib untuk rekomendasi</span>
@@ -83,10 +84,29 @@ export function Medan({
 }
 
 const KONTROL =
-  "w-full rounded-lg border border-outline bg-white px-3.5 py-2.5 text-sm text-navy placeholder:text-muted focus:border-primary disabled:bg-c1";
+  "min-h-11 w-full rounded-kontrol border border-line bg-card px-3.5 py-2.5 text-[15px] text-navy transition-colors duration-150 placeholder:text-muted focus:border-primary disabled:bg-c1 disabled:text-muted";
 
-export function Masukan({ className, ...p }: InputHTMLAttributes<HTMLInputElement>) {
+export function Masukan({ className, ...p }: ComponentProps<"input">) {
   return <input {...p} className={cx(KONTROL, className)} />;
+}
+
+/** Kolom kata sandi dengan tombol lihat. */
+export function MasukanSandi({ className, ...p }: Omit<ComponentProps<"input">, "type">) {
+  const [lihat, setLihat] = useState(false);
+  return (
+    <span className="relative block">
+      <Masukan {...p} type={lihat ? "text" : "password"} className={cx("pr-12", className)} />
+      <button
+        type="button"
+        aria-pressed={lihat}
+        aria-label={lihat ? "Sembunyikan karakter" : "Tampilkan karakter"}
+        onClick={() => setLihat((v) => !v)}
+        className="absolute right-0.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-muted transition-colors hover:text-navy"
+      >
+        {lihat ? <EyeOff className="h-5 w-5" aria-hidden /> : <Eye className="h-5 w-5" aria-hidden />}
+      </button>
+    </span>
+  );
 }
 
 export function Pilihan({ className, children, ...p }: SelectHTMLAttributes<HTMLSelectElement>) {
@@ -98,14 +118,14 @@ export function Pilihan({ className, children, ...p }: SelectHTMLAttributes<HTML
 }
 
 export function Kartu({ className, children }: { className?: string; children: ReactNode }) {
-  return <section className={cx("rounded-2xl border border-c4/60 bg-white p-6 shadow-kartu", className)}>{children}</section>;
+  return <section className={cx("rounded-kartu border border-c4/60 bg-card p-5 shadow-kartu sm:p-6", className)}>{children}</section>;
 }
 
 export function JudulHalaman({ judul, deskripsi, aksi }: { judul: string; deskripsi?: string; aksi?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+    <div className="halaman-masuk mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-[28px] font-bold leading-tight text-navy">{judul}</h1>
+        <h1 className="text-2xl font-bold leading-tight text-navy sm:text-[28px]">{judul}</h1>
         {deskripsi && <p className="mt-1 max-w-2xl text-sm text-ink">{deskripsi}</p>}
       </div>
       {aksi}
@@ -120,8 +140,8 @@ export function ChipFilter({ aktif, onClick, children }: { aktif?: boolean; onCl
       aria-pressed={aktif}
       onClick={onClick}
       className={cx(
-        "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-        aktif ? "bg-primary text-white" : "bg-c2 text-navy hover:bg-c3",
+        "inline-flex min-h-11 items-center rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors duration-150",
+        aktif ? "border-fill bg-fill text-white" : "border-c4 bg-card text-navy hover:bg-c2",
       )}
     >
       {children}
@@ -131,24 +151,34 @@ export function ChipFilter({ aktif, onClick, children }: { aktif?: boolean; onCl
 
 const WARNA_KATEGORI: Record<string, string> = {
   memenuhi: "bg-ok-soft text-ok",
-  hampir_memenuhi: "bg-c4 text-[#12407a]",
-  belum_memenuhi: "bg-danger-soft text-[#8c1212]",
+  hampir_memenuhi: "bg-info-soft text-info-ink",
+  belum_memenuhi: "bg-danger-soft text-danger-ink",
 };
 
 export function ChipStatus({ kategori, teks }: { kategori: string; teks?: string }) {
   return (
-    <span className={cx("inline-block rounded-full px-3 py-1 text-xs font-semibold", WARNA_KATEGORI[kategori] ?? "bg-c2 text-navy")}>
+    <span className={cx("inline-block rounded-full px-3 py-1 text-xs font-bold", WARNA_KATEGORI[kategori] ?? "bg-c2 text-navy")}>
       {teks ?? LABEL_KATEGORI[kategori] ?? kategori}
     </span>
   );
 }
 
-export function Metrik({ label, nilai, catatan }: { label: string; nilai: ReactNode; catatan?: ReactNode }) {
+export function Metrik({ label, nilai, catatan, memuat, nada }: { label: string; nilai: ReactNode; catatan?: ReactNode; memuat?: boolean; nada?: "utama" | "bahaya" }) {
   return (
-    <div className="rounded-2xl border border-c4/60 bg-white p-5 shadow-kartu">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</p>
-      <p className="mt-2 text-2xl font-bold text-navy">{nilai}</p>
-      {catatan && <p className="mt-1 text-xs text-muted">{catatan}</p>}
+    <div className="rounded-kartu border border-c4/60 bg-card p-5 shadow-kartu">
+      <p className="text-[11px] font-bold uppercase tracking-wide text-muted">{label}</p>
+      {memuat ? (
+        <>
+          <span className="sr-only" role="status">Memuat</span>
+          <div aria-hidden className="skeleton mt-2 h-8 w-16" />
+          <div aria-hidden className="skeleton mt-2 h-3 w-24" />
+        </>
+      ) : (
+        <>
+          <p className={cx("mt-2 text-2xl font-extrabold", nada === "utama" ? "text-primary" : nada === "bahaya" ? "text-danger" : "text-navy")}>{nilai}</p>
+          {catatan && <p className="mt-1 text-xs text-muted">{catatan}</p>}
+        </>
+      )}
     </div>
   );
 }
@@ -162,9 +192,9 @@ export function BarProgres({ nilai, label }: { nilai: number; label?: string }) 
       aria-valuemin={0}
       aria-valuemax={100}
       aria-label={label ?? "Kemajuan"}
-      className="h-2 w-full overflow-hidden rounded-full bg-c4"
+      className="h-2 w-full overflow-hidden rounded-full bg-c3"
     >
-      <div className="h-full rounded-full bg-primary" style={{ width: `${n}%` }} />
+      <div className="h-full rounded-full bg-fill transition-[width] duration-300" style={{ width: `${n}%` }} />
     </div>
   );
 }
@@ -176,8 +206,8 @@ export function Donat({ bagian }: { bagian: { label: string; nilai: number; warn
   const k = 2 * Math.PI * r;
   let geser = 0;
   return (
-    <div className="flex items-center gap-6">
-      <svg viewBox="0 0 100 100" className="h-32 w-32 shrink-0 -rotate-90" role="img" aria-label={`Total ${total} beasiswa`}>
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+      <svg viewBox="0 0 100 100" className="h-28 w-28 shrink-0 -rotate-90" role="img" aria-label={`Total ${total} beasiswa`}>
         <circle cx="50" cy="50" r={r} fill="none" stroke="var(--c4)" strokeWidth="12" />
         {total > 0 &&
           bagian.map((b) => {
@@ -208,6 +238,34 @@ export function Donat({ bagian }: { bagian: { label: string; nilai: number; warn
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+/** Penanda kecil bergaya chip untuk metadata (jenjang, negara, dan sejenisnya). */
+export function Lencana({ children, nada = "netral", className }: { children: ReactNode; nada?: "netral" | "info" | "ok" | "waspada" | "bahaya" | "emas"; className?: string }) {
+  const WARNA = {
+    netral: "bg-c2 text-navy",
+    info: "bg-info-soft text-info-ink",
+    ok: "bg-ok-soft text-ok",
+    waspada: "bg-warn-soft text-warn",
+    bahaya: "bg-danger-soft text-danger-ink",
+    emas: "bg-gold/20 text-navy",
+  } as const;
+  return <span className={cx("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold", WARNA[nada], className)}>{children}</span>;
+}
+
+/** Latar ikon bulat bersudut untuk kepala kartu dan keadaan kosong. */
+export function KotakIkon({ children, className }: { children: ReactNode; className?: string }) {
+  return <span className={cx("flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-c2 text-primary", className)}>{children}</span>;
+}
+
+/** Judul bagian di dalam halaman (20/700). */
+export function JudulBagian({ children, aksi }: { children: ReactNode; aksi?: ReactNode }) {
+  return (
+    <div className="mb-3 flex items-center justify-between gap-3">
+      <h2 className="text-lg font-bold text-navy sm:text-xl">{children}</h2>
+      {aksi}
     </div>
   );
 }

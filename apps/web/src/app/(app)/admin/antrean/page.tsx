@@ -1,10 +1,10 @@
 "use client";
-import { Flag } from "lucide-react";
+import { CircleCheck, Flag } from "lucide-react";
 import Link from "next/link";
 import { KosongState, Tampil } from "@/components/state";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Kartu, JudulHalaman, Tombol } from "@/components/ui";
+import { Kartu, JudulHalaman, TautanTombol, Tombol } from "@/components/ui";
 import { kirim } from "@/lib/api";
 import { useAntrean, usePengaturan } from "@/lib/hooks";
 import { tanggalIndo } from "@/lib/format";
@@ -36,8 +36,8 @@ function PanelAi() {
   return (
     <Kartu className="mb-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <label className="flex items-start gap-3 text-sm text-ink">
-          <input type="checkbox" checked={aktif} onChange={(e) => ubah(e.target.checked)} className="mt-1 h-4 w-4 accent-primary" />
+        <label className="flex min-h-11 items-start gap-3 text-sm text-ink">
+          <input type="checkbox" checked={aktif} onChange={(e) => ubah(e.target.checked)} className="mt-1 h-5 w-5 accent-primary" />
           <span>
             <span className="font-semibold text-navy">Validasi otomatis oleh AI</span>
             <span className="block text-xs text-muted">
@@ -58,14 +58,14 @@ function PanelAi() {
 export default function Antrean() {
   const kueri = useAntrean();
   return (
-    <div>
+    <div className="halaman-masuk">
       <JudulHalaman judul="Antrean Validasi" deskripsi="Beasiswa hasil pemantauan yang perlu diperiksa sebelum terbit." />
       <PanelAi />
-      <Tampil kueri={kueri} kosong={<KosongState judul="Antrean kosong" pesan="Semua beasiswa sudah divalidasi." />}>
+      <Tampil kueri={kueri} kosong={<KosongState ikon={CircleCheck} judul="Antrean kosong" pesan="Semua beasiswa sudah divalidasi. Jalankan pemantauan sumber untuk menemukan yang baru." aksi={<TautanTombol href="/admin/sumber" varian="sekunder">Kelola sumber</TautanTombol>} />}>
         {(daftar) => (
           <ul className="space-y-3">
             {daftar.map((a) => (
-              <li key={a.id} className="rounded-2xl border border-c4/60 bg-white p-5 shadow-kartu">
+              <li key={a.id} className="rounded-kartu border border-c4/60 bg-card p-5 shadow-kartu">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <Link href={`/admin/antrean/${a.id}`} className="text-base font-bold text-navy hover:underline">
@@ -76,12 +76,10 @@ export default function Antrean() {
                     </p>
                     <p className="text-xs text-muted">Tenggat {tanggalIndo(a.tenggat)}</p>
                   </div>
-                  <Link href={`/admin/antrean/${a.id}`} className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-[#1b4d8f]">
-                    Periksa
-                  </Link>
+                  <TautanTombol href={`/admin/antrean/${a.id}`}>Periksa</TautanTombol>
                 </div>
                 {a.alasan_ditandai && (
-                  <p className="mt-3 flex items-start gap-2 rounded-xl bg-danger-soft px-3 py-2 text-sm text-[#8c1212]">
+                  <p className="mt-3 flex items-start gap-2 rounded-[14px] bg-danger-soft px-3 py-2 text-sm text-danger-ink">
                     <Flag className="mt-0.5 h-4 w-4 shrink-0" aria-hidden /> {a.alasan_ditandai}
                   </p>
                 )}
