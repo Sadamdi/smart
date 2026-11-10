@@ -1,4 +1,5 @@
 from app.models import Pengguna
+from app.rekomendasi.wilayah import NEGARA_ASAL
 from app.repositories.pengguna import PenggunaRepo
 from app.schemas.pengguna import PenggunaOut, PreferensiNotifikasiIn, ProfilIn
 
@@ -7,6 +8,9 @@ def ubah_profil(repo: PenggunaRepo, pengguna: Pengguna, data: ProfilIn) -> Pengg
     """Mengubah hanya kolom yang dikirim. Vektor profil dihitung ulang oleh mesin rekomendasi (F5)."""
     for kolom, nilai in data.model_dump(exclude_unset=True).items():
         setattr(pengguna, kolom, nilai)
+    # provinsi hanya berlaku untuk domisili di Indonesia; pindah negara mengosongkannya
+    if pengguna.negara_domisili and pengguna.negara_domisili != NEGARA_ASAL:
+        pengguna.provinsi_domisili = None
     return repo.simpan(pengguna)
 
 

@@ -14,6 +14,7 @@ import type {
   Notifikasi,
   PengaturanAdmin,
   Pengguna,
+  ReferensiWilayah,
   Rekomendasi,
   Ringkasan,
   Sumber,
@@ -35,6 +36,8 @@ export const kunci = {
 const ambil = async <T>(path: string) => (await api<T>(path)).data;
 
 export const useSaya = (aktif = true) => useQuery({ queryKey: kunci.saya, queryFn: () => ambil<Pengguna>("/me"), enabled: aktif, retry: false });
+export const useWilayah = () =>
+  useQuery({ queryKey: ["referensi", "wilayah"], queryFn: () => ambil<ReferensiWilayah>("/referensi/wilayah"), staleTime: Infinity });
 export const useRekomendasi = (kategori?: string) =>
   useQuery({
     queryKey: kunci.rekom(kategori),
