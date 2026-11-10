@@ -57,7 +57,7 @@ def daftar(
 def detail(beasiswa_id: uuid.UUID, _: SaatIni, repo: RepoDep, profil: ProfilDep) -> Amplop[BeasiswaDetail]:
     hasil = layanan.detail(repo, beasiswa_id, date.today())
     ringkas = BeasiswaRingkas.model_validate(hasil.beasiswa).model_dump()
-    nilai = layanan.nilai_untuk(hasil.persyaratan, profil, date.today())
+    nilai = layanan.nilai_untuk(hasil.persyaratan, profil, date.today(), hasil.beasiswa.jenjang)
     return Amplop(
         data=BeasiswaDetail(
             **ringkas,

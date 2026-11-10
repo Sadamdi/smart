@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.models import Beasiswa, DokumenPengguna, Pengguna, Persyaratan, Rekomendasi
 from app.rekomendasi.embedding import PengemasHash, teks_profil
-from app.rekomendasi.kelayakan import ProfilKelayakan
+from app.rekomendasi.kelayakan import ProfilKelayakan, dengan_jenjang_beasiswa
 from app.rekomendasi.konfigurasi import VERSI_MODEL
 from app.rekomendasi.mesin import HasilRekomendasi, MasukanBeasiswa, susun
 from app.rekomendasi.peringkat import muat, urut_ulang
@@ -67,7 +67,12 @@ def _masukan(sesi: Session, hari_ini: date) -> list[MasukanBeasiswa]:
     if ids:
         for s in sesi.scalars(select(Persyaratan).where(Persyaratan.beasiswa_id.in_(ids))):
             syarat[s.beasiswa_id].append((s.jenis, s.nilai_batas))
-    return [MasukanBeasiswa(b.id, b.nama, b.penyelenggara, b.manfaat, b.tenggat, syarat.get(b.id, [])) for b in baris]
+    return [
+        MasukanBeasiswa(
+            b.id, b.nama, b.penyelenggara, b.manfaat, b.tenggat, dengan_jenjang_beasiswa(syarat.get(b.id, []), b.jenjang)
+        )
+        for b in baris
+    ]
 
 
 def hitung(sesi: Session, p: Pengguna, hari_ini: date) -> list[HasilRekomendasi]:
