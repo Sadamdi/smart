@@ -27,18 +27,18 @@ class _Kerangka extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
+          padding: const EdgeInsets.fromLTRB(20, 64, 20, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
                 child: Column(
                   children: [
-                    const LogoSmart(ukuran: 84),
-                    const SizedBox(height: 14),
+                    const LogoSmart(ukuran: 64),
+                    const SizedBox(height: 12),
                     Text(
                       'SMART',
-                      style: t.headlineMedium?.copyWith(letterSpacing: 3),
+                      style: t.headlineMedium?.copyWith(fontSize: 28),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -49,11 +49,11 @@ class _Kerangka extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(height: 40),
+              Text(judul, style: t.headlineMedium?.copyWith(fontSize: 22)),
+              const SizedBox(height: 8),
+              Text(subjudul, style: t.bodyMedium?.copyWith(height: 1.5)),
               const SizedBox(height: 28),
-              Text(judul, style: t.headlineMedium?.copyWith(fontSize: 24)),
-              const SizedBox(height: 6),
-              Text(subjudul, style: t.bodyMedium),
-              const SizedBox(height: 20),
               anak,
               const SizedBox(height: 20),
               Center(child: kaki),
@@ -106,7 +106,11 @@ class _LoginPageState extends State<LoginPage> {
         alignment: WrapAlignment.center,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          const Text('Belum punya akun?'),
+          Text(
+            'Belum punya akun?',
+            style: Theme.of(context).textTheme.labelLarge
+                ?.copyWith(color: Warna.primary),
+          ),
           TextButton(
             onPressed: () => context.go('/daftar'),
             child: const Text('Daftar Akun Baru'),
@@ -122,11 +126,7 @@ class _LoginPageState extends State<LoginPage> {
               controller: _email,
               keyboardType: TextInputType.emailAddress,
               autofillHints: const [AutofillHints.email],
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                hintText: 'nama@kampus.ac.id',
-                prefixIcon: Icon(Icons.mail_outline),
-              ),
+              decoration: const InputDecoration(hintText: 'Email'),
               validator: (v) => _pola.hasMatch((v ?? '').trim())
                   ? null
                   : 'Masukkan alamat email yang valid.',
@@ -137,9 +137,7 @@ class _LoginPageState extends State<LoginPage> {
               obscureText: !_lihat,
               autofillHints: const [AutofillHints.password],
               decoration: InputDecoration(
-                labelText: 'Kata sandi',
-                hintText: 'Minimal 8 karakter',
-                prefixIcon: const Icon(Icons.lock_outline),
+                hintText: 'Kata sandi',
                 suffixIcon: IconButton(
                   tooltip: _lihat ? 'Sembunyikan' : 'Tampilkan',
                   icon: Icon(
@@ -262,9 +260,7 @@ class _DaftarPageState extends State<DaftarPage> {
               controller: _sandi,
               obscureText: !_lihat,
               decoration: InputDecoration(
-                labelText: 'Kata sandi',
-                hintText: 'Minimal 8 karakter',
-                prefixIcon: const Icon(Icons.lock_outline),
+                hintText: 'Kata sandi',
                 suffixIcon: IconButton(
                   tooltip: _lihat ? 'Sembunyikan' : 'Tampilkan',
                   icon: Icon(

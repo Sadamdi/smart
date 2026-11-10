@@ -168,12 +168,12 @@ void pasangGetUji(
 }
 
 /// Aplikasi lengkap dengan server palsu dan token tersimpan.
-Widget aplikasi(ServerPalsu s, {bool sudahMasuk = true}) {
+Widget aplikasi(ServerPalsu s, {bool sudahMasuk = true, bool pembuka = false}) {
   pasangGetUji(
     s,
     storage: MemoryTokenStorage(
       sudahMasuk ? const PasanganToken(akses: 'a', penyegar: 'p') : null,
     ),
   );
-  return const SmartApp(googleFonts: false, pembuka: false);
+  return SmartApp(googleFonts: false, pembuka: pembuka);
 }

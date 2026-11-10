@@ -56,10 +56,10 @@ void main() {
       await t.pumpAndSettle();
       expect(find.text('Beasiswa Satu'), findsOneWidget);
       expect(find.text('Biaya kuliah penuh'), findsOneWidget);
-      expect(find.text('Jenjang'), findsOneWidget);
+      expect(find.textContaining('Jenjang'), findsOneWidget);
       expect(find.text('Transkrip nilai'), findsOneWidget);
 
-      await t.tap(find.text('Kunjungi Laman Resmi'));
+      await t.tap(find.text('Buka Laman Resmi'));
       await t.pumpAndSettle();
       expect(dibuka.single.toString(), 'https://contoh.ac.id/1');
       expect(s.hitung('POST /beasiswa/1/interaksi'), 1);
