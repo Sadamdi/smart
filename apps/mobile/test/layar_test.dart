@@ -37,7 +37,8 @@ Future<void> _bukaUbahProfil(WidgetTester t) async {
     300,
     scrollable: find.byType(Scrollable).first,
   );
-  await _bukaUbahProfil(t);
+  await t.tap(find.text('Ubah profil'));
+  await t.pumpAndSettle();
 }
 
 Future<void> _pasang(WidgetTester t, ServerPalsu s, {bool masuk = true}) async {
