@@ -11,11 +11,16 @@ class TileVersiAplikasi extends StatelessWidget {
       future: PackageInfo.fromPlatform(),
       builder: (context, snap) {
         final i = snap.data;
+        final t = Theme.of(context).textTheme;
         return ListTile(
-          leading: const Icon(Icons.info_outline),
-          title: const Text('Versi aplikasi'),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+          title: Text(
+            'Versi aplikasi',
+            style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+          ),
           subtitle: Text(
             i == null ? '...' : '${i.version} (build ${i.buildNumber})',
+            style: t.bodySmall?.copyWith(fontSize: 11),
           ),
         );
       },
