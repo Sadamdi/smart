@@ -6,10 +6,12 @@
     </linearGradient>
   </defs>
   <rect width="64" height="64" rx="15" fill="url(#bg)"/>
-  <path d="M18 30.5L32 37L46 30.5V39.5C46 43.5 39.5 47.5 32 47.5C24.5 47.5 18 43.5 18 39.5Z" fill="#fff" fill-opacity=".82"/>
-  <path d="M32 13L57 24.5L32 36L7 24.5Z" fill="#fff"/>
-  <path d="M50 27.6V41" stroke="#F5B73B" stroke-width="2.4" stroke-linecap="round" fill="none"/>
-  <path d="M50 40.5L51.7 44.4L55.6 46.1L51.7 47.8L50 51.7L48.3 47.8L44.4 46.1L48.3 44.4Z" fill="#F5B73B"/>
-  <path class="gelombang1" d="M57.7 44A8 8 0 0 0 53.4 38.9" stroke="#F5B73B" stroke-opacity=".9" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-  <path class="gelombang2" d="M61.1 43.1A11.5 11.5 0 0 0 54.9 35.7" stroke="#F5B73B" stroke-opacity=".55" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <g transform="translate(1 1.4)">
+    <path d="M17 29.5L30 36L43 29.5V38.5C43 42.5 37 45.5 30 45.5C23 45.5 17 42.5 17 38.5Z" fill="#fff" fill-opacity=".85"/>
+    <path d="M30 13L54 24L30 35L6 24Z" fill="#fff"/>
+    <path d="M47 27.4V40" stroke="#F5B73B" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+    <path d="M47 39.8L48.4 42.6L51.2 44L48.4 45.4L47 48.2L45.6 45.4L42.8 44L45.6 42.6Z" fill="#F5B73B"/>
+    <path d="M50.59 36.3A8.5 8.5 0 0 1 55.21 41.8" stroke="#F5B73B" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+    <path d="M52.07 33.12A12 12 0 0 1 58.59 40.89" stroke="#F5B73B" stroke-opacity=".6" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  </g>
 </svg>

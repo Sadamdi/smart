@@ -32,8 +32,11 @@ Map<String, Penangan> _rute() => {
       'selesai': false,
     },
   ]),
-  'GET /rekomendasi/ringkasan': (o) =>
-      Balasan.ok({'memenuhi': 12, 'hampir_memenuhi': 31, 'belum_memenuhi': 104}),
+  'GET /rekomendasi/ringkasan': (o) => Balasan.ok({
+    'memenuhi': 12,
+    'hampir_memenuhi': 31,
+    'belum_memenuhi': 104,
+  }),
   'GET /rekomendasi': (o) => Balasan.ok([
     {
       'beasiswa': beasiswaJson(
@@ -43,17 +46,22 @@ Map<String, Penangan> _rute() => {
       ),
       'kategori': 'hampir_memenuhi',
       'alasan': ['IPK memenuhi batas minimum yang ditetapkan penyelenggara'],
-      'catatan_kekurangan': ['Perlu skor TOEFL 500, skor saat ini 470 dan belum ada sertifikat'],
+      'catatan_kekurangan': [
+        'Perlu skor TOEFL 500, skor saat ini 470 dan belum ada sertifikat',
+      ],
       'tenggat': _hariKe(6),
     },
   ]),
-  'GET /beasiswa': (o) => Balasan.ok([
-    beasiswaJson(
-      '1',
-      'Beasiswa Unggulan Pemerintah Republik Indonesia Tahap Dua',
-      tenggat: _hariKe(6),
-    ),
-  ], meta: {'next_cursor': null}),
+  'GET /beasiswa': (o) => Balasan.ok(
+    [
+      beasiswaJson(
+        '1',
+        'Beasiswa Unggulan Pemerintah Republik Indonesia Tahap Dua',
+        tenggat: _hariKe(6),
+      ),
+    ],
+    meta: {'next_cursor': null},
+  ),
 };
 
 void main() {
