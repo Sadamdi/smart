@@ -109,8 +109,10 @@ class ChipStatus extends StatelessWidget {
           Flexible(
             child: Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: warna ?? Warna.navy, fontWeight: FontWeight.w600),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: warna ?? Warna.navy,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
