@@ -3,7 +3,9 @@ from datetime import date
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints, field_validator
+
+from app.rekomendasi.wilayah import negara_kanonik, provinsi_kanonik
 
 Teks = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 KataSandi = Annotated[str, StringConstraints(min_length=8, max_length=128)]
@@ -108,6 +110,8 @@ class ProfilIn(BaseModel):
     nama: Teks | None = None
     tanggal_lahir: date | None = None
     kota_domisili: Annotated[str, StringConstraints(strip_whitespace=True, max_length=120)] | None = None
+    negara_domisili: Annotated[str, StringConstraints(strip_whitespace=True, max_length=80)] | None = None
+    provinsi_domisili: Annotated[str, StringConstraints(strip_whitespace=True, max_length=80)] | None = None
     kampus: Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)] | None = None
     jenis_kampus: Literal["negeri", "swasta"] | None = None
     program_studi: Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)] | None = None
@@ -144,9 +148,32 @@ class ProfilIn(BaseModel):
     catatan_tambahan: Annotated[str, StringConstraints(strip_whitespace=True, max_length=1000)] | None = None
     profil_lanjutan: ProfilLanjutan | None = None
 
+    @field_validator("negara_domisili")
+    @classmethod
+    def _negara(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        baku = negara_kanonik(v)
+        if baku is None:
+            raise ValueError("Negara domisili harus dipilih dari daftar negara (GET /referensi/wilayah)")
+        return baku
+
+    @field_validator("provinsi_domisili")
+    @classmethod
+    def _provinsi(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        baku = provinsi_kanonik(v)
+        if baku is None:
+            raise ValueError("Provinsi domisili harus dipilih dari daftar provinsi Indonesia (GET /referensi/wilayah)")
+        return baku
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
+                "negara_domisili": "Indonesia",
+                "provinsi_domisili": "Jawa Timur",
+                "kota_domisili": "Malang",
                 "kampus": "UIN Maulana Malik Ibrahim Malang",
                 "jenis_kampus": "negeri",
                 "jenjang": "S1",
@@ -174,6 +201,8 @@ class PenggunaOut(BaseModel):
     nama: str
     tanggal_lahir: date | None = None
     kota_domisili: str | None = None
+    negara_domisili: str | None = None
+    provinsi_domisili: str | None = None
     kampus: str | None = None
     jenis_kampus: str | None = None
     program_studi: str | None = None
@@ -189,3 +218,9 @@ class PenggunaOut(BaseModel):
     catatan_tambahan: str | None = None
     profil_lanjutan: dict | None = None
     preferensi_notifikasi: dict
+
+
+class ReferensiWilayahOut(BaseModel):
+    negara: list[str]
+    provinsi: list[str]
+    negara_asal: str
