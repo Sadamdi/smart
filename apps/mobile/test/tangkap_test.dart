@@ -51,20 +51,30 @@ Map<String, Penangan> _rute() => {
       'tenggat': _hariKe(12),
     },
   ]),
-  'GET /beasiswa': (o) => Balasan.ok([
-    beasiswaJson('1', 'Beasiswa Unggulan', tenggat: _hariKe(6)),
-    beasiswaJson('2', 'Beasiswa Prestasi Nasional', tenggat: _hariKe(20)),
-    beasiswaJson('3', 'Beasiswa Riset Dasar', tenggat: _hariKe(45)),
-  ], meta: {'next_cursor': null}),
+  'GET /beasiswa': (o) => Balasan.ok(
+    [
+      beasiswaJson('1', 'Beasiswa Unggulan', tenggat: _hariKe(6)),
+      beasiswaJson('2', 'Beasiswa Prestasi Nasional', tenggat: _hariKe(20)),
+      beasiswaJson('3', 'Beasiswa Riset Dasar', tenggat: _hariKe(45)),
+    ],
+    meta: {'next_cursor': null},
+  ),
 };
 
 Future<void> _muatHuruf() async {
-  final data = File(
-    'assets/google_fonts/PlusJakartaSans-Medium.ttf',
-  ).readAsBytesSync();
+  final data = File('assets/google_fonts/PlusJakartaSans-Medium.ttf')
+      .readAsBytesSync();
   final f = FontLoader('Roboto')
     ..addFont(Future.value(ByteData.view(data.buffer)));
   await f.load();
+  final ikon = File(
+    '${Platform.environment['USERPROFILE']}/flutter/bin/cache/artifacts/material_fonts/materialicons-regular.otf',
+  );
+  if (ikon.existsSync()) {
+    final g = FontLoader('MaterialIcons')
+      ..addFont(Future.value(ByteData.view(ikon.readAsBytesSync().buffer)));
+    await g.load();
+  }
 }
 
 void main() {

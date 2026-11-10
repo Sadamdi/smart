@@ -164,11 +164,11 @@ class _PainterLogo extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final k = math.min(size.width / 56, size.height / 44);
-    // Lambang menempati x 7 sampai 62 dan y 13 sampai 55 pada kotak 64.
+    final k = math.min(size.width / 58, size.height / 40);
+    // Lambang menempati x 6 sampai 60 dan y 13 sampai 48 pada kotak 64.
     canvas.translate(
-      (size.width - 55 * k) / 2 - 7 * k,
-      (size.height - 42 * k) / 2 - 13 * k,
+      (size.width - 54 * k) / 2 - 6 * k,
+      (size.height - 35 * k) / 2 - 13 * k,
     );
     canvas.scale(k);
 
@@ -183,14 +183,14 @@ class _PainterLogo extends CustomPainter {
     canvas.translate(0, 8 * (1 - alas));
     canvas.drawPath(
       Path()
-        ..moveTo(18, 30.5)
-        ..lineTo(32, 37)
-        ..lineTo(46, 30.5)
-        ..lineTo(46, 39.5)
-        ..cubicTo(46, 43.5, 39.5, 47.5, 32, 47.5)
-        ..cubicTo(24.5, 47.5, 18, 43.5, 18, 39.5)
+        ..moveTo(17, 29.5)
+        ..lineTo(30, 36)
+        ..lineTo(43, 29.5)
+        ..lineTo(43, 38.5)
+        ..cubicTo(43, 42.5, 37, 45.5, 30, 45.5)
+        ..cubicTo(23, 45.5, 17, 42.5, 17, 38.5)
         ..close(),
-      Paint()..color = Colors.white.withValues(alpha: 0.82 * alas),
+      Paint()..color = Colors.white.withValues(alpha: 0.85 * alas),
     );
     canvas.restore();
 
@@ -199,10 +199,10 @@ class _PainterLogo extends CustomPainter {
     canvas.translate(0, -22 * (1 - topi));
     canvas.drawPath(
       Path()
-        ..moveTo(32, 13)
-        ..lineTo(57, 24.5)
-        ..lineTo(32, 36)
-        ..lineTo(7, 24.5)
+        ..moveTo(30, 13)
+        ..lineTo(54, 24)
+        ..lineTo(30, 35)
+        ..lineTo(6, 24)
         ..close(),
       Paint()..color = Colors.white.withValues(alpha: topiMuncul),
     );
@@ -211,8 +211,8 @@ class _PainterLogo extends CustomPainter {
     // Jumbai turun dari ujung topi.
     if (jumbai > 0) {
       canvas.drawLine(
-        const Offset(50, 27.6),
-        Offset(50, 27.6 + 13.4 * jumbai),
+        const Offset(47, 27.4),
+        Offset(47, 27.4 + 12.6 * jumbai),
         Paint()
           ..color = _emas
           ..strokeWidth = 2.4
@@ -223,20 +223,20 @@ class _PainterLogo extends CustomPainter {
     // Bintang pemandu.
     if (bintang > 0) {
       canvas.save();
-      canvas.translate(50, 46.1);
+      canvas.translate(47, 44);
       canvas.rotate(-0.8 * (1 - bintang));
       canvas.scale(bintang.clamp(0.0, 1.4));
-      canvas.translate(-50, -46.1);
+      canvas.translate(-47, -44);
       canvas.drawPath(
         Path()
-          ..moveTo(50, 40.5)
-          ..lineTo(51.7, 44.4)
-          ..lineTo(55.6, 46.1)
-          ..lineTo(51.7, 47.8)
-          ..lineTo(50, 51.7)
-          ..lineTo(48.3, 47.8)
-          ..lineTo(44.4, 46.1)
-          ..lineTo(48.3, 44.4)
+          ..moveTo(47, 39.8)
+          ..lineTo(48.4, 42.6)
+          ..lineTo(51.2, 44)
+          ..lineTo(48.4, 45.4)
+          ..lineTo(47, 48.2)
+          ..lineTo(45.6, 45.4)
+          ..lineTo(42.8, 44)
+          ..lineTo(45.6, 42.6)
           ..close(),
         Paint()..color = _emas,
       );
@@ -248,10 +248,10 @@ class _PainterLogo extends CustomPainter {
       final awal = 1400.0 + i * 260;
       final fase = ((ms - awal) / 900).clamp(0.0, 1.0);
       if (fase <= 0) continue;
-      final r = (i == 0 ? 8.0 : 11.5) + 3 * fase;
+      final r = (i == 0 ? 8.5 : 12.0) + 3 * fase;
       final alpha = math.sin(fase * math.pi) * (i == 0 ? 0.95 : 0.6);
       canvas.drawArc(
-        Rect.fromCircle(center: const Offset(50, 46.1), radius: r),
+        Rect.fromCircle(center: const Offset(47, 44), radius: r),
         -65 * math.pi / 180,
         50 * math.pi / 180,
         false,
