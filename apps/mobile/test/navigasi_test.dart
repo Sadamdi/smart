@@ -7,6 +7,7 @@ import 'helpers.dart';
 
 Map<String, Penangan> _rute() => {
   'GET /me': (o) => Balasan.ok(penggunaJson()),
+  'GET /referensi/wilayah': (o) => Balasan.ok(wilayahJson()),
   'GET /notifikasi': (o) => Balasan.ok([]),
   'GET /me/tersimpan': (o) => Balasan.ok([]),
   'GET /me/checklist': (o) => Balasan.ok([]),
@@ -70,7 +71,7 @@ void main() {
     await t.tap(find.text('Ubah profil'));
     await t.pumpAndSettle();
     await t.enterText(
-      find.widgetWithText(TextFormField, 'Nama lengkap'),
+      find.widgetWithText(TextFormField, 'Nama lengkap (wajib)'),
       'Nama Baru',
     );
     await t.binding.handlePopRoute();
