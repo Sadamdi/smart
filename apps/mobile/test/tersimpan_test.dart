@@ -47,6 +47,7 @@ Future<void> _bukaDariProfil(WidgetTester t, ServerPalsu s) async {
 }
 
 void main() {
+  siapkanGet();
   test('urutkanTenggat: terdekat dulu, tanpa tenggat, lalu yang lewat', () {
     final sekarang = DateTime(2026, 11, 10);
     BeasiswaRingkas b(String id, DateTime? t) =>

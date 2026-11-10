@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/logo_smart.dart';
 import 'auth_controller.dart';
@@ -66,20 +65,25 @@ class _Kerangka extends StatelessWidget {
   }
 }
 
-class LoginPage extends ConsumerStatefulWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  ConsumerState<LoginPage> createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends ConsumerState<LoginPage> {
+class _LoginPageState extends State<LoginPage> {
   final _kunci = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _sandi = TextEditingController();
+  final _c = Get.find<AuthController>();
   bool _lihat = false;
-  bool _kirim = false;
-  String? _galat;
+
+  @override
+  void initState() {
+    super.initState();
+    _c.bersihkanForm();
+  }
 
   @override
   void dispose() {
@@ -90,19 +94,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Future<void> _masuk() async {
     if (!_kunci.currentState!.validate()) return;
-    setState(() {
-      _kirim = true;
-      _galat = null;
-    });
-    try {
-      await ref
-          .read(authControllerProvider.notifier)
-          .masuk(_email.text.trim(), _sandi.text);
-    } catch (e) {
-      if (mounted) setState(() => _galat = pesanGalat(e));
-    } finally {
-      if (mounted) setState(() => _kirim = false);
-    }
+    await _c.masuk(_email.text.trim(), _sandi.text);
   }
 
   @override
@@ -160,20 +152,26 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   (v ?? '').isEmpty ? 'Kata sandi wajib diisi.' : null,
               onFieldSubmitted: (_) => _masuk(),
             ),
-            if (_galat != null) ...[
-              const SizedBox(height: 14),
-              _KotakGalat(_galat!),
-            ],
+            Obx(
+              () => _c.galatForm.value == null
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 14),
+                      child: _KotakGalat(_c.galatForm.value!),
+                    ),
+            ),
             const SizedBox(height: 20),
-            FilledButton(
-              onPressed: _kirim ? null : _masuk,
-              child: _kirim
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Masuk'),
+            Obx(
+              () => FilledButton(
+                onPressed: _c.mengirim.value ? null : _masuk,
+                child: _c.mengirim.value
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Masuk'),
+              ),
             ),
           ],
         ),
@@ -182,21 +180,26 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 }
 
-class DaftarPage extends ConsumerStatefulWidget {
+class DaftarPage extends StatefulWidget {
   const DaftarPage({super.key});
 
   @override
-  ConsumerState<DaftarPage> createState() => _DaftarPageState();
+  State<DaftarPage> createState() => _DaftarPageState();
 }
 
-class _DaftarPageState extends ConsumerState<DaftarPage> {
+class _DaftarPageState extends State<DaftarPage> {
   final _kunci = GlobalKey<FormState>();
   final _nama = TextEditingController();
   final _email = TextEditingController();
   final _sandi = TextEditingController();
+  final _c = Get.find<AuthController>();
   bool _lihat = false;
-  bool _kirim = false;
-  String? _galat;
+
+  @override
+  void initState() {
+    super.initState();
+    _c.bersihkanForm();
+  }
 
   @override
   void dispose() {
@@ -208,19 +211,7 @@ class _DaftarPageState extends ConsumerState<DaftarPage> {
 
   Future<void> _daftar() async {
     if (!_kunci.currentState!.validate()) return;
-    setState(() {
-      _kirim = true;
-      _galat = null;
-    });
-    try {
-      await ref
-          .read(authControllerProvider.notifier)
-          .daftar(_nama.text.trim(), _email.text.trim(), _sandi.text);
-    } catch (e) {
-      if (mounted) setState(() => _galat = pesanGalat(e));
-    } finally {
-      if (mounted) setState(() => _kirim = false);
-    }
+    await _c.daftar(_nama.text.trim(), _email.text.trim(), _sandi.text);
   }
 
   @override
@@ -286,20 +277,26 @@ class _DaftarPageState extends ConsumerState<DaftarPage> {
                   ? 'Kata sandi minimal 8 karakter.'
                   : null,
             ),
-            if (_galat != null) ...[
-              const SizedBox(height: 14),
-              _KotakGalat(_galat!),
-            ],
+            Obx(
+              () => _c.galatForm.value == null
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 14),
+                      child: _KotakGalat(_c.galatForm.value!),
+                    ),
+            ),
             const SizedBox(height: 20),
-            FilledButton(
-              onPressed: _kirim ? null : _daftar,
-              child: _kirim
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Daftar'),
+            Obx(
+              () => FilledButton(
+                onPressed: _c.mengirim.value ? null : _daftar,
+                child: _c.mengirim.value
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Daftar'),
+              ),
             ),
           ],
         ),

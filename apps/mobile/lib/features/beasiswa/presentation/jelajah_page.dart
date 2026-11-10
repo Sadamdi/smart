@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -9,21 +9,31 @@ import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/kartu_beasiswa.dart';
 import '../../../core/widgets/smart_app_bar.dart';
 import '../../../core/widgets/state_widgets.dart';
-import 'beasiswa_providers.dart';
+import 'jelajah_controller.dart';
 import 'simpan_aksi.dart';
+import 'tersimpan_controller.dart';
 
-class JelajahPage extends ConsumerStatefulWidget {
+class JelajahPage extends StatefulWidget {
   const JelajahPage({super.key});
 
   @override
-  ConsumerState<JelajahPage> createState() => _JelajahPageState();
+  State<JelajahPage> createState() => _JelajahPageState();
 }
 
-class _JelajahPageState extends ConsumerState<JelajahPage> {
+class _JelajahPageState extends State<JelajahPage> {
+  final _c = Get.find<JelajahController>();
+  final _simpan = Get.find<TersimpanController>();
   final _cari = TextEditingController();
   Timer? _tunda;
 
   static const _jenjang = ['D3', 'D4', 'S1', 'S2', 'S3'];
+
+  @override
+  void initState() {
+    super.initState();
+    _c.pastikan();
+    _simpan.idTersimpan.pastikan();
+  }
 
   @override
   void dispose() {
@@ -34,17 +44,16 @@ class _JelajahPageState extends ConsumerState<JelajahPage> {
 
   void _onCari(String v) {
     _tunda?.cancel();
-    _tunda = Timer(
-      const Duration(milliseconds: 400),
-      () => ref.read(jelajahProvider.notifier).cari(v),
-    );
+    _tunda = Timer(const Duration(milliseconds: 400), () => _c.cari(v));
   }
 
   @override
-  Widget build(BuildContext context) {
-    final s = ref.watch(jelajahProvider);
-    final c = ref.read(jelajahProvider.notifier);
-    final tersimpan = ref.watch(tersimpanProvider).value ?? <String>{};
+  Widget build(BuildContext context) => Obx(() => _bangun(context));
+
+  Widget _bangun(BuildContext context) {
+    final s = _c.state.value;
+    final c = _c;
+    final tersimpan = _simpan.ids;
     final t = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -144,7 +153,6 @@ class _JelajahPageState extends ConsumerState<JelajahPage> {
                   tersimpan: tersimpan.contains(b.id),
                   onSimpan: () => ubahSimpan(
                     context,
-                    ref,
                     b.id,
                     tersimpan: tersimpan.contains(b.id),
                   ),

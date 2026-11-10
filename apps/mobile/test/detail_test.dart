@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_mobile/core/format.dart';
-import 'package:smart_mobile/core/providers.dart';
 import 'package:smart_mobile/core/theme/app_theme.dart';
-import 'package:smart_mobile/core/token_storage.dart';
 import 'package:smart_mobile/features/beasiswa/presentation/detail_page.dart';
 
 import 'helpers.dart';
 
 void main() {
+  siapkanGet();
   testWidgets(
     'detail menampilkan syarat dan berkas, membuka tautan resmi, mencatat klik',
     (t) async {
@@ -42,21 +40,17 @@ void main() {
         'POST /beasiswa/1/interaksi': (o) =>
             Balasan.ok({'id': 'i', 'aksi': 'klik'}),
       });
+      pasangGetUji(
+        s,
+        bukaTautan: (u) async {
+          dibuka.add(u);
+          return true;
+        },
+      );
       await t.pumpWidget(
-        ProviderScope(
-          retry: (_, _) => null,
-          overrides: [
-            tokenStorageProvider.overrideWithValue(MemoryTokenStorage()),
-            dioProvider.overrideWithValue(dioPalsu(s)),
-            bukaTautanProvider.overrideWithValue((u) async {
-              dibuka.add(u);
-              return true;
-            }),
-          ],
-          child: MaterialApp(
-            theme: buatTema(googleFonts: false),
-            home: const DetailPage(id: '1'),
-          ),
+        MaterialApp(
+          theme: buatTema(googleFonts: false),
+          home: const DetailPage(id: '1'),
         ),
       );
       await t.pumpAndSettle();

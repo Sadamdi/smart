@@ -1,15 +1,12 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 
-import '../../../core/providers.dart';
+import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/state_widgets.dart';
 import '../domain/dokumen.dart';
-
-final dokumenProvider = FutureProvider.autoDispose<List<Dokumen>>(
-  (ref) => ref.watch(dokumenRepositoryProvider).daftar(),
-);
+import 'dokumen_controller.dart';
 
 const _jenis = {
   'cv': 'CV',
@@ -17,16 +14,21 @@ const _jenis = {
   'pengalaman_organisasi': 'Pengalaman organisasi',
 };
 
-class DokumenPage extends ConsumerStatefulWidget {
+class DokumenPage extends StatefulWidget {
   const DokumenPage({super.key});
 
   @override
-  ConsumerState<DokumenPage> createState() => _DokumenPageState();
+  State<DokumenPage> createState() => _DokumenPageState();
 }
 
-class _DokumenPageState extends ConsumerState<DokumenPage> {
-  String _pilihanJenis = 'cv';
-  bool _kirim = false;
+class _DokumenPageState extends State<DokumenPage> {
+  final _c = Get.find<DokumenController>();
+
+  @override
+  void initState() {
+    super.initState();
+    _c.daftar.muat();
+  }
 
   Future<void> _unggah() async {
     final pesan = ScaffoldMessenger.of(context);
@@ -36,34 +38,31 @@ class _DokumenPageState extends ConsumerState<DokumenPage> {
     );
     final berkas = hasil.isEmpty ? null : hasil.first;
     if (berkas?.path == null) return;
-    setState(() => _kirim = true);
     try {
-      await ref
-          .read(dokumenRepositoryProvider)
-          .unggah(jenis: _pilihanJenis, path: berkas!.path!, nama: berkas.name);
-      ref.invalidate(dokumenProvider);
+      await _c.unggah(berkas!.path!, berkas.name);
       pesan.showSnackBar(const SnackBar(content: Text('Dokumen diunggah.')));
     } catch (e) {
       pesan.showSnackBar(SnackBar(content: Text(pesanGalat(e))));
-    } finally {
-      if (mounted) setState(() => _kirim = false);
     }
   }
 
   Future<void> _hapus(Dokumen d) async {
     final pesan = ScaffoldMessenger.of(context);
     try {
-      await ref.read(dokumenRepositoryProvider).hapus(d.id);
-      ref.invalidate(dokumenProvider);
+      await _c.hapus(d.id);
     } catch (e) {
       pesan.showSnackBar(SnackBar(content: Text(pesanGalat(e))));
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Obx(() => _bangun(context));
+
+  Widget _bangun(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final nilai = ref.watch(dokumenProvider);
+    final nilai = _c.daftar.state.value;
+    final pilihanJenis = _c.jenis.value;
+    final kirim = _c.mengirim.value;
     return Scaffold(
       appBar: AppBar(title: const Text('Dokumen Saya')),
       body: ListView(
@@ -75,25 +74,25 @@ class _DokumenPageState extends ConsumerState<DokumenPage> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            initialValue: _pilihanJenis,
+            initialValue: pilihanJenis,
             decoration: const InputDecoration(labelText: 'Jenis dokumen'),
             items: [
               for (final e in _jenis.entries)
                 DropdownMenuItem(value: e.key, child: Text(e.value)),
             ],
-            onChanged: (v) => setState(() => _pilihanJenis = v ?? 'cv'),
+            onChanged: (v) => _c.jenis.value = v ?? 'cv',
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
-            onPressed: _kirim ? null : _unggah,
-            icon: _kirim
+            onPressed: kirim ? null : _unggah,
+            icon: kirim
                 ? const SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.upload_file_rounded),
-            label: Text(_kirim ? 'Mengunggah' : 'Pilih berkas'),
+            label: Text(kirim ? 'Mengunggah' : 'Pilih berkas'),
           ),
           const SizedBox(height: 20),
           nilai.when(

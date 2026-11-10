@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/smart_app_bar.dart';
 import '../../auth/domain/pengguna.dart';
 import '../../auth/presentation/auth_controller.dart';
+import 'profil_controller.dart';
 
 const _labelKondisi = {
   'disabilitas': 'Penyandang disabilitas',
@@ -16,9 +16,6 @@ const _labelKondisi = {
   'penghafal_quran': 'Penghafal Al-Quran',
   'anak_tenaga_kesehatan': 'Anak tenaga kesehatan',
 };
-
-/// Benar selama formulir "Ubah profil" terbuka; dipakai cangkang navigasi agar Back menutup formulir lebih dulu.
-final ValueNotifier<bool> profilSedangDiubah = ValueNotifier(false);
 
 /// Menulis rupiah dengan pemisah ribuan, misalnya 3500000 menjadi Rp3.500.000.
 String formatRupiah(int nilai) {
@@ -31,17 +28,17 @@ String formatRupiah(int nilai) {
   return '${nilai < 0 ? '-' : ''}Rp$buf';
 }
 
-class ProfilPage extends ConsumerStatefulWidget {
+class ProfilPage extends StatefulWidget {
   const ProfilPage({super.key});
 
   @override
-  ConsumerState<ProfilPage> createState() => _ProfilPageState();
+  State<ProfilPage> createState() => _ProfilPageState();
 }
 
-class _ProfilPageState extends ConsumerState<ProfilPage> {
-  bool _ubah = false;
-  bool _kirim = false;
-  String? _galat;
+class _ProfilPageState extends State<ProfilPage> {
+  final _ctrl = Get.find<ProfilController>();
+  bool get _ubah => _ctrl.sedangDiubah.value;
+  bool get _kirim => _ctrl.mengirim.value;
   final _kunci = GlobalKey<FormState>();
   final _nama = TextEditingController();
   final _kampus = TextEditingController();
@@ -86,10 +83,7 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
     (_kondisi.toList()..sort()).join(','),
   ].join('|');
 
-  void _aturUbah(bool nilai) {
-    setState(() => _ubah = nilai);
-    profilSedangDiubah.value = nilai;
-  }
+  void _aturUbah(bool nilai) => _ctrl.sedangDiubah.value = nilai;
 
   /// Back atau Batal: bila ada perubahan belum disimpan, minta konfirmasi dulu.
   Future<void> _tutupFormulir() async {
@@ -120,7 +114,7 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
 
   @override
   void dispose() {
-    profilSedangDiubah.value = false;
+    _ctrl.bersihkan();
     for (final c in [
       _nama,
       _kampus,
@@ -160,7 +154,7 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
     _kondisi = p.kondisiKhusus.toSet();
     _jenisKampus = p.jenisKampus;
     _jenjang = p.jenjang;
-    _galat = null;
+    _ctrl.bersihkanGalat();
   }
 
   String? _wajibAngka(String? v, num min, num max, String nama) {
@@ -175,10 +169,6 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
 
   Future<void> _simpan() async {
     if (!_kunci.currentState!.validate()) return;
-    setState(() {
-      _kirim = true;
-      _galat = null;
-    });
     String? teks(TextEditingController c) =>
         c.text.trim().isEmpty ? null : c.text.trim();
     final minat = _minat.text
@@ -186,57 +176,48 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
         .map((e) => e.trim())
         .where((e) => e.isNotEmpty)
         .toList();
-    try {
-      await ref
-          .read(authControllerProvider.notifier)
-          .ubahProfil(
-            ProfilMasukan(
-              nama: teks(_nama),
-              kampus: teks(_kampus),
-              jenisKampus: _jenisKampus,
-              programStudi: teks(_prodi),
-              jenjang: _jenjang,
-              semester: int.tryParse(_semester.text.trim()),
-              ipk: double.tryParse(_ipk.text.trim().replaceAll(',', '.')),
-              kotaDomisili: teks(_kota),
-              minat: minat.isEmpty ? null : minat,
-              kondisiKhusus: _kondisi.toList(),
-              catatanTambahan: _catatan.text.trim(),
-              tanggalLahir: teks(_lahir),
-              ipsTerakhir: double.tryParse(
-                _ips.text.trim().replaceAll(',', '.'),
-              ),
-              penghasilanOrangTua: int.tryParse(
-                _penghasilan.text.trim().replaceAll(RegExp(r'[^0-9]'), ''),
-              ),
-              kewarganegaraan: teks(_warga),
-              skorBahasa: {
-                if (_toefl.text.trim().isNotEmpty)
-                  'toefl':
-                      num.tryParse(_toefl.text.trim()) ?? _toefl.text.trim(),
-                if (_ielts.text.trim().isNotEmpty)
-                  'ielts':
-                      num.tryParse(_ielts.text.trim().replaceAll(',', '.')) ??
-                      _ielts.text.trim(),
-              },
-            ),
-          );
-      if (mounted) {
-        _aturUbah(false);
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Profil disimpan.')));
-      }
-    } catch (e) {
-      if (mounted) setState(() => _galat = pesanGalat(e));
-    } finally {
-      if (mounted) setState(() => _kirim = false);
+    final ok = await _ctrl.simpan(
+      ProfilMasukan(
+        nama: teks(_nama),
+        kampus: teks(_kampus),
+        jenisKampus: _jenisKampus,
+        programStudi: teks(_prodi),
+        jenjang: _jenjang,
+        semester: int.tryParse(_semester.text.trim()),
+        ipk: double.tryParse(_ipk.text.trim().replaceAll(',', '.')),
+        kotaDomisili: teks(_kota),
+        minat: minat.isEmpty ? null : minat,
+        kondisiKhusus: _kondisi.toList(),
+        catatanTambahan: _catatan.text.trim(),
+        tanggalLahir: teks(_lahir),
+        ipsTerakhir: double.tryParse(_ips.text.trim().replaceAll(',', '.')),
+        penghasilanOrangTua: int.tryParse(
+          _penghasilan.text.trim().replaceAll(RegExp(r'[^0-9]'), ''),
+        ),
+        kewarganegaraan: teks(_warga),
+        skorBahasa: {
+          if (_toefl.text.trim().isNotEmpty)
+            'toefl': num.tryParse(_toefl.text.trim()) ?? _toefl.text.trim(),
+          if (_ielts.text.trim().isNotEmpty)
+            'ielts':
+                num.tryParse(_ielts.text.trim().replaceAll(',', '.')) ??
+                _ielts.text.trim(),
+        },
+      ),
+    );
+    if (ok && mounted) {
+      _aturUbah(false);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Profil disimpan.')));
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Obx(() => _bangun(context));
+
+  Widget _bangun(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final p = ref.watch(authControllerProvider).pengguna;
+    final p = Get.find<AuthController>().pengguna;
     if (p == null) return const Scaffold(body: SizedBox.shrink());
     final kel = p.kelengkapan;
 
@@ -436,11 +417,11 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
                       'Catatan khusus',
                       hint: 'Contoh: penerima KIP',
                     ),
-                    if (_galat != null)
+                    if (_ctrl.galat.value != null)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Text(
-                          _galat!,
+                          _ctrl.galat.value!,
                           style: TextStyle(color: Warna.error),
                         ),
                       ),
@@ -508,8 +489,7 @@ class _ProfilPageState extends ConsumerState<ProfilPage> {
                 foregroundColor: Warna.error,
                 side: BorderSide(color: Warna.error.withValues(alpha: 0.5)),
               ),
-              onPressed: () =>
-                  ref.read(authControllerProvider.notifier).keluar(),
+              onPressed: () => Get.find<AuthController>().keluar(),
               icon: const Icon(Icons.logout, size: 18),
               label: const Text('Keluar'),
             ),

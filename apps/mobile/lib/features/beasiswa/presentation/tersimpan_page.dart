@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/format.dart';
-import '../../../core/providers.dart';
+import '../../../core/dependensi.dart';
 import '../../../core/widgets/kartu_beasiswa.dart';
 import '../../../core/widgets/state_widgets.dart';
-import '../../kalender/presentation/kalender_providers.dart';
 import '../domain/beasiswa.dart';
-import 'beasiswa_providers.dart';
+import 'tersimpan_controller.dart';
 
 /// Tenggat terdekat lebih dulu; tanpa tenggat di belakangnya; yang sudah lewat paling akhir.
 List<BeasiswaRingkas> urutkanTenggat(
@@ -31,25 +30,27 @@ List<BeasiswaRingkas> urutkanTenggat(
   return hasil;
 }
 
-class TersimpanPage extends ConsumerWidget {
+class TersimpanPage extends StatefulWidget {
   const TersimpanPage({super.key});
 
-  Future<void> _hapus(
-    BuildContext context,
-    WidgetRef ref,
-    BeasiswaRingkas b,
-  ) async {
-    final repo = ref.read(beasiswaRepositoryProvider);
-    final pesan = ScaffoldMessenger.of(context);
-    void segarkan() {
-      ref.invalidate(daftarTersimpanProvider);
-      ref.invalidate(tersimpanProvider);
-      ref.invalidate(checklistProvider);
-    }
+  @override
+  State<TersimpanPage> createState() => _TersimpanPageState();
+}
 
+class _TersimpanPageState extends State<TersimpanPage> {
+  final _c = Get.find<TersimpanController>();
+
+  @override
+  void initState() {
+    super.initState();
+    // Selalu muat ulang saat halaman dibuka agar daftar mengikuti perubahan terbaru.
+    _c.daftar.muat();
+  }
+
+  Future<void> _hapus(BuildContext context, BeasiswaRingkas b) async {
+    final pesan = ScaffoldMessenger.of(context);
     try {
-      await repo.hapusSimpan(b.id);
-      segarkan();
+      await _c.hapus(b.id);
       pesan.hideCurrentSnackBar();
       pesan.showSnackBar(
         SnackBar(
@@ -58,8 +59,7 @@ class TersimpanPage extends ConsumerWidget {
             label: 'Urungkan',
             onPressed: () async {
               try {
-                await repo.simpan(b.id);
-                segarkan();
+                await _c.simpan(b.id);
               } catch (e) {
                 pesan.showSnackBar(SnackBar(content: Text(pesanGalat(e))));
               }
@@ -73,80 +73,76 @@ class TersimpanPage extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final nilai = ref.watch(daftarTersimpanProvider);
-    Future<void> muatUlang() async {
-      ref.invalidate(daftarTersimpanProvider);
-      try {
-        await ref.read(daftarTersimpanProvider.future);
-      } catch (_) {}
-    }
+    Future<void> muatUlang() => _c.daftar.muat();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Beasiswa Tersimpan')),
-      body: AsyncIsi<List<BeasiswaRingkas>>(
-        nilai: nilai,
-        ulang: () => ref.invalidate(daftarTersimpanProvider),
-        bangun: (data) {
-          if (data.isEmpty) {
+      body: Obx(
+        () => AsyncIsi<List<BeasiswaRingkas>>(
+          nilai: _c.daftar.state.value,
+          ulang: _c.daftar.muat,
+          bangun: (data) {
+            if (data.isEmpty) {
+              return RefreshIndicator(
+                onRefresh: muatUlang,
+                child: LayoutBuilder(
+                  builder: (context, c) => ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: c.maxHeight),
+                        child: KosongState(
+                          ikon: Icons.bookmark_border_rounded,
+                          judul: 'Belum ada beasiswa tersimpan',
+                          pesan: 'Buka Jelajah, lalu ketuk ikon bookmark pada beasiswa yang ingin Anda pantau tenggatnya.',
+                          aksi: () => context.go('/jelajah'),
+                          labelAksi: 'Jelajahi beasiswa',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+            final urut = urutkanTenggat(data);
+            final dekat = urut
+                .where(
+                  (b) =>
+                      b.tenggat != null &&
+                      sisaHari(b.tenggat!) >= 0 &&
+                      sisaHari(b.tenggat!) <= 7,
+                )
+                .length;
             return RefreshIndicator(
               onRefresh: muatUlang,
-              child: LayoutBuilder(
-                builder: (context, c) => ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  children: [
-                    ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: c.maxHeight),
-                      child: KosongState(
-                        ikon: Icons.bookmark_border_rounded,
-                        judul: 'Belum ada beasiswa tersimpan',
-                        pesan: 'Buka Jelajah, lalu ketuk ikon bookmark pada beasiswa yang ingin Anda pantau tenggatnya.',
-                        aksi: () => context.go('/jelajah'),
-                        labelAksi: 'Jelajahi beasiswa',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-          final urut = urutkanTenggat(data);
-          final dekat = urut
-              .where(
-                (b) =>
-                    b.tenggat != null &&
-                    sisaHari(b.tenggat!) >= 0 &&
-                    sisaHari(b.tenggat!) <= 7,
-              )
-              .length;
-          return RefreshIndicator(
-            onRefresh: muatUlang,
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              children: [
-                Text(
-                  dekat > 0
-                      ? '${urut.length} beasiswa, $dekat bertenggat dalam 7 hari. Diurutkan dari tenggat terdekat.'
-                      : '${urut.length} beasiswa. Diurutkan dari tenggat terdekat.',
-                  style: t.bodyMedium,
-                ),
-                const SizedBox(height: 12),
-                for (final b in urut) ...[
-                  KartuBeasiswa(
-                    key: ValueKey(b.id),
-                    beasiswa: b,
-                    tersimpan: true,
-                    onSimpan: () => _hapus(context, ref, b),
-                    onBuka: () => context.push('/beasiswa/${b.id}'),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                children: [
+                  Text(
+                    dekat > 0
+                        ? '${urut.length} beasiswa, $dekat bertenggat dalam 7 hari. Diurutkan dari tenggat terdekat.'
+                        : '${urut.length} beasiswa. Diurutkan dari tenggat terdekat.',
+                    style: t.bodyMedium,
                   ),
                   const SizedBox(height: 12),
+                  for (final b in urut) ...[
+                    KartuBeasiswa(
+                      key: ValueKey(b.id),
+                      beasiswa: b,
+                      tersimpan: true,
+                      onSimpan: () => _hapus(context, b),
+                      onBuka: () => context.push('/beasiswa/${b.id}'),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                 ],
-              ],
-            ),
-          );
-        },
+              ),
+            );
+          },
+        ),
       ),
     );
   }
