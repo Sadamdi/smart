@@ -67,6 +67,44 @@ Map<String, Penangan> _rute() => {
 
 void main() {
   siapkanGet();
+  // Label menu bawah, terutama "Rekomendasi", harus selalu satu baris.
+  for (final skala in [1.0, 1.3, 2.0]) {
+    testWidgets('label menu bawah satu baris pada 320 dp, skala $skala', (
+      t,
+    ) async {
+      t.view.physicalSize = const Size(320 * 2, 640 * 2);
+      t.view.devicePixelRatio = 2;
+      t.platformDispatcher.textScaleFactorTestValue = skala;
+      addTearDown(t.view.reset);
+      addTearDown(t.platformDispatcher.clearAllTestValues);
+      await t.pumpWidget(aplikasi(ServerPalsu(_rute())));
+      await t.pumpAndSettle();
+      for (final label in [
+        'Beranda',
+        'Rekomendasi',
+        'Jelajah',
+        'Kalender',
+        'Profil',
+      ]) {
+        final f = find.descendant(
+          of: find.byType(NavigationBar),
+          matching: find.text(label),
+        );
+        final teks = t.widget<Text>(f);
+        final tinggi = t.getSize(f).height;
+        final ukuran = teks.style?.fontSize ?? 11;
+        expect(
+          tinggi,
+          lessThan(ukuran * 1.8),
+          reason: 'label $label turun ke dua baris (tinggi $tinggi)',
+        );
+        // Penguncian skala: ukuran akhir label tidak ikut membesar.
+        expect(ukuran, lessThanOrEqualTo(11));
+      }
+      expect(t.takeException(), isNull);
+    });
+  }
+
   for (final gelap in [false, true]) {
     for (final layar in [
       'masuk',
