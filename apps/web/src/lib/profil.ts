@@ -1,17 +1,15 @@
 import type { Pengguna } from "./types";
 
+// Hanya syarat yang paling sering diminta beasiswa terbit (jenjang, kewarganegaraan, domisili, IPK, jenis kampus,
+// semester, usia). Kolom lain (kampus, prodi, minat, penghasilan, skor bahasa) opsional dan tidak dihitung.
 const BUTIR: [keyof Pengguna, string][] = [
-  ["kampus", "Kampus"],
-  ["jenis_kampus", "Jenis kampus"],
-  ["program_studi", "Program studi"],
   ["jenjang", "Jenjang"],
   ["semester", "Semester"],
   ["ipk", "IPK"],
+  ["jenis_kampus", "Jenis kampus"],
   ["kota_domisili", "Kota domisili"],
-  ["tanggal_lahir", "Tanggal lahir"],
   ["kewarganegaraan", "Kewarganegaraan"],
-  ["penghasilan_orang_tua", "Penghasilan orang tua"],
-  ["minat", "Minat"],
+  ["tanggal_lahir", "Tanggal lahir"],
 ];
 
 /** Kelengkapan profil sebagai bilangan 0-100 dan daftar kolom yang masih kosong. */

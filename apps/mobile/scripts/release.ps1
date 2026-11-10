@@ -192,9 +192,12 @@ if ($NoGit) {
   # Uji coba: tidak membuat commit; tag menunjuk ujung cabang main yang sudah ada di GitHub.
   $sha1 = 'main'
 } else {
-  git add pubspec.yaml release-notes
+  Invoke-Quiet { git add pubspec.yaml release-notes }
   Invoke-Quiet { git commit -q -m "[chore] release $newName+$newBuild ($($note.type))" }
-  if (-not $NoPush) { git push -q -u origin HEAD }
+  if (-not $NoPush) {
+    Invoke-Quiet { git push -q -u origin HEAD }
+    if ($LASTEXITCODE -ne 0) { Fail 'git push gagal' }
+  }
   $sha1 = (git rev-parse HEAD).Trim()
 }
 

@@ -45,15 +45,15 @@ class KartuBeasiswa extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Warna.putih,
-        borderRadius: BorderRadius.circular(Jari.kartu),
+        color: Warna.kartu,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Warna.container4),
         boxShadow: bayanganKartu,
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(height: 4, color: Warna.primary),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -62,6 +62,20 @@ class KartuBeasiswa extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      margin: const EdgeInsets.only(right: 12),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Warna.container3,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        _inisial(beasiswa.penyelenggara ?? beasiswa.nama),
+                        style: t.titleMedium?.copyWith(color: Warna.primary),
+                      ),
+                    ),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,7 +148,15 @@ class KartuBeasiswa extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 14),
-                FilledButton(onPressed: onBuka, child: Text(labelAksi)),
+                FilledButton.tonal(
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(46),
+                    backgroundColor: Warna.container3,
+                    foregroundColor: Warna.primary,
+                  ),
+                  onPressed: onBuka,
+                  child: Text(labelAksi),
+                ),
               ],
             ),
           ),
@@ -142,6 +164,11 @@ class KartuBeasiswa extends StatelessWidget {
       ),
     );
   }
+}
+
+String _inisial(String s) {
+  final h = s.trim();
+  return h.isEmpty ? '?' : h.characters.first.toUpperCase();
 }
 
 class _Daftar extends StatelessWidget {

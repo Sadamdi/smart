@@ -10,16 +10,16 @@ class Metrik extends StatelessWidget {
     required this.label,
     this.keterangan,
     required this.ikon,
-    this.warna = Warna.primary,
-    this.latarIkon = Warna.container2,
+    this.warna,
+    this.latarIkon,
   });
 
   final String angka;
   final String label;
   final String? keterangan;
   final IconData ikon;
-  final Color warna;
-  final Color latarIkon;
+  final Color? warna;
+  final Color? latarIkon;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,7 @@ class Metrik extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
       decoration: BoxDecoration(
-        color: Warna.putih,
+        color: Warna.kartu,
         borderRadius: BorderRadius.circular(Jari.kartu),
         boxShadow: bayanganKartu,
       ),
@@ -35,15 +35,18 @@ class Metrik extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: latarIkon,
-            child: Icon(ikon, size: 18, color: warna),
+            backgroundColor: latarIkon ?? Warna.container2,
+            child: Icon(ikon, size: 18, color: warna ?? Warna.primary),
           ),
           const SizedBox(height: 8),
           Text(angka, style: t.titleLarge?.copyWith(fontSize: 24)),
           Text(
             label,
             textAlign: TextAlign.center,
-            style: t.labelSmall?.copyWith(color: warna, letterSpacing: 0),
+            style: t.labelSmall?.copyWith(
+              color: warna ?? Warna.primary,
+              letterSpacing: 0,
+            ),
           ),
           if (keterangan != null)
             Text(

@@ -35,9 +35,12 @@ class _Kerangka extends StatelessWidget {
               Center(
                 child: Column(
                   children: [
-                    const LogoSmart(ukuran: 72),
-                    const SizedBox(height: 12),
-                    Text('SMART', style: t.headlineMedium),
+                    const LogoSmart(ukuran: 84),
+                    const SizedBox(height: 14),
+                    Text(
+                      'SMART',
+                      style: t.headlineMedium?.copyWith(letterSpacing: 3),
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       'Scholarship Monitoring & Recommendation Tool',
@@ -48,7 +51,7 @@ class _Kerangka extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 28),
-              Text(judul, style: t.titleLarge?.copyWith(fontSize: 22)),
+              Text(judul, style: t.headlineMedium?.copyWith(fontSize: 24)),
               const SizedBox(height: 6),
               Text(subjudul, style: t.bodyMedium),
               const SizedBox(height: 20),
@@ -158,12 +161,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               onFieldSubmitted: (_) => _masuk(),
             ),
             if (_galat != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                _galat!,
-                key: const Key('galat-form'),
-                style: const TextStyle(color: Warna.error),
-              ),
+              const SizedBox(height: 14),
+              _KotakGalat(_galat!),
             ],
             const SizedBox(height: 20),
             FilledButton(
@@ -195,6 +194,7 @@ class _DaftarPageState extends ConsumerState<DaftarPage> {
   final _nama = TextEditingController();
   final _email = TextEditingController();
   final _sandi = TextEditingController();
+  bool _lihat = false;
   bool _kirim = false;
   String? _galat;
 
@@ -269,23 +269,26 @@ class _DaftarPageState extends ConsumerState<DaftarPage> {
             const SizedBox(height: 14),
             TextFormField(
               controller: _sandi,
-              obscureText: true,
-              decoration: const InputDecoration(
+              obscureText: !_lihat,
+              decoration: InputDecoration(
                 labelText: 'Kata sandi',
                 hintText: 'Minimal 8 karakter',
-                prefixIcon: Icon(Icons.lock_outline),
+                prefixIcon: const Icon(Icons.lock_outline),
+                suffixIcon: IconButton(
+                  tooltip: _lihat ? 'Sembunyikan' : 'Tampilkan',
+                  icon: Icon(
+                    _lihat ? Icons.visibility_off : Icons.visibility_outlined,
+                  ),
+                  onPressed: () => setState(() => _lihat = !_lihat),
+                ),
               ),
               validator: (v) => (v ?? '').length < 8
                   ? 'Kata sandi minimal 8 karakter.'
                   : null,
             ),
             if (_galat != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                _galat!,
-                key: const Key('galat-form'),
-                style: const TextStyle(color: Warna.error),
-              ),
+              const SizedBox(height: 14),
+              _KotakGalat(_galat!),
             ],
             const SizedBox(height: 20),
             FilledButton(
@@ -300,6 +303,38 @@ class _DaftarPageState extends ConsumerState<DaftarPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _KotakGalat extends StatelessWidget {
+  const _KotakGalat(this.pesan);
+
+  final String pesan;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Warna.errorSoft,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.error_outline_rounded, size: 20, color: Warna.error),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              pesan,
+              key: const Key('galat-form'),
+              style: TextStyle(color: Warna.error),
+            ),
+          ),
+        ],
       ),
     );
   }
