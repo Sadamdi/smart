@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 
-import '../router.dart';
+import '../dependensi.dart';
 import 'app_update_checker.dart';
 import 'pembaruan_controller.dart';
 
 /// Memeriksa pembaruan sekali saat aplikasi dibuka dan setiap kembali ke latar depan (paling sering sekali per
 /// enam jam). Tidak melakukan apa pun di luar Android atau pada build non-rilis.
-class PemeriksaPembaruan extends ConsumerStatefulWidget {
+class PemeriksaPembaruan extends StatefulWidget {
   const PemeriksaPembaruan({super.key, required this.child});
 
   final Widget child;
 
   @override
-  ConsumerState<PemeriksaPembaruan> createState() => _PemeriksaPembaruanState();
+  State<PemeriksaPembaruan> createState() => _PemeriksaPembaruanState();
 }
 
-class _PemeriksaPembaruanState extends ConsumerState<PemeriksaPembaruan>
+class _PemeriksaPembaruanState extends State<PemeriksaPembaruan>
     with WidgetsBindingObserver {
   @override
   void initState() {
@@ -40,7 +40,7 @@ class _PemeriksaPembaruanState extends ConsumerState<PemeriksaPembaruan>
   }
 
   void _periksa() {
-    final kunci = ref.read(navigatorKeyProvider);
+    final kunci = Get.find<NavigasiController>().kunci;
     AppUpdateChecker.otomatis(() => kunci.currentState?.overlay?.context);
   }
 

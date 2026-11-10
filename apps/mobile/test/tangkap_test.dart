@@ -78,6 +78,7 @@ Future<void> _muatHuruf() async {
 }
 
 void main() {
+  siapkanGet();
   final aktif = Platform.environment['TANGKAP'] == '1';
   for (final gelap in [false, true]) {
     final mode = gelap ? 'gelap' : 'terang';

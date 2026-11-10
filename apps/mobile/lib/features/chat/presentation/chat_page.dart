@@ -1,31 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/providers.dart';
+import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/state_widgets.dart';
-import '../data/chat_repository.dart';
+import 'chat_controller.dart';
 
-final chatTersediaProvider = FutureProvider.autoDispose<bool>(
-  (ref) => ref.watch(chatRepositoryProvider).tersedia(),
-);
-
-final chatRiwayatProvider = FutureProvider.autoDispose<List<PesanChat>>(
-  (ref) => ref.watch(chatRepositoryProvider).riwayat(),
-);
-
-class ChatPage extends ConsumerStatefulWidget {
+class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
 
   @override
-  ConsumerState<ChatPage> createState() => _ChatPageState();
+  State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends ConsumerState<ChatPage> {
+class _ChatPageState extends State<ChatPage> {
+  final _c = Get.find<ChatController>();
   final _isi = TextEditingController();
-  bool _kirim = false;
-  String? _galat;
+
+  @override
+  void initState() {
+    super.initState();
+    _c.buka();
+  }
 
   @override
   void dispose() {
@@ -34,26 +31,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 
   Future<void> _kirimPesan() async {
-    final teks = _isi.text.trim();
-    if (teks.isEmpty || _kirim) return;
-    setState(() {
-      _kirim = true;
-      _galat = null;
-    });
-    try {
-      await ref.read(chatRepositoryProvider).kirim(teks);
-      _isi.clear();
-      ref.invalidate(chatRiwayatProvider);
-    } catch (e) {
-      if (mounted) setState(() => _galat = pesanGalat(e));
-    } finally {
-      if (mounted) setState(() => _kirim = false);
-    }
-  }
-
-  Future<void> _hapus() async {
-    await ref.read(chatRepositoryProvider).hapusRiwayat();
-    ref.invalidate(chatRiwayatProvider);
+    final ok = await _c.kirim(_isi.text.trim());
+    if (ok) _isi.clear();
   }
 
   Widget _gelembung(
@@ -115,10 +94,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Obx(() => _bangun(context));
+
+  Widget _bangun(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final tersedia = ref.watch(chatTersediaProvider).value ?? true;
-    final riwayat = ref.watch(chatRiwayatProvider);
+    final tersedia = _c.bisaMenjawab;
+    final riwayat = _c.riwayat.state.value;
+    final kirim = _c.mengirim.value;
+    final galat = _c.galat.value;
 
     return Scaffold(
       appBar: AppBar(
@@ -126,7 +109,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         actions: [
           IconButton(
             tooltip: 'Hapus riwayat',
-            onPressed: _hapus,
+            onPressed: _c.hapusRiwayat,
             icon: const Icon(Icons.delete_outline),
           ),
         ],
@@ -168,10 +151,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               ),
             ),
           ),
-          if (_galat != null)
+          if (galat != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(_galat!, style: TextStyle(color: Warna.error)),
+              child: Text(galat, style: TextStyle(color: Warna.error)),
             ),
           SizedBox(
             height: 44,
@@ -212,8 +195,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   ),
                   const SizedBox(width: 8),
                   IconButton.filled(
-                    onPressed: _kirim ? null : _kirimPesan,
-                    icon: _kirim
+                    onPressed: kirim ? null : _kirimPesan,
+                    icon: kirim
                         ? const SizedBox(
                             height: 18,
                             width: 18,

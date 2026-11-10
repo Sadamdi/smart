@@ -1,15 +1,17 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Pilihan tampilan: ikut sistem, terang, atau gelap. Disimpan di berkas kecil di perangkat.
-class TemaController extends Notifier<ThemeMode> {
+class TemaController extends GetxController {
+  final mode = ThemeMode.system.obs;
+
   @override
-  ThemeMode build() {
+  void onInit() {
+    super.onInit();
     _muat();
-    return ThemeMode.system;
   }
 
   Future<File?> _berkas() async {
@@ -25,19 +27,15 @@ class TemaController extends Notifier<ThemeMode> {
     final f = await _berkas();
     if (f == null || !await f.exists()) return;
     final nilai = (await f.readAsString()).trim();
-    final mode = ThemeMode.values.where((m) => m.name == nilai);
-    if (mode.isNotEmpty) state = mode.first;
+    final cocok = ThemeMode.values.where((m) => m.name == nilai);
+    if (cocok.isNotEmpty) mode.value = cocok.first;
   }
 
-  Future<void> atur(ThemeMode mode) async {
-    state = mode;
+  Future<void> atur(ThemeMode baru) async {
+    mode.value = baru;
     final f = await _berkas();
     try {
-      await f?.writeAsString(mode.name);
+      await f?.writeAsString(baru.name);
     } catch (_) {}
   }
 }
-
-final temaProvider = NotifierProvider<TemaController, ThemeMode>(
-  TemaController.new,
-);

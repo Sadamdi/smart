@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'theme/app_theme.dart';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
+import 'dependensi.dart';
 import '../features/auth/presentation/auth_controller.dart';
 import '../features/auth/presentation/auth_pages.dart';
 import '../features/beasiswa/presentation/detail_page.dart';
@@ -17,31 +18,25 @@ import '../features/pengaturan/presentation/pengaturan_page.dart';
 import '../features/profil/presentation/profil_lanjutan_page.dart';
 import '../features/kalender/presentation/kalender_page.dart';
 import '../features/notifikasi/presentation/notifikasi_page.dart';
+import '../features/profil/presentation/profil_controller.dart';
 import '../features/profil/presentation/profil_page.dart';
 import '../features/rekomendasi/presentation/rekomendasi_page.dart';
 import 'widgets/state_widgets.dart';
 
-class _Segarkan extends ChangeNotifier {
+/// Penyegar router: dipicu setiap status auth berubah agar redirect dievaluasi ulang.
+class SegarkanRouter extends ChangeNotifier {
   void ping() => notifyListeners();
 }
 
-/// Kunci navigator utama; dipakai pemeriksa pembaruan untuk menampilkan dialog di atas halaman mana pun.
-final navigatorKeyProvider = Provider<GlobalKey<NavigatorState>>(
-  (ref) => GlobalKey<NavigatorState>(),
-);
-
 /// Router mengikuti status masuk: belum masuk selalu ke layar masuk.
-final routerProvider = Provider<GoRouter>((ref) {
-  final segarkan = _Segarkan();
-  ref.listen(authControllerProvider, (_, _) => segarkan.ping());
-  ref.onDispose(segarkan.dispose);
-
+GoRouter buatRouter(SegarkanRouter segarkan) {
+  final auth = Get.find<AuthController>();
   return GoRouter(
-    navigatorKey: ref.read(navigatorKeyProvider),
+    navigatorKey: Get.find<NavigasiController>().kunci,
     initialLocation: '/',
     refreshListenable: segarkan,
     redirect: (context, state) {
-      final status = ref.read(authControllerProvider).status;
+      final status = auth.status;
       final lokasi = state.matchedLocation;
       final halamanAuth = lokasi == '/masuk' || lokasi == '/daftar';
       if (status == StatusAuth.memeriksa) {
@@ -109,7 +104,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
-});
+}
 
 class _Cangkang extends StatelessWidget {
   const _Cangkang({required this.shell});
@@ -123,7 +118,7 @@ class _Cangkang extends StatelessWidget {
       canPop: shell.currentIndex == 0,
       onPopInvokedWithResult: (didPop, _) {
         // Formulir profil yang terbuka menangani Back sendiri.
-        if (didPop || profilSedangDiubah.value) {
+        if (didPop || Get.find<ProfilController>().sedangDiubah.value) {
           return;
         }
         shell.goBranch(0);
