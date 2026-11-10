@@ -101,5 +101,51 @@ void main() {
         expect(t.takeException(), isNull, reason: 'overflow di $layar');
       });
     }
+    for (final kosong in [false, true]) {
+      testWidgets(
+        'tanpa overflow: Beasiswa Tersimpan ${kosong ? 'kosong' : 'berisi'} ${gelap ? 'gelap' : 'terang'}',
+        (t) async {
+          t.view.physicalSize = const Size(320 * 2, 640 * 2);
+          t.view.devicePixelRatio = 2;
+          t.platformDispatcher.textScaleFactorTestValue = 1.3;
+          t.platformDispatcher.platformBrightnessTestValue = gelap
+              ? Brightness.dark
+              : Brightness.light;
+          addTearDown(t.view.reset);
+          addTearDown(t.platformDispatcher.clearAllTestValues);
+          final rute = _rute();
+          rute['GET /me/tersimpan'] = (o) => Balasan.ok(
+            kosong
+                ? []
+                : [
+                    {
+                      'beasiswa': beasiswaJson(
+                        '1',
+                        'Beasiswa Unggulan Pemerintah Republik Indonesia Tahap Dua',
+                        tenggat: _hariKe(6),
+                      ),
+                      'status_rencana': null,
+                    },
+                  ],
+          );
+          await t.pumpWidget(aplikasi(ServerPalsu(rute)));
+          await t.pumpAndSettle();
+          await t.tap(
+            find.descendant(
+              of: find.byType(NavigationBar),
+              matching: find.text('Profil'),
+            ),
+          );
+          await t.pumpAndSettle();
+          final menu = find.text('Beasiswa Tersimpan');
+          await t.scrollUntilVisible(menu, 200);
+          await t.drag(find.byType(Scrollable).first, const Offset(0, -150));
+          await t.pumpAndSettle();
+          await t.tap(menu);
+          await t.pumpAndSettle();
+          expect(t.takeException(), isNull, reason: 'overflow di Tersimpan');
+        },
+      );
+    }
   }
 }
