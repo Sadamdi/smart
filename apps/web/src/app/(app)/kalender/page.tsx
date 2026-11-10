@@ -42,7 +42,7 @@ export default function KalenderChecklist() {
   const tampilAcara = dipilih ? acara.filter((a) => a.tanggal.slice(0, 10) === dipilih) : acara;
 
   return (
-    <div>
+    <div className="halaman-masuk">
       <JudulHalaman judul="Kalender dan Checklist" deskripsi="Tenggat beasiswa tersimpan, berkas yang harus siap, dan tugas pribadi Anda." />
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="space-y-6 lg:col-span-2">
@@ -58,18 +58,22 @@ export default function KalenderChecklist() {
             >
               {() =>
                 tampilAcara.length === 0 ? (
-                  <p className="text-sm text-ink">Tidak ada tenggat atau tugas pada rentang ini.</p>
+                  <div className="rounded-[14px] border border-dashed border-line/60 px-4 py-6 text-center">
+                    <p className="text-sm font-bold text-navy">Tidak ada tenggat atau tugas pada rentang ini</p>
+                    <p className="mt-1 text-sm text-ink">Simpan beasiswa untuk melihat tenggatnya, atau tambahkan tugas pribadi di bawah.</p>
+                    <TautanTombol href="/jelajah" varian="sekunder" className="mt-3">Jelajah beasiswa</TautanTombol>
+                  </div>
                 ) : (
                   <ul className="space-y-2">
                     {tampilAcara.map((a) => (
-                      <li key={a.jenis + a.ref_id + a.tanggal} className="flex items-center gap-3 rounded-xl bg-c1 px-3 py-2 text-sm">
+                      <li key={a.jenis + a.ref_id + a.tanggal} className="flex items-center gap-3 rounded-[14px] bg-c1 px-3 py-2 text-sm">
                         {a.jenis === "tugas" ? (
                           <input
                             type="checkbox"
                             aria-label={`Tandai ${a.judul}`}
                             checked={a.selesai}
                             onChange={(e) => ubah.mutate({ id: a.ref_id, selesai: e.target.checked })}
-                            className="h-4 w-4 accent-primary"
+                            className="h-5 w-5 accent-primary"
                           />
                         ) : (
                           <span className="h-2.5 w-2.5 rounded-full bg-danger" aria-hidden />
@@ -87,7 +91,7 @@ export default function KalenderChecklist() {
                           </span>
                         </span>
                         {a.jenis === "tugas" && (
-                          <button type="button" aria-label={`Hapus ${a.judul}`} onClick={() => hapus.mutate(a.ref_id)} className="rounded-full p-1.5 text-muted hover:bg-danger-soft hover:text-danger">
+                          <button type="button" aria-label={`Hapus ${a.judul}`} onClick={() => hapus.mutate(a.ref_id)} className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-danger-soft hover:text-danger">
                             <Trash2 className="h-4 w-4" />
                           </button>
                         )}
