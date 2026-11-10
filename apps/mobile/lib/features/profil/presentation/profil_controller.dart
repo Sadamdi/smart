@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 
+import '../../../core/async_state.dart';
 import '../../../core/dependensi.dart';
+import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/pengguna.dart';
 import '../../auth/presentation/auth_controller.dart';
 
@@ -11,6 +13,11 @@ class ProfilController extends GetxController {
   final sedangDiubah = false.obs;
   final mengirim = false.obs;
   final galat = RxnString();
+
+  /// Daftar negara dan provinsi untuk pilihan domisili; dimuat sekali lalu dipakai ulang.
+  late final wilayah = Muatan<ReferensiWilayah>(
+    () => Get.find<AuthRepository>().wilayah(),
+  );
 
   void bersihkanGalat() => galat.value = null;
 
