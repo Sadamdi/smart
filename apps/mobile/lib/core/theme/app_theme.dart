@@ -127,7 +127,11 @@ class Jari {
 List<BoxShadow> get bayanganKartu => Warna.gelap
     ? const []
     : const [
-        BoxShadow(color: Color(0x0D000000), offset: Offset(0, 1), blurRadius: 2),
+        BoxShadow(
+          color: Color(0x0D000000),
+          offset: Offset(0, 1),
+          blurRadius: 2,
+        ),
       ];
 
 /// [googleFonts] dimatikan pada uji agar tidak mengunduh huruf.
@@ -254,9 +258,7 @@ ThemeData buatTema({bool googleFonts = true, Palet w = Palet.terang}) {
         backgroundColor: w.primary,
         foregroundColor: Warna.putih,
         minimumSize: const Size.fromHeight(52),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         textStyle: tema.labelLarge,
       ),
     ),
@@ -265,9 +267,7 @@ ThemeData buatTema({bool googleFonts = true, Palet w = Palet.terang}) {
         foregroundColor: w.primary,
         minimumSize: const Size.fromHeight(48),
         side: BorderSide(color: w.outline),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         textStyle: tema.labelLarge,
       ),
     ),
