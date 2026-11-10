@@ -65,6 +65,7 @@ Map<String, Penangan> _rute() => {
 };
 
 void main() {
+  siapkanGet();
   for (final gelap in [false, true]) {
     for (final layar in [
       'masuk',

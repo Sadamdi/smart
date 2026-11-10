@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/format.dart';
-import '../../../core/providers.dart';
+import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/kartu_beasiswa.dart';
@@ -12,27 +12,35 @@ import '../../../core/widgets/smart_app_bar.dart';
 import '../../../core/widgets/state_widgets.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../kalender/domain/kalender.dart';
-import '../../kalender/presentation/kalender_providers.dart';
-import '../../rekomendasi/domain/rekomendasi.dart';
-import '../../rekomendasi/presentation/rekomendasi_providers.dart';
+import 'beranda_controller.dart';
 
-class BerandaPage extends ConsumerWidget {
+class BerandaPage extends StatefulWidget {
   const BerandaPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final t = Theme.of(context).textTheme;
-    final p = ref.watch(authControllerProvider).pengguna;
-    final kel = p?.kelengkapan;
-    final ringkasan = ref.watch(ringkasanRekomendasiProvider);
-    final utama = ref.watch(rekomendasiProvider(Kategori.memenuhi));
-    final kalender = ref.watch(kalenderProvider);
+  State<BerandaPage> createState() => _BerandaPageState();
+}
 
-    Future<void> segarkan() async {
-      ref.invalidate(ringkasanRekomendasiProvider);
-      ref.invalidate(rekomendasiProvider);
-      ref.invalidate(kalenderProvider);
-    }
+class _BerandaPageState extends State<BerandaPage> {
+  final _c = Get.find<BerandaController>();
+
+  @override
+  void initState() {
+    super.initState();
+    _c.buka();
+  }
+
+  @override
+  Widget build(BuildContext context) => Obx(() => _bangun(context));
+
+  Widget _bangun(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final p = Get.find<AuthController>().pengguna;
+    final kel = p?.kelengkapan;
+    final ringkasan = _c.ringkasan.state.value;
+    final utama = _c.utama.state.value;
+    final kalender = _c.acara.state.value;
+    final segarkan = _c.segarkan;
 
     return Scaffold(
       appBar: const SmartAppBar(),
@@ -77,8 +85,7 @@ class BerandaPage extends ConsumerWidget {
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.white,
                         ),
-                        onPressed: () =>
-                            ref.invalidate(ringkasanRekomendasiProvider),
+                        onPressed: () => _c.ringkasan.muat(),
                         child: const Text('Coba lagi'),
                       ),
                     ],
@@ -121,8 +128,7 @@ class BerandaPage extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: GalatState(
                   pesan: pesanGalat(e),
-                  cobaLagi: () =>
-                      ref.invalidate(rekomendasiProvider(Kategori.memenuhi)),
+                  cobaLagi: () => _c.utama.muat(),
                 ),
               ),
               data: (daftar) {
@@ -162,7 +168,7 @@ class BerandaPage extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: GalatState(
                   pesan: pesanGalat(e),
-                  cobaLagi: () => ref.invalidate(kalenderProvider),
+                  cobaLagi: () => _c.acara.muat(),
                 ),
               ),
               data: (acara) {

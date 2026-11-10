@@ -1,27 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/format.dart';
-import '../../../core/providers.dart';
+import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/state_widgets.dart';
 import '../domain/notifikasi.dart';
-import 'notifikasi_providers.dart';
+import 'notifikasi_controller.dart';
 
-class NotifikasiPage extends ConsumerWidget {
+class NotifikasiPage extends StatefulWidget {
   const NotifikasiPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final nilai = ref.watch(notifikasiProvider);
-    final repo = ref.read(notifikasiRepositoryProvider);
+  State<NotifikasiPage> createState() => _NotifikasiPageState();
+}
+
+class _NotifikasiPageState extends State<NotifikasiPage> {
+  final _c = Get.find<NotifikasiController>();
+
+  @override
+  void initState() {
+    super.initState();
+    _c.daftar.muat();
+  }
+
+  @override
+  Widget build(BuildContext context) => Obx(() => _bangun(context));
+
+  Widget _bangun(BuildContext context) {
+    final nilai = _c.daftar.state.value;
 
     Future<void> aksi(Future<void> Function() f) async {
       final pesan = ScaffoldMessenger.of(context);
       try {
         await f();
-        ref.invalidate(notifikasiProvider);
       } catch (e) {
         pesan.showSnackBar(SnackBar(content: Text(pesanGalat(e))));
       }
@@ -33,14 +46,14 @@ class NotifikasiPage extends ConsumerWidget {
         actions: [
           if (nilai.value?.any((n) => !n.dibaca) ?? false)
             TextButton(
-              onPressed: () => aksi(repo.bacaSemua),
+              onPressed: () => aksi(_c.bacaSemua),
               child: const Text('Tandai semua dibaca'),
             ),
         ],
       ),
       body: AsyncIsi<List<Notifikasi>>(
         nilai: nilai,
-        ulang: () => ref.invalidate(notifikasiProvider),
+        ulang: _c.daftar.muat,
         bangun: (daftar) {
           if (daftar.isEmpty) {
             return const KosongState(
@@ -50,7 +63,7 @@ class NotifikasiPage extends ConsumerWidget {
             );
           }
           return RefreshIndicator(
-            onRefresh: () async => ref.invalidate(notifikasiProvider),
+            onRefresh: _c.daftar.muat,
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: daftar.length,
@@ -89,7 +102,7 @@ class NotifikasiPage extends ConsumerWidget {
                         : Icon(Icons.circle, size: 10, color: Warna.primary),
                     onTap: () async {
                       final router = GoRouter.of(context);
-                      if (!n.dibaca) await aksi(() => repo.baca(n.id));
+                      if (!n.dibaca) await aksi(() => _c.baca(n.id));
                       router.push('/beasiswa/${n.beasiswaId}');
                     },
                   ),

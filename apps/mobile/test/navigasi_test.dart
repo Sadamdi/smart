@@ -28,6 +28,7 @@ int _tabAktif(WidgetTester t) =>
     t.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex;
 
 void main() {
+  siapkanGet();
   test('formatRupiah memakai pemisah ribuan', () {
     expect(formatRupiah(0), 'Rp0');
     expect(formatRupiah(950), 'Rp950');

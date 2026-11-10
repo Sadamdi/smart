@@ -1,28 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 
-import '../../../core/providers.dart';
-import '../../kalender/presentation/kalender_providers.dart';
-import 'beasiswa_providers.dart';
+import '../../../core/dependensi.dart';
+import 'tersimpan_controller.dart';
 
-/// Simpan atau hapus simpanan, lalu segarkan daftar tersimpan dan checklist.
+/// Simpan atau hapus simpanan lewat [TersimpanController], lalu tampilkan hasilnya.
 Future<void> ubahSimpan(
   BuildContext context,
-  WidgetRef ref,
   String id, {
   required bool tersimpan,
 }) async {
-  final repo = ref.read(beasiswaRepositoryProvider);
+  final c = Get.find<TersimpanController>();
   final pesan = ScaffoldMessenger.of(context);
   try {
     if (tersimpan) {
-      await repo.hapusSimpan(id);
+      await c.hapus(id);
     } else {
-      await repo.simpan(id);
+      await c.simpan(id);
     }
-    ref.invalidate(tersimpanProvider);
-    ref.invalidate(daftarTersimpanProvider);
-    ref.invalidate(checklistProvider);
     pesan.showSnackBar(
       SnackBar(
         content: Text(
