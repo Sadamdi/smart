@@ -145,7 +145,8 @@ class ProfilMasukan {
     if (profilLanjutan != null) 'profil_lanjutan': profilLanjutan,
     if (tanggalLahir != null) 'tanggal_lahir': tanggalLahir,
     if (ipsTerakhir != null) 'ips_terakhir': ipsTerakhir,
-    if (penghasilanOrangTua != null) 'penghasilan_orang_tua': penghasilanOrangTua,
+    if (penghasilanOrangTua != null)
+      'penghasilan_orang_tua': penghasilanOrangTua,
     if (kewarganegaraan != null) 'kewarganegaraan': kewarganegaraan,
     if (skorBahasa != null && skorBahasa!.isNotEmpty) 'skor_bahasa': skorBahasa,
   };

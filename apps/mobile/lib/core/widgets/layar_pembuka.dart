@@ -104,9 +104,7 @@ class _IsiPembuka extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               mainAxisSize: MainAxisSize.min,
-              children: [
-                for (var i = 0; i < _huruf.length; i++) _satuHuruf(i),
-              ],
+              children: [for (var i = 0; i < _huruf.length; i++) _satuHuruf(i)],
             ),
             const SizedBox(height: 8),
             Opacity(

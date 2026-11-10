@@ -87,7 +87,11 @@ class BerandaPage extends ConsumerWidget {
                 data: (r) => Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _Angka('${r.memenuhi}', 'Memenuhi', const Color(0xFF7BE0A4)),
+                    _Angka(
+                      '${r.memenuhi}',
+                      'Memenuhi',
+                      const Color(0xFF7BE0A4),
+                    ),
                     _Pemisah(),
                     _Angka(
                       '${r.hampirMemenuhi}',

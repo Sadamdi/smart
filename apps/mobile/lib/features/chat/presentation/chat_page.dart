@@ -59,11 +59,19 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     return Align(
       alignment: saya ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * 0.82,
+        ),
         margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: saya ? Warna.primary : Warna.kartu,
-          borderRadius: BorderRadius.circular(Jari.kartuDalam),
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(18),
+            topRight: const Radius.circular(18),
+            bottomLeft: Radius.circular(saya ? 18 : 4),
+            bottomRight: Radius.circular(saya ? 4 : 18),
+          ),
           boxShadow: saya ? null : bayanganKartu,
         ),
         child: Text(
@@ -108,10 +116,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               loading: () => const MemuatState(),
               error: (e, _) => Center(child: Text(pesanGalat(e))),
               data: (daftar) => daftar.isEmpty
-                  ? const KosongState(
-                      judul: 'Belum ada percakapan',
-                      pesan: 'Tanyakan misalnya "beasiswa apa yang tenggatnya paling dekat?"',
-                      ikon: Icons.chat_bubble_outline,
+                  ? _Saran(
+                      onPilih: (s) {
+                        _isi.text = s;
+                        _kirimPesan();
+                      },
                     )
                   : ListView(
                       padding: const EdgeInsets.all(16),
@@ -174,6 +183,43 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _Saran extends StatelessWidget {
+  const _Saran({required this.onPilih});
+
+  final void Function(String) onPilih;
+
+  static const _daftar = [
+    'Beasiswa apa yang tenggatnya paling dekat?',
+    'Beasiswa apa yang cocok untuk IPK saya?',
+    'Berkas apa saja yang biasanya diminta?',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        const SizedBox(height: 24),
+        Icon(Icons.forum_rounded, size: 40, color: Warna.primary),
+        const SizedBox(height: 12),
+        Text('Tanya seputar beasiswa', style: t.titleLarge),
+        const SizedBox(height: 4),
+        Text(
+          'Jawaban disusun dari data beasiswa di SMART, bukan dari tebakan.',
+          style: t.bodyMedium,
+        ),
+        const SizedBox(height: 20),
+        for (final s in _daftar)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: ActionChip(label: Text(s), onPressed: () => onPilih(s)),
+          ),
+      ],
     );
   }
 }
