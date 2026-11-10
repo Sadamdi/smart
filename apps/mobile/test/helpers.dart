@@ -108,8 +108,23 @@ Map<String, dynamic> penggunaJson({
   'semester': lengkap ? 5 : null,
   'ipk': lengkap ? '3.80' : null,
   'kota_domisili': lengkap ? 'Malang' : null,
+  'negara_domisili': 'Indonesia',
+  'provinsi_domisili': lengkap ? 'Jawa Timur' : null,
   'minat': lengkap ? ['riset'] : <String>[],
   'preferensi_notifikasi': {'email': true, 'push': true},
+};
+
+/// Respons GET /referensi/wilayah (ringkas, bentuk sama dengan API asli).
+Map<String, dynamic> wilayahJson() => {
+  'negara': ['Indonesia', 'Malaysia', 'Singapura', 'Brunei Darussalam'],
+  'provinsi': [
+    'Aceh',
+    'Jawa Timur',
+    'DI Yogyakarta',
+    'Kepulauan Bangka Belitung',
+    'Papua Pegunungan',
+  ],
+  'negara_asal': 'Indonesia',
 };
 
 Map<String, dynamic> beasiswaJson(String id, String nama, {String? tenggat}) =>

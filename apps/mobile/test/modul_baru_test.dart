@@ -4,6 +4,8 @@ import 'package:smart_mobile/features/chat/data/chat_repository.dart';
 import 'package:smart_mobile/features/dokumen/domain/dokumen.dart';
 import 'package:smart_mobile/features/profil/domain/profil_lanjutan.dart';
 
+import 'helpers.dart';
+
 void main() {
   test('Dokumen meringkas nilai yang terbaca', () {
     final d = Dokumen.fromJson({
@@ -50,6 +52,26 @@ void main() {
       'jawaban': null,
     });
     expect(p.jawaban, isNull);
+  });
+
+  test('Domisili negara dan provinsi dibaca dan dikirim dengan nama API', () {
+    final p = Pengguna.fromJson({
+      ...penggunaJson(),
+      'negara_domisili': 'Indonesia',
+      'provinsi_domisili': 'Jawa Timur',
+    });
+    expect(p.negaraDomisili, 'Indonesia');
+    expect(p.provinsiDomisili, 'Jawa Timur');
+    final j = const ProfilMasukan(
+      negaraDomisili: 'Malaysia',
+      provinsiDomisili: 'Aceh',
+    ).toJson();
+    expect(j['negara_domisili'], 'Malaysia');
+    expect(j['provinsi_domisili'], 'Aceh');
+    final w = ReferensiWilayah.fromJson(wilayahJson());
+    expect(w.negara.first, 'Indonesia');
+    expect(w.provinsi, contains('Jawa Timur'));
+    expect(w.negaraAsal, 'Indonesia');
   });
 
   test('Baris profil lanjutan diurai dan diformat bolak-balik', () {

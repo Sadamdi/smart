@@ -55,13 +55,25 @@ export type BeasiswaRingkas = {
   tenggat?: string | null;
   tautan_resmi: string;
 };
-export type Persyaratan = { jenis: string; nilai_batas?: Record<string, unknown> | null; dapat_dikejar: boolean };
+/** Hasil pemeriksaan satu syarat terhadap profil; hanya ada bila API mengirimnya. */
+export type StatusSyarat = "terpenuhi" | "dalam_toleransi" | "gagal" | "tidak_diketahui";
+export type Persyaratan = {
+  jenis: string;
+  nilai_batas?: Record<string, unknown> | null;
+  dapat_dikejar: boolean;
+  status?: StatusSyarat | string | null;
+  catatan?: string | null;
+};
 export type BerkasWajib = { id: string; nama_berkas: string };
 export type BeasiswaDetail = BeasiswaRingkas & {
   manfaat?: string | null;
   tanggal_diperiksa?: string | null;
   persyaratan?: Persyaratan[];
   berkas_wajib?: BerkasWajib[];
+  /** Penilaian kelayakan untuk pengguna; ada bila profil cukup lengkap. */
+  kategori?: Kategori | string | null;
+  alasan?: string[];
+  catatan_kekurangan?: string[];
 };
 export type DetailAdmin = BeasiswaDetail & { status: string; alasan_ditandai?: string | null };
 export type AntreanItem = BeasiswaRingkas & { status: string; alasan_ditandai?: string | null; nama_sumber: string };

@@ -5,6 +5,8 @@ class Pengguna {
     required this.nama,
     this.tanggalLahir,
     this.kotaDomisili,
+    this.negaraDomisili,
+    this.provinsiDomisili,
     this.kampus,
     this.jenisKampus,
     this.programStudi,
@@ -28,6 +30,8 @@ class Pengguna {
   final String nama;
   final String? tanggalLahir;
   final String? kotaDomisili;
+  final String? negaraDomisili;
+  final String? provinsiDomisili;
   final String? kampus;
   final String? jenisKampus;
   final String? programStudi;
@@ -69,6 +73,8 @@ class Pengguna {
     nama: j['nama'] as String,
     tanggalLahir: j['tanggal_lahir'] as String?,
     kotaDomisili: j['kota_domisili'] as String?,
+    negaraDomisili: j['negara_domisili'] as String?,
+    provinsiDomisili: j['provinsi_domisili'] as String?,
     kampus: j['kampus'] as String?,
     jenisKampus: j['jenis_kampus'] as String?,
     programStudi: j['program_studi'] as String?,
@@ -101,6 +107,8 @@ class ProfilMasukan {
     this.semester,
     this.ipk,
     this.kotaDomisili,
+    this.negaraDomisili,
+    this.provinsiDomisili,
     this.minat,
     this.kondisiKhusus,
     this.catatanTambahan,
@@ -125,6 +133,8 @@ class ProfilMasukan {
   final int? semester;
   final double? ipk;
   final String? kotaDomisili;
+  final String? negaraDomisili;
+  final String? provinsiDomisili;
   final List<String>? minat;
   final List<String>? kondisiKhusus;
   final String? catatanTambahan;
@@ -139,6 +149,8 @@ class ProfilMasukan {
     if (semester != null) 'semester': semester,
     if (ipk != null) 'ipk': ipk,
     if (kotaDomisili != null) 'kota_domisili': kotaDomisili,
+    if (negaraDomisili != null) 'negara_domisili': negaraDomisili,
+    if (provinsiDomisili != null) 'provinsi_domisili': provinsiDomisili,
     if (minat != null) 'minat': minat,
     if (kondisiKhusus != null) 'kondisi_khusus': kondisiKhusus,
     if (catatanTambahan != null) 'catatan_tambahan': catatanTambahan,
@@ -150,4 +162,23 @@ class ProfilMasukan {
     if (kewarganegaraan != null) 'kewarganegaraan': kewarganegaraan,
     if (skorBahasa != null && skorBahasa!.isNotEmpty) 'skor_bahasa': skorBahasa,
   };
+}
+
+/// Daftar rujukan domisili dari GET /referensi/wilayah: negara, provinsi Indonesia, dan negara asal (bawaan).
+class ReferensiWilayah {
+  const ReferensiWilayah({
+    required this.negara,
+    required this.provinsi,
+    this.negaraAsal = 'Indonesia',
+  });
+
+  final List<String> negara;
+  final List<String> provinsi;
+  final String negaraAsal;
+
+  factory ReferensiWilayah.fromJson(Map<String, dynamic> j) => ReferensiWilayah(
+    negara: [for (final x in (j['negara'] as List? ?? [])) '$x'],
+    provinsi: [for (final x in (j['provinsi'] as List? ?? [])) '$x'],
+    negaraAsal: j['negara_asal'] as String? ?? 'Indonesia',
+  );
 }
