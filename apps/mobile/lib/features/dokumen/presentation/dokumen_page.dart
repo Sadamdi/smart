@@ -86,7 +86,13 @@ class _DokumenPageState extends ConsumerState<DokumenPage> {
           const SizedBox(height: 12),
           FilledButton.icon(
             onPressed: _kirim ? null : _unggah,
-            icon: const Icon(Icons.upload_file),
+            icon: _kirim
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.upload_file_rounded),
             label: Text(_kirim ? 'Mengunggah' : 'Pilih berkas'),
           ),
           const SizedBox(height: 20),
@@ -102,45 +108,79 @@ class _DokumenPageState extends ConsumerState<DokumenPage> {
                 : Column(
                     children: [
                       for (final d in daftar)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: Warna.kartu,
-                            borderRadius: BorderRadius.circular(
-                              Jari.kartuDalam,
-                            ),
-                            boxShadow: bayanganKartu,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(d.namaBerkas, style: t.titleSmall),
-                                    Text(
-                                      '${_jenis[d.jenis] ?? d.jenis} | ${d.statusBaca == 'selesai' ? 'Terbaca' : 'Belum terbaca, isi profil manual'}',
-                                      style: t.bodySmall,
-                                    ),
-                                    if (d.ringkasan.isNotEmpty)
-                                      Text(
-                                        d.ringkasan.join(', '),
-                                        style: t.bodySmall,
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              IconButton(
-                                tooltip: 'Hapus',
-                                onPressed: () => _hapus(d),
-                                icon: const Icon(Icons.delete_outline),
-                              ),
-                            ],
-                          ),
+                        _KartuDokumen(
+                          d: d,
+                          jenis: _jenis[d.jenis] ?? d.jenis,
+                          onHapus: () => _hapus(d),
                         ),
                     ],
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _KartuDokumen extends StatelessWidget {
+  const _KartuDokumen({
+    required this.d,
+    required this.jenis,
+    required this.onHapus,
+  });
+
+  final Dokumen d;
+  final String jenis;
+  final VoidCallback onHapus;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final terbaca = d.statusBaca == 'selesai';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.fromLTRB(14, 14, 4, 14),
+      decoration: BoxDecoration(
+        color: Warna.kartu,
+        borderRadius: BorderRadius.circular(Jari.kartu),
+        boxShadow: bayanganKartu,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Warna.container2,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.description_rounded, color: Warna.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(d.namaBerkas, style: t.titleSmall),
+                const SizedBox(height: 2),
+                Text(
+                  '$jenis · ${terbaca ? 'Terbaca' : 'Belum terbaca, isi profil manual'}',
+                  style: t.bodySmall?.copyWith(
+                    color: terbaca ? Warna.sukses : Warna.muted,
+                  ),
+                ),
+                if (d.ringkasan.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(d.ringkasan.join(', '), style: t.bodySmall),
+                ],
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Hapus',
+            onPressed: onHapus,
+            icon: const Icon(Icons.delete_outline_rounded),
           ),
         ],
       ),
