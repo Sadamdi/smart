@@ -217,7 +217,10 @@ class _Saran extends StatelessWidget {
         for (final s in _daftar)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: ActionChip(label: Text(s), onPressed: () => onPilih(s)),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: ActionChip(label: Text(s), onPressed: () => onPilih(s)),
+            ),
           ),
       ],
     );
