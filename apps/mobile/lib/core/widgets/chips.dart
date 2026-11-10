@@ -25,15 +25,18 @@ class ChipFilter extends StatelessWidget {
         borderRadius: BorderRadius.circular(Jari.bulat),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+          height: 34,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: terpilih ? Warna.primary : Warna.container2,
-            borderRadius: BorderRadius.circular(Jari.bulat),
+            color: terpilih ? Warna.primary : Warna.kartu,
+            border: terpilih ? null : Border.all(color: Warna.outline),
+            borderRadius: BorderRadius.circular(17),
           ),
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: terpilih ? Warna.putih : Warna.navy,
+              color: terpilih ? Warna.putih : Warna.ink,
               fontSize: 13,
             ),
           ),
@@ -116,6 +119,54 @@ class ChipStatus extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Lencana kecil rata (tinggi 22, huruf 11 tebal) untuk jenjang, kategori, dan status berkas.
+class Lencana extends StatelessWidget {
+  const Lencana(this.label, {super.key, this.latar, this.warna});
+
+  final String label;
+  final Color? latar;
+  final Color? warna;
+
+  factory Lencana.kategori(Kategori k) => switch (k) {
+    Kategori.memenuhi => Lencana(
+      'Memenuhi',
+      latar: Warna.suksesSoft,
+      warna: Warna.sukses,
+    ),
+    Kategori.hampirMemenuhi => Lencana(
+      'Hampir memenuhi',
+      latar: Warna.container4,
+      warna: Warna.navy,
+    ),
+    Kategori.belumMemenuhi => Lencana(
+      'Belum memenuhi',
+      latar: Warna.container2,
+      warna: Warna.muted,
+    ),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 22,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: latar ?? Warna.container2,
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Center(
+        widthFactor: 1,
+        child: Text(
+          label,
+          maxLines: 1,
+          style: Theme.of(context).textTheme.labelSmall
+              ?.copyWith(color: warna ?? Warna.navy, letterSpacing: 0),
+        ),
       ),
     );
   }

@@ -19,7 +19,6 @@ class KartuBeasiswa extends StatelessWidget {
     this.tersimpan,
     this.onSimpan,
     required this.onBuka,
-    this.labelAksi = 'Lihat detail',
     this.sekarang,
   });
 
@@ -30,7 +29,6 @@ class KartuBeasiswa extends StatelessWidget {
   final bool? tersimpan;
   final VoidCallback? onSimpan;
   final VoidCallback onBuka;
-  final String labelAksi;
   final DateTime? sekarang;
 
   @override
@@ -38,24 +36,32 @@ class KartuBeasiswa extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     final tenggat = beasiswa.tenggat;
     final sisa = tenggat == null ? null : sisaHari(tenggat, sekarang: sekarang);
-    final meta = [
-      if ((beasiswa.penyelenggara ?? '').isNotEmpty) beasiswa.penyelenggara!,
-      if ((beasiswa.negara ?? '').isNotEmpty) beasiswa.negara!,
-    ].join(' · ');
+    final dekat = sisa != null && sisa >= 0 && sisa <= 7;
+    final teksTenggat = tenggat == null
+        ? 'Tenggat belum diumumkan'
+        : sisa! < 0
+        ? 'Tenggat sudah lewat'
+        : sisa == 0
+        ? 'Tenggat hari ini'
+        : 'Tenggat $sisa hari lagi';
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: Warna.kartu,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Warna.container4),
+        borderRadius: BorderRadius.circular(Jari.kartu),
         boxShadow: bayanganKartu,
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(Jari.kartu),
+          onTap: onBuka,
+          child: Ink(
             padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Warna.kartu,
+              borderRadius: BorderRadius.circular(Jari.kartu),
+              border: Border.all(color: Warna.container4),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -68,155 +74,111 @@ class KartuBeasiswa extends StatelessWidget {
                       margin: const EdgeInsets.only(right: 12),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: Warna.container3,
+                        color: Warna.container2,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(
-                        _inisial(beasiswa.penyelenggara ?? beasiswa.nama),
-                        style: t.titleMedium?.copyWith(color: Warna.primary),
+                      child: Icon(
+                        Icons.star_border_rounded,
+                        size: 26,
+                        color: Warna.primary,
                       ),
                     ),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (meta.isNotEmpty)
-                            Text(
-                              meta.toUpperCase(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: t.labelSmall,
-                            ),
-                          const SizedBox(height: 4),
                           Text(
                             beasiswa.nama,
-                            style: t.titleMedium,
+                            style: t.titleMedium?.copyWith(
+                              fontSize: 15,
+                              height: 1.25,
+                            ),
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          if ((beasiswa.penyelenggara ?? '').isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              beasiswa.penyelenggara!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: t.bodySmall,
+                            ),
+                          ],
                         ],
                       ),
                     ),
                     if (onSimpan != null)
-                      IconButton(
-                        tooltip: tersimpan == true
+                      Semantics(
+                        label: tersimpan == true
                             ? 'Hapus dari tersimpan'
                             : 'Simpan beasiswa',
-                        onPressed: onSimpan,
-                        icon: Icon(
-                          tersimpan == true
-                              ? Icons.bookmark_rounded
-                              : Icons.bookmark_border_rounded,
-                          color: Warna.primary,
+                        button: true,
+                        child: Tooltip(
+                          message: tersimpan == true
+                              ? 'Hapus dari tersimpan'
+                              : 'Simpan beasiswa',
+                          child: InkResponse(
+                            onTap: onSimpan,
+                            radius: 24,
+                            child: Padding(
+                              padding: const EdgeInsets.all(2),
+                              child: Icon(
+                                tersimpan == true
+                                    ? Icons.bookmark_rounded
+                                    : Icons.bookmark_border_rounded,
+                                size: 26,
+                                color: tersimpan == true
+                                    ? Warna.primary
+                                    : Warna.muted,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 14),
                 Wrap(
-                  spacing: 8,
+                  spacing: 6,
                   runSpacing: 6,
                   children: [
-                    if (kategori != null) ChipStatus.kategori(kategori!),
                     if ((beasiswa.jenjang ?? '').isNotEmpty)
-                      ChipStatus(label: beasiswa.jenjang!),
-                    if (tenggat != null)
-                      ChipStatus.tenggat(
-                        sisa! < 0
-                            ? 'Sudah lewat'
-                            : '${teksSisaHari(tenggat, sekarang: sekarang)} (${tenggat.day} ${bulanPendek(tenggat.month)})',
-                        dekat: sisa <= 7,
-                      )
-                    else
-                      ChipStatus.tenggat(
-                        'Tenggat belum diumumkan',
-                        dekat: false,
-                      ),
+                      Lencana(beasiswa.jenjang!),
+                    if (kategori != null) Lencana.kategori(kategori!),
                   ],
                 ),
-                if (alasan.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  _Daftar(
-                    judul: 'Alasan',
-                    isi: alasan,
-                    ikon: Icons.check_circle_outline,
-                    warna: Warna.sukses,
-                  ),
-                ],
-                if (catatan.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  _Daftar(
-                    judul: 'Catatan kekurangan',
-                    isi: catatan,
-                    ikon: Icons.info_outline,
-                    warna: Warna.primary,
-                  ),
-                ],
-                const SizedBox(height: 14),
-                FilledButton.tonal(
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(46),
-                    backgroundColor: Warna.container3,
-                    foregroundColor: Warna.primary,
-                  ),
-                  onPressed: onBuka,
-                  child: Text(labelAksi),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: dekat ? Warna.error : Warna.primarySoft,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        teksTenggat,
+                        style: t.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: dekat ? Warna.error : Warna.ink,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+                for (final s in [...alasan, ...catatan]) ...[
+                  const SizedBox(height: 8),
+                  Text(s, style: t.bodySmall, maxLines: 3),
+                ],
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-String _inisial(String s) {
-  final h = s.trim();
-  return h.isEmpty ? '?' : h.characters.first.toUpperCase();
-}
-
-class _Daftar extends StatelessWidget {
-  const _Daftar({
-    required this.judul,
-    required this.isi,
-    required this.ikon,
-    required this.warna,
-  });
-
-  final String judul;
-  final List<String> isi;
-  final IconData ikon;
-  final Color warna;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Warna.container1,
-        borderRadius: BorderRadius.circular(Jari.kartuDalam),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(judul, style: t.titleSmall),
-          const SizedBox(height: 6),
-          for (final s in isi)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(ikon, size: 16, color: warna),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(s, style: t.bodyMedium)),
-                ],
-              ),
-            ),
-        ],
+        ),
       ),
     );
   }
