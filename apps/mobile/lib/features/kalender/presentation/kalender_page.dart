@@ -68,7 +68,7 @@ class _KalenderPageState extends ConsumerState<KalenderPage> {
               child: const Text('Batal'),
             ),
             FilledButton(
-              style: FilledButton.styleFrom(minimumSize: const Size(90, 40)),
+              style: FilledButton.styleFrom(minimumSize: const Size(90, 48)),
               onPressed: () => Navigator.pop(ctx, true),
               child: const Text('Simpan'),
             ),

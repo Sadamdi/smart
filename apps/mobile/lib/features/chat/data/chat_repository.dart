@@ -1,7 +1,15 @@
 import '../../../core/api_client.dart';
 
 class PesanChat {
-  const PesanChat({required this.id, required this.pesan, this.jawaban});
+  const PesanChat({
+    required this.id,
+    required this.pesan,
+    this.jawaban,
+    this.rujukan = const [],
+  });
+
+  /// Beasiswa yang menjadi sumber jawaban: pasangan id dan nama.
+  final List<({String id, String nama})> rujukan;
 
   final String id;
   final String pesan;
@@ -11,6 +19,13 @@ class PesanChat {
     id: j['id'] as String,
     pesan: j['pesan'] as String,
     jawaban: j['jawaban'] as String?,
+    rujukan: [
+      for (final x in (j['rujukan'] as List? ?? []))
+        (
+          id: (x as Map<String, dynamic>)['id'] as String,
+          nama: x['nama'] as String,
+        ),
+    ],
   );
 }
 

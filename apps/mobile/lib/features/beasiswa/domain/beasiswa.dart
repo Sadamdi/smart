@@ -44,11 +44,17 @@ class Persyaratan {
     required this.jenis,
     this.nilaiBatas,
     required this.dapatDikejar,
+    this.status,
+    this.catatan,
   });
 
   final String jenis;
   final Map<String, dynamic>? nilaiBatas;
   final bool dapatDikejar;
+
+  /// Penilaian terhadap profil pengguna: terpenuhi, dalam_toleransi, gagal, tidak_diketahui.
+  final String? status;
+  final String? catatan;
 
   factory Persyaratan.fromJson(Map<String, dynamic> j) => Persyaratan(
     jenis: j['jenis'] as String,
@@ -56,6 +62,8 @@ class Persyaratan {
         ? j['nilai_batas'] as Map<String, dynamic>
         : null,
     dapatDikejar: (j['dapat_dikejar'] ?? false) as bool,
+    status: j['status'] as String?,
+    catatan: j['catatan'] as String?,
   );
 
   static const _label = {
@@ -105,8 +113,14 @@ class BeasiswaDetail {
     this.tanggalDiperiksa,
     this.persyaratan = const [],
     this.berkasWajib = const [],
+    this.kategori,
+    this.alasan = const [],
+    this.catatanKekurangan = const [],
   });
 
+  final String? kategori;
+  final List<String> alasan;
+  final List<String> catatanKekurangan;
   final BeasiswaRingkas ringkas;
   final String? manfaat;
   final DateTime? tanggalDiperiksa;
@@ -124,6 +138,11 @@ class BeasiswaDetail {
     berkasWajib: [
       for (final x in (j['berkas_wajib'] as List? ?? []))
         BerkasWajib.fromJson(x as Map<String, dynamic>),
+    ],
+    kategori: j['kategori'] as String?,
+    alasan: [for (final x in (j['alasan'] as List? ?? [])) '$x'],
+    catatanKekurangan: [
+      for (final x in (j['catatan_kekurangan'] as List? ?? [])) '$x',
     ],
   );
 }
