@@ -77,7 +77,7 @@ void main() {
       t.getTopLeft(find.text('Beasiswa Dekat')).dy,
       lessThan(t.getTopLeft(find.text('Beasiswa Jauh')).dy),
     );
-    await t.tap(find.text('Lihat detail').first);
+    await t.tap(find.text('Beasiswa Dekat'));
     await t.pumpAndSettle();
     expect(s.hitung('GET /beasiswa/a'), 1);
   });
