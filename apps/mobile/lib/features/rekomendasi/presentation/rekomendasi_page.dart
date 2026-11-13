@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/dependensi.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/kartu_beasiswa.dart';
 import '../../../core/widgets/smart_app_bar.dart';
@@ -29,6 +30,12 @@ class _RekomendasiPageState extends State<RekomendasiPage> {
     _c.pastikan();
     _tersimpan.idTersimpan.pastikan();
   }
+
+  String _singkat(Kategori k) => switch (k) {
+    Kategori.memenuhi => 'Memenuhi',
+    Kategori.hampirMemenuhi => 'Hampir',
+    Kategori.belumMemenuhi => 'Belum',
+  };
 
   Future<void> _hitungUlang() async {
     final pesan = ScaffoldMessenger.of(context);
@@ -69,6 +76,18 @@ class _RekomendasiPageState extends State<RekomendasiPage> {
 
     return Scaffold(
       appBar: const SmartAppBar(),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Chatbot beasiswa',
+        onPressed: () => context.push('/chat'),
+        backgroundColor: Warna.primary,
+        foregroundColor: Warna.putih,
+        elevation: 0,
+        highlightElevation: 0,
+        focusElevation: 0,
+        hoverElevation: 0,
+        shape: const CircleBorder(side: BorderSide.none),
+        child: const Icon(Icons.chat_bubble_outline_rounded),
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
           await _c.muatSemua();
@@ -79,7 +98,7 @@ class _RekomendasiPageState extends State<RekomendasiPage> {
             Text('Rekomendasi Beasiswa', style: t.headlineMedium),
             const SizedBox(height: 4),
             Text(
-              'Dihasilkan Mesin Rekomendasi dari profil akademikmu. Setiap hasil menyertakan alasan dan catatan kekurangan.',
+              'Dihasilkan Mesin Rekomendasi dari profil akademikmu, lengkap dengan alasan.',
               style: t.bodyMedium,
             ),
             const SizedBox(height: 14),
@@ -95,29 +114,55 @@ class _RekomendasiPageState extends State<RekomendasiPage> {
                   for (final k in Kategori.values) ...[
                     const SizedBox(width: 8),
                     ChipFilter(
-                      label: hitung(k, k.label),
+                      label: hitung(k, _singkat(k)),
                       terpilih: kategori == k,
                       onTap: () => _c.pilih(k),
                     ),
                   ],
+                  const SizedBox(width: 8),
+                  Semantics(
+                    button: true,
+                    label: 'Hitung ulang',
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(17),
+                      onTap: menghitung ? null : _hitungUlang,
+                      child: Container(
+                        height: 34,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        alignment: Alignment.center,
+                        child: menghitung
+                            ? const SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.refresh,
+                                    size: 16,
+                                    color: Warna.primary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Hitung ulang',
+                                    style: t.labelLarge?.copyWith(
+                                      fontSize: 13,
+                                      color: Warna.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: menghitung ? null : _hitungUlang,
-                icon: menghitung
-                    ? const SizedBox(
-                        height: 16,
-                        width: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.refresh, size: 18),
-                label: const Text('Hitung ulang'),
-              ),
-            ),
+            const SizedBox(height: 16),
             nilai.when(
               loading: () => const Padding(
                 padding: EdgeInsets.only(top: 60),
@@ -158,7 +203,6 @@ class _RekomendasiPageState extends State<RekomendasiPage> {
                           r.beasiswa.id,
                           tersimpan: tersimpan.contains(r.beasiswa.id),
                         ),
-                        labelAksi: 'Lihat detail dan syarat',
                         onBuka: () =>
                             context.push('/beasiswa/${r.beasiswa.id}'),
                       ),

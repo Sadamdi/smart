@@ -92,12 +92,14 @@ void main() {
         expect(find.text('Beasiswa Uji'), findsOneWidget);
         expect(find.text('Hampir memenuhi'), findsOneWidget);
         expect(find.text('Jenjang S1 sesuai'), findsOneWidget);
-        expect(find.text('Catatan kekurangan'), findsOneWidget);
-        expect(find.textContaining('Tersisa 6 hari'), findsOneWidget);
+        expect(find.text('IPK kurang 0,10 dari syarat 3,50'), findsOneWidget);
+        expect(find.text('Tenggat 6 hari lagi'), findsOneWidget);
         for (final w in t.widgetList<Text>(find.byType(Text))) {
           expect(w.data ?? '', isNot(matches(_larangan)));
         }
-        await t.tap(find.text('Lihat detail'));
+        // Kartu seluruhnya dapat diketuk; tidak ada tombol "Lihat detail" terpisah.
+        expect(find.text('Lihat detail'), findsNothing);
+        await t.tap(find.text('Beasiswa Uji'));
         expect(dibuka, isTrue);
       },
     );
@@ -196,11 +198,12 @@ void main() {
       );
       await _pasang(t, s);
       expect(find.text('Halo, Nabila'), findsOneWidget);
-      expect(find.text('Memenuhi'), findsOneWidget);
+      // 'Memenuhi' muncul dua kali: label angka di hero dan lencana kategori pada kartu.
+      expect(find.text('Memenuhi'), findsNWidgets(2));
       expect(find.text('Hampir memenuhi'), findsOneWidget);
       expect(find.text('4'), findsOneWidget);
       await t.scrollUntilVisible(
-        find.text('Tenggat pendaftaran'),
+        find.text('Tenggat Terdekat'),
         300,
         scrollable: find.byType(Scrollable).first,
       );
@@ -351,8 +354,8 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Semua (7)'), findsOneWidget);
-      await t.ensureVisible(find.text('Hampir memenuhi (1)'));
-      await t.tap(find.text('Hampir memenuhi (1)'));
+      await t.ensureVisible(find.text('Hampir (1)'));
+      await t.tap(find.text('Hampir (1)'));
       await t.pumpAndSettle();
       expect(
         s.terakhir('GET /rekomendasi').queryParameters['kategori'],

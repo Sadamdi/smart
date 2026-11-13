@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/state_widgets.dart';
+import '../../../core/widgets/tombol_bulat.dart';
 import 'chat_controller.dart';
 
 class ChatPage extends StatefulWidget {
@@ -51,13 +53,8 @@ class _ChatPageState extends State<ChatPage> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: saya ? Warna.primary : Warna.kartu,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(18),
-            topRight: const Radius.circular(18),
-            bottomLeft: Radius.circular(saya ? 18 : 4),
-            bottomRight: Radius.circular(saya ? 4 : 18),
-          ),
-          boxShadow: saya ? null : bayanganKartu,
+          borderRadius: BorderRadius.circular(18),
+          border: saya ? null : Border.all(color: Warna.container4),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,7 +62,11 @@ class _ChatPageState extends State<ChatPage> {
           children: [
             Text(
               teks,
-              style: saya ? const TextStyle(color: Colors.white) : gaya,
+              style: (gaya ?? Theme.of(context).textTheme.bodyMedium)?.copyWith(
+                fontSize: 13,
+                height: 1.45,
+                color: saya ? Colors.white : null,
+              ),
             ),
             if (rujukan.isNotEmpty) ...[
               const SizedBox(height: 8),
@@ -93,6 +94,11 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
+  OutlineInputBorder _pil(Color c, [double w = 1]) => OutlineInputBorder(
+    borderRadius: BorderRadius.circular(26),
+    borderSide: BorderSide(color: c, width: w),
+  );
+
   @override
   Widget build(BuildContext context) => Obx(() => _bangun(context));
 
@@ -105,12 +111,20 @@ class _ChatPageState extends State<ChatPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chatbot AI'),
+        leadingWidth: 56,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: TombolBulat.kembali(context),
+        ),
+        title: Text(
+          'Chatbot Beasiswa',
+          style: t.titleLarge?.copyWith(fontSize: 18),
+        ),
         actions: [
           IconButton(
             tooltip: 'Hapus riwayat',
             onPressed: _c.hapusRiwayat,
-            icon: const Icon(Icons.delete_outline),
+            icon: Icon(Icons.delete_outline, color: Warna.muted),
           ),
         ],
       ),
@@ -157,7 +171,7 @@ class _ChatPageState extends State<ChatPage> {
               child: Text(galat, style: TextStyle(color: Warna.error)),
             ),
           SizedBox(
-            height: 44,
+            height: 42,
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -165,9 +179,10 @@ class _ChatPageState extends State<ChatPage> {
                 for (final q in _Saran.daftar)
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
-                    child: ActionChip(
-                      label: Text(q),
-                      onPressed: () {
+                    child: ChipFilter(
+                      label: q,
+                      terpilih: false,
+                      onTap: () {
                         _isi.text = q;
                         _kirimPesan();
                       },
@@ -188,13 +203,29 @@ class _ChatPageState extends State<ChatPage> {
                       maxLines: 4,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _kirimPesan(),
-                      decoration: const InputDecoration(
-                        hintText: 'Tulis pertanyaan',
+                      decoration: InputDecoration(
+                        hintText: 'Tulis pertanyaanmu',
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                        border: _pil(Warna.outline),
+                        enabledBorder: _pil(Warna.outline),
+                        focusedBorder: _pil(Warna.primary, 2),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   IconButton.filled(
+                    tooltip: 'Kirim',
+                    style: IconButton.styleFrom(
+                      backgroundColor: Warna.primary,
+                      foregroundColor: Warna.putih,
+                      minimumSize: const Size(48, 52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
                     onPressed: kirim ? null : _kirimPesan,
                     icon: kirim
                         ? const SizedBox(
@@ -223,9 +254,9 @@ class _ChatPageState extends State<ChatPage> {
 
 class _Saran {
   static const daftar = [
-    'Beasiswa apa yang tenggatnya paling dekat?',
     'Syarat IPK',
     'Berkas apa saja?',
+    'Tenggat minggu ini',
     'Cocok untuk saya?',
   ];
 }

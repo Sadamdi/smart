@@ -241,3 +241,51 @@ def test_penilaian_detail_memakai_kolom_jenjang():
     assert n.kelayakan.kategori == BELUM
     assert n.status_syarat[1] == "gagal"  # syarat tambahan berindeks setelah syarat tercatat
     assert nilai_untuk(syarat, _profil(jenjang="S3"), HARI).kelayakan.kategori == MEMENUHI
+
+
+def test_hitung_ulang_memakai_kunci_per_pengguna(monkeypatch):
+    """Hitung ulang yang serentak (Beranda memuat beberapa daftar sekaligus) diserialkan per pengguna."""
+    from app.services import rekomendasi as r
+
+    kunci: list[str] = []
+
+    class Dialek:
+        name = "postgresql"
+
+    class Ikat:
+        dialect = Dialek()
+
+    class Sesi:
+        def get_bind(self):
+            return Ikat()
+
+        def execute(self, stmt, params=None):
+            kunci.append(str(params["k"]))
+
+    class P:
+        id = "u-1"
+
+    r._kunci_hitung(Sesi(), P())
+    assert kunci == ["u-1"]
+
+
+def test_kunci_hitung_dilewati_di_basis_data_lain():
+    from app.services import rekomendasi as r
+
+    class Dialek:
+        name = "sqlite"
+
+    class Ikat:
+        dialect = Dialek()
+
+    class Sesi:
+        def get_bind(self):
+            return Ikat()
+
+        def execute(self, *a, **k):
+            raise AssertionError("tidak boleh dipanggil")
+
+    class P:
+        id = "u-1"
+
+    r._kunci_hitung(Sesi(), P())
