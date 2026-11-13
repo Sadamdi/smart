@@ -148,6 +148,13 @@ class ProfilIn(BaseModel):
     catatan_tambahan: Annotated[str, StringConstraints(strip_whitespace=True, max_length=1000)] | None = None
     profil_lanjutan: ProfilLanjutan | None = None
 
+    @field_validator("tanggal_lahir")
+    @classmethod
+    def _lahir(cls, v: date | None) -> date | None:
+        if v is not None and not (date(1900, 1, 1) <= v <= date.today()):
+            raise ValueError("Tanggal lahir tidak masuk akal (harus antara 1900 dan hari ini)")
+        return v
+
     @field_validator("negara_domisili")
     @classmethod
     def _negara(cls, v: str | None) -> str | None:
