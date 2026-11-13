@@ -179,6 +179,70 @@ def test_masalah_tautan_atau_jenjang():
     assert m("https://x.org/a", "Beasiswa JIS untuk pelajar kelas 8") is not None
 
 
+# --- Perbaikan dari uji 80 skenario (11 November 2026) ---
+
+
+@pytest.mark.parametrize("kunci", ["toefl", "TOEFL", " Toefl "])
+def test_skor_bahasa_kunci_tidak_peka_huruf_besar(kunci):
+    toefl = {"jenis": "toefl", "nilai": 500}
+    h = nilai_kelayakan([("sertifikat_bahasa", toefl)], _profil(skor_bahasa={kunci: 550}), HARI)
+    assert h.kategori == MEMENUHI
+
+
+@pytest.mark.parametrize("nilai", ["belum ada", "", "n/a", None, float("nan")])
+def test_skor_bahasa_bukan_angka_tidak_menggalatkan(nilai):
+    toefl = {"jenis": "toefl", "nilai": 500}
+    h = nilai_kelayakan([("sertifikat_bahasa", toefl)], _profil(skor_bahasa={"toefl": nilai}), HARI)
+    assert h.kategori == HAMPIR  # dianggap belum punya skor, bukan galat dan bukan memenuhi
+
+
+def test_skor_bahasa_teks_angka_dibaca():
+    ielts = {"jenis": "ielts", "nilai": 6.5}
+    assert nilai_kelayakan([("sertifikat_bahasa", ielts)], _profil(skor_bahasa={"ielts": "7,0"}), HARI).kategori == MEMENUHI
+
+
+@pytest.mark.parametrize("lahir", ["2999-01-01", "1800-05-05"])
+def test_tanggal_lahir_tidak_masuk_akal_ditolak(lahir):
+    from pydantic import ValidationError
+
+    from app.schemas.pengguna import ProfilIn
+
+    with pytest.raises(ValidationError):
+        ProfilIn(tanggal_lahir=lahir)
+    assert ProfilIn(tanggal_lahir="2003-04-05").tanggal_lahir == date(2003, 4, 5)
+
+
+def test_kolom_jenjang_beasiswa_menjadi_syarat_bila_tanpa_baris_jenjang():
+    from app.rekomendasi.kelayakan import dengan_jenjang_beasiswa
+
+    ipk = {"nilai": 3.0}
+    s1 = nilai_kelayakan(dengan_jenjang_beasiswa([("ipk_minimum", ipk)], ["S1"]), _profil(jenjang="S1"), HARI)
+    s3 = nilai_kelayakan(dengan_jenjang_beasiswa([("ipk_minimum", ipk)], ["S1"]), _profil(jenjang="S3"), HARI)
+    assert s1.kategori == MEMENUHI
+    assert s3.kategori == BELUM  # sebelumnya memenuhi karena kolom jenjang tidak dipakai
+
+
+def test_kolom_jenjang_tidak_menimpa_syarat_jenjang_tercatat_dan_mengabaikan_nilai_asing():
+    from app.rekomendasi.kelayakan import dengan_jenjang_beasiswa
+
+    tercatat = [("jenjang", {"nilai": ["S2"]})]
+    assert dengan_jenjang_beasiswa(tercatat, ["S1"]) == tercatat
+    assert dengan_jenjang_beasiswa([], ["Sarjana", ""]) == []
+    assert dengan_jenjang_beasiswa([], None) == []
+
+
+def test_penilaian_detail_memakai_kolom_jenjang():
+    from types import SimpleNamespace
+
+    from app.services.beasiswa import nilai_untuk
+
+    syarat = [SimpleNamespace(jenis="ipk_minimum", nilai_batas={"nilai": 3.0})]
+    n = nilai_untuk(syarat, _profil(jenjang="S3"), HARI, ["S1"])
+    assert n.kelayakan.kategori == BELUM
+    assert n.status_syarat[1] == "gagal"  # syarat tambahan berindeks setelah syarat tercatat
+    assert nilai_untuk(syarat, _profil(jenjang="S3"), HARI).kelayakan.kategori == MEMENUHI
+
+
 def test_hitung_ulang_memakai_kunci_per_pengguna(monkeypatch):
     """Hitung ulang yang serentak (Beranda memuat beberapa daftar sekaligus) diserialkan per pengguna."""
     from app.services import rekomendasi as r

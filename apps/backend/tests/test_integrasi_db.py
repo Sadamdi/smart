@@ -164,3 +164,28 @@ def test_kolom_versi_token_ada_di_basis_data(sesi):
         text("select 1 from information_schema.columns where table_name='pengguna' and column_name='versi_token'")
     ).scalar()
     assert ada == 1
+
+
+def test_buat_pengingat_menghitung_baris_baru_saja(sesi):
+    """rowcount ON CONFLICT DO NOTHING bisa -1 pada psycopg; hitungan harus 1 pertama kali dan 0 sesudahnya."""
+    from app.models import Pengguna
+    from app.services import aktivitas as akt
+
+    hari = date.today()
+    p = Pengguna(email=f"uji-{uuid.uuid4().hex[:8]}@uji.invalid", kata_sandi="!bukan-hash!", nama="Uji")
+    sm = Sumber(nama="uji", url=f"https://uji.invalid/{uuid.uuid4().hex}", jenis="input_manual")
+    sesi.add_all([p, sm])
+    sesi.flush()
+    b = Beasiswa(
+        sumber_id=sm.id,
+        nama="Uji",
+        tautan_resmi="https://uji.invalid/b",
+        status="terbit",
+        tenggat=hari + timedelta(days=3),
+        sidik_isi="x",
+    )
+    sesi.add(b)
+    sesi.flush()
+    akt.catat_interaksi(sesi, p, b.id, "simpan", None, hari)
+    assert akt.buat_pengingat(sesi, p, hari) == 1
+    assert akt.buat_pengingat(sesi, p, hari) == 0
