@@ -4,7 +4,9 @@ import 'package:get/get.dart';
 
 import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/state_widgets.dart';
+import '../../../core/widgets/tombol_bulat.dart';
 import '../domain/dokumen.dart';
 import 'dokumen_controller.dart';
 
@@ -64,35 +66,53 @@ class _DokumenPageState extends State<DokumenPage> {
     final pilihanJenis = _c.jenis.value;
     final kirim = _c.mengirim.value;
     return Scaffold(
-      appBar: AppBar(title: const Text('Dokumen Saya')),
+      appBar: AppBar(
+        leadingWidth: 56,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: TombolBulat.kembali(context),
+        ),
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
         children: [
+          Text('Dokumen Saya', style: t.headlineMedium),
+          const SizedBox(height: 6),
           Text(
-            'Unggah CV atau sertifikat (PDF, DOCX, TXT, PNG, JPG, maksimal 5 MB). Sistem membaca IPK, semester, dan skor bahasa. Gambar dibaca oleh layanan AI.',
+            'Unggah transkrip, CV, atau sertifikat agar IPK dan skor bahasa terisi otomatis.',
             style: t.bodyMedium,
           ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: pilihanJenis,
-            decoration: const InputDecoration(labelText: 'Jenis dokumen'),
-            items: [
-              for (final e in _jenis.entries)
-                DropdownMenuItem(value: e.key, child: Text(e.value)),
-            ],
-            onChanged: (v) => _c.jenis.value = v ?? 'cv',
+          const SizedBox(height: 4),
+          Text(
+            'PDF, DOCX, TXT, PNG, atau JPG, maksimal 5 MB. Gambar dibaca oleh layanan AI.',
+            style: t.bodySmall,
+          ),
+          const SizedBox(height: 16),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final e in _jenis.entries) ...[
+                  ChipFilter(
+                    label: e.value,
+                    terpilih: pilihanJenis == e.key,
+                    onTap: () => _c.jenis.value = e.key,
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ],
+            ),
           ),
           const SizedBox(height: 12),
-          FilledButton.icon(
+          FilledButton(
             onPressed: kirim ? null : _unggah,
-            icon: kirim
+            child: kirim
                 ? const SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.upload_file_rounded),
-            label: Text(kirim ? 'Mengunggah' : 'Pilih berkas'),
+                : const Text('Unggah Dokumen'),
           ),
           const SizedBox(height: 20),
           nilai.when(
@@ -136,12 +156,21 @@ class _KartuDokumen extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final terbaca = d.statusBaca == 'selesai';
+    final gagal = d.statusBaca == 'gagal';
+    final keterangan = terbaca
+        ? (d.ringkasan.isEmpty
+              ? 'Terbaca'
+              : 'Terbaca: ${d.ringkasan.join(', ')}')
+        : gagal
+        ? 'Belum terbaca, isi profil manual'
+        : 'Sedang dibaca';
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.fromLTRB(14, 14, 4, 14),
+      padding: const EdgeInsets.fromLTRB(12, 12, 4, 12),
       decoration: BoxDecoration(
         color: Warna.kartu,
         borderRadius: BorderRadius.circular(Jari.kartu),
+        border: Border.all(color: Warna.container4),
         boxShadow: bayanganKartu,
       ),
       child: Row(
@@ -149,37 +178,49 @@ class _KartuDokumen extends StatelessWidget {
         children: [
           Container(
             width: 44,
-            height: 44,
+            height: 52,
             decoration: BoxDecoration(
               color: Warna.container2,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(Icons.description_rounded, color: Warna.primary),
+            child: Icon(Icons.description_outlined, color: Warna.primary),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(d.namaBerkas, style: t.titleSmall),
-                const SizedBox(height: 2),
                 Text(
-                  '$jenis · ${terbaca ? 'Terbaca' : 'Belum terbaca, isi profil manual'}',
-                  style: t.bodySmall?.copyWith(
-                    color: terbaca ? Warna.sukses : Warna.muted,
-                  ),
+                  d.namaBerkas,
+                  style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
-                if (d.ringkasan.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(d.ringkasan.join(', '), style: t.bodySmall),
-                ],
+                const SizedBox(height: 2),
+                Text('$jenis · $keterangan', style: t.bodySmall),
+                const SizedBox(height: 6),
+                terbaca
+                    ? Lencana(
+                        'Selesai',
+                        latar: Warna.suksesSoft,
+                        warna: Warna.sukses,
+                      )
+                    : gagal
+                    ? Lencana(
+                        'Gagal',
+                        latar: Warna.errorSoft,
+                        warna: Warna.error,
+                      )
+                    : Lencana(
+                        'Menunggu',
+                        latar: Warna.container4,
+                        warna: Warna.navy,
+                      ),
               ],
             ),
           ),
           IconButton(
             tooltip: 'Hapus',
             onPressed: onHapus,
-            icon: const Icon(Icons.delete_outline_rounded),
+            icon: Icon(Icons.delete_outline_rounded, color: Warna.muted),
           ),
         ],
       ),

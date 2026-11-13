@@ -165,8 +165,11 @@ def buat_pengingat(sesi: Session, p: Pengguna, hari_ini: date) -> int:
                 pg_insert(Notifikasi)
                 .values(pengguna_id=p.id, beasiswa_id=b.id, jenis="tenggat", kanal="push", tanggal_acuan=b.tenggat)
                 .on_conflict_do_nothing(constraint="uq_notifikasi_pengingat")
+                .returning(
+                    Notifikasi.id
+                )  # rowcount pada ON CONFLICT DO NOTHING bisa -1 (psycopg), jadi hitung baris kembali
             )
-            baru += hasil.rowcount or 0
+            baru += len(hasil.all())
     return baru
 
 

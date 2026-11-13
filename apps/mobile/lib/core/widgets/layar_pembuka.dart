@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 /// Animasi pembuka, disusun dari potongan logo yang bergerak sendiri-sendiri: topi toga jatuh dan memantul,
 /// alasnya naik, jumbai turun, bintang pemandu muncul, gelombang pantau merambat keluar, lalu huruf SMART
 /// muncul satu per satu. Hanya visual, tidak menahan sentuhan.
@@ -84,40 +86,48 @@ class _IsiPembuka extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tag = _tahap(ms, 1900, 2500, Curves.easeOutCubic);
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF2F6FC0), Color(0xFF143F7C)],
-        ),
-      ),
+    return ColoredBox(
+      color: Warna.surface,
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              width: 200,
-              height: 160,
-              child: CustomPaint(painter: _PainterLogo(ms)),
+            Container(
+              width: 96,
+              height: 96,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF2F6FC0), Color(0xFF143F7C)],
+                ),
+              ),
+              child: SizedBox(
+                width: 87,
+                height: 60,
+                child: CustomPaint(painter: _PainterLogo(ms)),
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Row(
               mainAxisSize: MainAxisSize.min,
-              children: [for (var i = 0; i < _huruf.length; i++) _satuHuruf(i)],
+              children: [
+                for (var i = 0; i < _huruf.length; i++) _satuHuruf(context, i),
+              ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Opacity(
               opacity: tag,
               child: Transform.translate(
                 offset: Offset(0, 8 * (1 - tag)),
                 child: Text(
                   'Beasiswa yang tepat untukmu',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontSize: 14,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontSize: 13,
+                    color: Warna.muted,
                     decoration: TextDecoration.none,
-                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -128,7 +138,7 @@ class _IsiPembuka extends StatelessWidget {
     );
   }
 
-  Widget _satuHuruf(int i) {
+  Widget _satuHuruf(BuildContext context, int i) {
     final mulai = 1150.0 + i * 90;
     final v = _tahap(ms, mulai, mulai + 450, Curves.easeOutBack);
     final f = _tahap(ms, mulai, mulai + 220, Curves.easeOut);
@@ -140,11 +150,11 @@ class _IsiPembuka extends StatelessWidget {
           scale: 0.8 + 0.2 * v,
           child: Text(
             _huruf[i],
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 34,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 5,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              color: Warna.navy,
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 2,
               decoration: TextDecoration.none,
             ),
           ),

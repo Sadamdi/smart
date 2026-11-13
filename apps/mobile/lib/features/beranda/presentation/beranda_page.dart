@@ -5,13 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../../core/format.dart';
 import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/kartu_beasiswa.dart';
 import '../../../core/widgets/metrik_dan_progres.dart';
 import '../../../core/widgets/smart_app_bar.dart';
 import '../../../core/widgets/state_widgets.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../kalender/domain/kalender.dart';
+import '../../beasiswa/presentation/simpan_aksi.dart';
+import '../../beasiswa/presentation/tersimpan_controller.dart';
 import 'beranda_controller.dart';
 
 class BerandaPage extends StatefulWidget {
@@ -23,11 +24,13 @@ class BerandaPage extends StatefulWidget {
 
 class _BerandaPageState extends State<BerandaPage> {
   final _c = Get.find<BerandaController>();
+  final _simpan = Get.find<TersimpanController>();
 
   @override
   void initState() {
     super.initState();
     _c.buka();
+    _simpan.idTersimpan.pastikan();
   }
 
   @override
@@ -109,7 +112,7 @@ class _BerandaPageState extends State<BerandaPage> {
                     _Angka(
                       '${r.belumMemenuhi}',
                       'Belum memenuhi',
-                      Colors.white70,
+                      Warna.heroTeks,
                     ),
                   ],
                 ),
@@ -150,17 +153,18 @@ class _BerandaPageState extends State<BerandaPage> {
                   kategori: r.kategori,
                   alasan: r.alasan,
                   catatan: r.catatanKekurangan,
-                  labelAksi: 'Lihat detail dan syarat',
+                  tersimpan: _simpan.ids.contains(r.beasiswa.id),
+                  onSimpan: () => ubahSimpan(
+                    context,
+                    r.beasiswa.id,
+                    tersimpan: _simpan.ids.contains(r.beasiswa.id),
+                  ),
                   onBuka: () => context.push('/beasiswa/${r.beasiswa.id}'),
                 );
               },
             ),
             const SizedBox(height: 20),
-            JudulBagian(
-              'Tenggat Terdekat',
-              aksi: 'Lihat kalender',
-              onAksi: () => context.go('/kalender'),
-            ),
+            const JudulBagian('Tenggat Terdekat'),
             const SizedBox(height: 8),
             kalender.when(
               loading: () => const SizedBox(height: 100, child: MemuatState()),
@@ -197,33 +201,6 @@ class _BerandaPageState extends State<BerandaPage> {
                 );
               },
             ),
-            const SizedBox(height: 20),
-            const JudulBagian('Jalan Pintas'),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                _Pintas(
-                  ikon: Icons.explore_outlined,
-                  label: 'Jelajah',
-                  onTap: () => context.go('/jelajah'),
-                ),
-                _Pintas(
-                  ikon: Icons.auto_awesome_outlined,
-                  label: 'Rekomendasi',
-                  onTap: () => context.go('/rekomendasi'),
-                ),
-                _Pintas(
-                  ikon: Icons.calendar_month_outlined,
-                  label: 'Kalender',
-                  onTap: () => context.go('/kalender'),
-                ),
-                _Pintas(
-                  ikon: Icons.person_outline,
-                  label: 'Profil',
-                  onTap: () => context.go('/profil'),
-                ),
-              ],
-            ),
           ],
         ),
       ),
@@ -253,13 +230,9 @@ class _Hero extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     final lengkap = total > 0 && terisi == total;
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF2F6FC0), Color(0xFF143F7C)],
-        ),
+        color: Warna.hero,
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
@@ -275,23 +248,32 @@ class _Hero extends StatelessWidget {
               ),
               child: Text(
                 info!,
-                style: t.labelMedium?.copyWith(color: Colors.white),
+                style: t.labelMedium?.copyWith(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           Text(
             'Halo, $nama',
-            style: t.headlineMedium?.copyWith(color: Colors.white),
+            style: t.headlineMedium?.copyWith(
+              color: Colors.white,
+              fontSize: 28,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             'Lihat beasiswa yang paling sesuai dengan profilmu dan tenggat yang perlu dikejar.',
             style: t.bodyMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.85),
+              color: Warna.heroTeks,
+              fontSize: 13,
+              height: 1.45,
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           ringkasan,
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
             decoration: BoxDecoration(
@@ -306,7 +288,11 @@ class _Hero extends StatelessWidget {
                     children: [
                       Text(
                         'Kelengkapan Profil',
-                        style: t.labelLarge?.copyWith(color: Colors.white),
+                        style: t.labelLarge?.copyWith(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       ClipRRect(
@@ -323,13 +309,22 @@ class _Hero extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         '$terisi dari $total data utama terisi',
-                        style: t.bodySmall?.copyWith(color: Colors.white70),
+                        style: t.bodySmall?.copyWith(
+                          color: Warna.heroTeks,
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 TextButton(
-                  style: TextButton.styleFrom(foregroundColor: Colors.white),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    textStyle: t.labelLarge?.copyWith(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   onPressed: onLengkapi,
                   child: Text(lengkap ? 'Lihat' : 'Lengkapi'),
                 ),
@@ -357,7 +352,7 @@ class _Angka extends StatelessWidget {
         children: [
           Text(
             angka,
-            style: t.headlineMedium?.copyWith(color: warna, fontSize: 32),
+            style: t.headlineMedium?.copyWith(color: warna, fontSize: 30),
           ),
           const SizedBox(height: 2),
           SizedBox(
@@ -366,7 +361,10 @@ class _Angka extends StatelessWidget {
               label,
               textAlign: TextAlign.center,
               maxLines: 2,
-              style: t.bodySmall?.copyWith(color: Colors.white),
+              style: t.bodySmall?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -394,98 +392,48 @@ class _BarisTenggat extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     final sisa = sisaHari(acara.tanggal);
     final dekat = sisa <= 7;
+    final warna = dekat ? Warna.error : Warna.primary;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Warna.kartu,
         borderRadius: BorderRadius.circular(Jari.kartu),
+        border: Border.all(color: Warna.container4),
         boxShadow: bayanganKartu,
       ),
       child: Row(
         children: [
           Container(
-            width: 52,
-            padding: const EdgeInsets.symmetric(vertical: 6),
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
               color: dekat ? Warna.errorSoft : Warna.container3,
-              borderRadius: BorderRadius.circular(Jari.kartuDalam),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Column(
-              children: [
-                Text(
-                  bulanPendek(acara.tanggal.month).toUpperCase(),
-                  style: t.labelSmall?.copyWith(
-                    color: dekat ? Warna.error : Warna.muted,
-                  ),
-                ),
-                Text(
-                  '${acara.tanggal.day}',
-                  style: t.titleLarge?.copyWith(
-                    color: dekat ? Warna.error : Warna.navy,
-                  ),
-                ),
-              ],
-            ),
+            child: Icon(Icons.calendar_today_outlined, size: 20, color: warna),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(acara.judul, style: t.titleSmall),
+                Text(
+                  acara.judul,
+                  style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 2),
-                Text('Tenggat pendaftaran', style: t.bodySmall),
+                Text(
+                  sisa == 0 ? 'Tenggat hari ini' : 'Tenggat $sisa hari lagi',
+                  style: t.bodySmall?.copyWith(
+                    color: dekat ? Warna.error : Warna.ink,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
-          ChipStatus.tenggat(
-            sisa == 0 ? 'Hari ini' : '$sisa hari',
-            dekat: dekat,
-          ),
         ],
-      ),
-    );
-  }
-}
-
-class _Pintas extends StatelessWidget {
-  const _Pintas({required this.ikon, required this.label, required this.onTap});
-
-  final IconData ikon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(Jari.kartu),
-        onTap: onTap,
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: Warna.kartu,
-            borderRadius: BorderRadius.circular(Jari.kartu),
-            boxShadow: bayanganKartu,
-          ),
-          child: Column(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: Warna.container3,
-                child: Icon(ikon, color: Warna.primary, size: 20),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.labelSmall
-                    ?.copyWith(color: Warna.navy, letterSpacing: 0),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

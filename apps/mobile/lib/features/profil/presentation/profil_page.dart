@@ -490,7 +490,7 @@ class _ProfilPageState extends State<ProfilPage> {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
             Text('Profil Saya', style: t.headlineMedium),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             _HeaderProfil(
               nama: p.nama,
               email: p.email,
@@ -500,7 +500,7 @@ class _ProfilPageState extends State<ProfilPage> {
             const SizedBox(height: 16),
             if (!_ubah) ...[
               _KartuData(
-                judul: 'Data akademik',
+                judul: 'Data utama',
                 baris: [
                   ('Kampus', p.kampus),
                   ('Jenis kampus', p.jenisKampus),
@@ -569,11 +569,14 @@ class _ProfilPageState extends State<ProfilPage> {
             const SizedBox(height: 16),
             Material(
               color: Warna.kartu,
-              borderRadius: BorderRadius.circular(Jari.kartu),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(color: Warna.container4),
+              ),
               clipBehavior: Clip.antiAlias,
               child: Column(
                 children: [
-                  for (final (i, m) in [
+                  for (final m in [
                     (
                       Icons.badge_outlined,
                       'Profil Lanjutan',
@@ -587,20 +590,25 @@ class _ProfilPageState extends State<ProfilPage> {
                     (Icons.description_outlined, 'Dokumen Saya', '/dokumen'),
                     (Icons.chat_bubble_outline, 'Chatbot AI', '/chat'),
                     (Icons.settings_outlined, 'Pengaturan', '/pengaturan'),
-                  ].indexed) ...[
-                    if (i > 0) const Divider(indent: 64),
+                  ]) ...[
                     ListTile(
+                      dense: true,
+                      minTileHeight: 48,
                       leading: Container(
-                        width: 36,
-                        height: 36,
+                        width: 32,
+                        height: 32,
                         decoration: BoxDecoration(
                           color: Warna.container3,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(m.$1, size: 20, color: Warna.primary),
                       ),
-                      title: Text(m.$2),
-                      trailing: const Icon(Icons.chevron_right),
+                      title: Text(
+                        m.$2,
+                        style: t.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                       onTap: () => context.push(m.$3),
                     ),
                   ],
@@ -699,12 +707,8 @@ class _HeaderProfil extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF2F6FC0), Color(0xFF143F7C)],
-        ),
-        borderRadius: BorderRadius.circular(Jari.kartu),
+        color: Warna.hero,
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -713,7 +717,7 @@ class _HeaderProfil extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundColor: Colors.white.withValues(alpha: 0.18),
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
                 child: Text(
                   huruf,
                   style: t.titleLarge?.copyWith(color: Warna.putih),
@@ -726,12 +730,16 @@ class _HeaderProfil extends StatelessWidget {
                   children: [
                     Text(
                       nama,
-                      style: t.titleLarge?.copyWith(color: Warna.putih),
+                      style: t.titleLarge?.copyWith(
+                        color: Warna.putih,
+                        fontSize: 18,
+                      ),
                     ),
                     Text(
                       email,
                       style: t.bodyMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.85),
+                        color: Warna.heroTeks,
+                        fontSize: 13,
                       ),
                     ),
                   ],
@@ -743,7 +751,8 @@ class _HeaderProfil extends StatelessWidget {
           Text(
             'Kelengkapan data utama: $terisi dari $total',
             style: t.bodySmall?.copyWith(
-              color: Colors.white.withValues(alpha: 0.9),
+              color: Warna.putih,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 6),
@@ -776,13 +785,14 @@ class _KartuData extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
       decoration: BoxDecoration(
         color: Warna.kartu,
-        borderRadius: BorderRadius.circular(Jari.kartu),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Warna.container4),
         boxShadow: bayanganKartu,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(judul, style: t.labelSmall),
+          Text(judul.toUpperCase(), style: t.labelSmall),
           const SizedBox(height: 4),
           for (final (i, b) in baris.indexed) ...[
             if (i > 0) const Divider(),
@@ -791,7 +801,13 @@ class _KartuData extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(flex: 4, child: Text(b.$1, style: t.bodySmall)),
+                  Expanded(
+                    flex: 4,
+                    child: Text(
+                      b.$1,
+                      style: t.bodySmall?.copyWith(fontSize: 13),
+                    ),
+                  ),
                   Expanded(
                     flex: 6,
                     child: Text(
@@ -799,7 +815,7 @@ class _KartuData extends StatelessWidget {
                       textAlign: TextAlign.end,
                       style: (b.$2 == null || b.$2!.isEmpty)
                           ? t.bodySmall
-                          : t.titleSmall,
+                          : t.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],

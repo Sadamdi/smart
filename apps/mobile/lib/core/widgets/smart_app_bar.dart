@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/auth/presentation/auth_controller.dart';
 import '../../features/notifikasi/presentation/notifikasi_controller.dart';
-import '../theme/app_theme.dart';
 import 'logo_smart.dart';
+import 'tombol_bulat.dart';
 
-/// Kepala halaman tab: logo SMART, program studi, lonceng notifikasi, avatar.
+/// Kepala halaman tab: logo SMART dan lonceng notifikasi dalam lingkaran.
 class SmartAppBar extends StatefulWidget implements PreferredSizeWidget {
   const SmartAppBar({super.key});
 
@@ -33,57 +32,32 @@ class _SmartAppBarState extends State<SmartAppBar> {
   }
 
   Widget _bangun(BuildContext context, TextTheme t) {
-    final p = Get.find<AuthController>().pengguna;
     final belumDibaca = Get.find<NotifikasiController>().belumDibaca;
-    final sub = [
-      if ((p?.jenjang ?? '').isNotEmpty) p!.jenjang!,
-      if ((p?.programStudi ?? '').isNotEmpty) p!.programStudi!,
-    ].join(' ');
     return AppBar(
       toolbarHeight: 64,
       titleSpacing: 16,
       title: Row(
         children: [
-          const LogoSmart(),
+          const LogoSmart(ukuran: 32),
           const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('SMART', style: t.titleMedium),
-                if (sub.isNotEmpty)
-                  Text(
-                    sub,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: t.bodySmall,
-                  ),
-              ],
+          Text(
+            'SMART',
+            style: t.titleLarge?.copyWith(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1,
             ),
           ),
         ],
       ),
       actions: [
-        IconButton(
-          tooltip: 'Notifikasi',
-          onPressed: () => context.push('/notifikasi'),
-          icon: Badge(
-            isLabelVisible: belumDibaca > 0,
-            label: Text('$belumDibaca'),
-            child: Icon(Icons.notifications_none, color: Warna.ink),
-          ),
-        ),
         Padding(
           padding: const EdgeInsets.only(right: 12),
-          child: InkWell(
-            onTap: () => context.go('/profil'),
-            customBorder: const CircleBorder(),
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: Warna.primary,
-              child: Icon(Icons.person, size: 20, color: Warna.putih),
-            ),
+          child: TombolBulat(
+            ikon: Icons.notifications_none,
+            tooltip: 'Notifikasi',
+            onTap: () => context.push('/notifikasi'),
+            lencana: belumDibaca,
           ),
         ),
       ],
