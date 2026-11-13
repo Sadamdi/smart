@@ -69,6 +69,24 @@ def _daftar(batas: dict | None) -> list[str]:
     return [str(x) for x in nilai]
 
 
+JENJANG_SAH = ("D3", "D4", "S1", "S2", "S3")
+
+
+def dengan_jenjang_beasiswa(
+    syarat: list[tuple[str, dict | None]], jenjang_beasiswa: list[str] | None
+) -> list[tuple[str, dict | None]]:
+    """Kolom jenjang beasiswa dipakai sebagai syarat jenjang bila beasiswa belum punya syarat jenjang tercatat.
+
+    Tanpa ini beasiswa "Under Graduate" (kolom S1) tanpa baris syarat jenjang akan dinyatakan memenuhi untuk mahasiswa S3.
+    """
+    if any(j == "jenjang" and _daftar(b) for j, b in syarat):
+        return syarat
+    jenjang = [x for x in (jenjang_beasiswa or []) if x in JENJANG_SAH]
+    if not jenjang:
+        return syarat
+    return [*syarat, ("jenjang", {"nilai": jenjang})]
+
+
 def _tidak_diketahui(jenis: str, label: str) -> HasilSyarat:
     return HasilSyarat(jenis, TIDAK_DIKETAHUI, 0.5, kekurangan=f"Lengkapi {label} di profil agar syarat ini dapat diperiksa")
 
@@ -212,15 +230,27 @@ def _warga(jenis: str, batas: dict | None, nilai: str | None) -> HasilSyarat | N
     return HasilSyarat(jenis, GAGAL, 0.0, kekurangan=f"Untuk warga negara {', '.join(diminta)}")
 
 
+def _skor_bahasa(skor_bahasa: dict | None, nama: str) -> float | None:
+    """Skor tes bahasa dari profil: kunci tak peka huruf besar, nilai teks angka diterima, nilai lain dianggap kosong."""
+    for kunci, nilai in (skor_bahasa or {}).items():
+        if str(kunci).strip().lower() != nama:
+            continue
+        try:
+            angka = float(str(nilai).replace(",", ".").strip())
+        except (TypeError, ValueError):
+            return None
+        return angka if angka == angka and angka >= 0 else None  # NaN dan negatif dianggap tidak ada
+    return None
+
+
 def _bahasa(jenis: str, batas: dict | None, profil: ProfilKelayakan, tol: Toleransi) -> HasilSyarat | None:
     minimum = _angka(batas)
     nama = str((batas or {}).get("jenis", "bahasa")).lower()
     if minimum is None:
         return None
-    skor = (profil.skor_bahasa or {}).get(nama)
+    skor = _skor_bahasa(profil.skor_bahasa, nama)
     if skor is None:
         return HasilSyarat(jenis, TOLERAN, 0.5, kekurangan=f"Perlu sertifikat {nama.upper()} dengan skor {minimum:g}")
-    skor = float(skor)
     if skor >= minimum:
         return HasilSyarat(jenis, OK, 1.0, f"Skor {nama.upper()} {skor:g} memenuhi syarat {minimum:g}")
     if (minimum - skor) / minimum <= tol.skor_bahasa_persen:

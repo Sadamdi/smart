@@ -26,7 +26,7 @@ class _JelajahPageState extends State<JelajahPage> {
   final _cari = TextEditingController();
   Timer? _tunda;
 
-  static const _jenjang = ['D3', 'D4', 'S1', 'S2', 'S3'];
+  static const _jenjang = ['S1', 'S2', 'S3', 'D3', 'D4'];
 
   @override
   void initState() {
@@ -47,6 +47,11 @@ class _JelajahPageState extends State<JelajahPage> {
     _tunda = Timer(const Duration(milliseconds: 400), () => _c.cari(v));
   }
 
+  OutlineInputBorder _bulat(Color c, [double w = 1]) => OutlineInputBorder(
+    borderRadius: BorderRadius.circular(24),
+    borderSide: BorderSide(color: c, width: w),
+  );
+
   @override
   Widget build(BuildContext context) => Obx(() => _bangun(context));
 
@@ -66,27 +71,20 @@ class _JelajahPageState extends State<JelajahPage> {
             Text('Jelajah Beasiswa', style: t.headlineMedium),
             const SizedBox(height: 4),
             Text(
-              'Beasiswa terbit yang tenggatnya belum lewat, dipantau dari laman resmi.',
+              'Beasiswa terbit yang tenggatnya belum lewat.',
               style: t.bodyMedium,
             ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () => context.push('/tersimpan'),
-                icon: const Icon(Icons.bookmark_border_rounded),
-                label: const Text('Tersimpan'),
-                style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-              ),
-            ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 16),
             TextField(
               controller: _cari,
               onChanged: _onCari,
               textInputAction: TextInputAction.search,
-              decoration: const InputDecoration(
-                hintText: 'Cari beasiswa',
-                prefixIcon: Icon(Icons.search),
+              decoration: InputDecoration(
+                hintText: 'Cari nama beasiswa atau penyelenggara',
+                prefixIcon: const Icon(Icons.search),
+                border: _bulat(Warna.outline),
+                enabledBorder: _bulat(Warna.outline),
+                focusedBorder: _bulat(Warna.primary, 2),
               ),
             ),
             const SizedBox(height: 12),
@@ -95,7 +93,7 @@ class _JelajahPageState extends State<JelajahPage> {
               child: Row(
                 children: [
                   ChipFilter(
-                    label: 'Semua jenjang',
+                    label: 'Semua',
                     terpilih: s.jenjang == null,
                     onTap: () => c.pilihJenjang(null),
                   ),
@@ -110,7 +108,12 @@ class _JelajahPageState extends State<JelajahPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
+            if (s.memuat || s.galat != null || s.items.isEmpty)
+              _BarisInfo(
+                teks: '',
+                onTersimpan: () => context.push('/tersimpan'),
+              ),
             if (s.memuat)
               const Padding(
                 padding: EdgeInsets.only(top: 80),
@@ -141,11 +144,11 @@ class _JelajahPageState extends State<JelajahPage> {
                 ),
               )
             else ...[
-              Text(
-                'Menampilkan ${s.items.length} beasiswa',
-                style: t.bodySmall,
+              _BarisInfo(
+                teks: 'Menampilkan ${s.items.length} beasiswa',
+                onTersimpan: () => context.push('/tersimpan'),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 4),
               for (final b in s.items) ...[
                 KartuBeasiswa(
                   key: ValueKey(b.id),
@@ -187,6 +190,33 @@ class _JelajahPageState extends State<JelajahPage> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _BarisInfo extends StatelessWidget {
+  const _BarisInfo({required this.teks, required this.onTersimpan});
+
+  final String teks;
+  final VoidCallback onTersimpan;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Row(
+      children: [
+        Expanded(child: Text(teks, style: t.bodySmall)),
+        TextButton.icon(
+          onPressed: onTersimpan,
+          icon: const Icon(Icons.bookmark_border_rounded, size: 18),
+          label: const Text('Tersimpan'),
+          style: TextButton.styleFrom(
+            minimumSize: const Size(48, 40),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            textStyle: t.labelLarge?.copyWith(fontSize: 12),
+          ),
+        ),
+      ],
     );
   }
 }
