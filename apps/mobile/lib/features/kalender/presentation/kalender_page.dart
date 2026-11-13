@@ -29,6 +29,26 @@ class _KalenderPageState extends State<KalenderPage> {
   }
 
   late DateTime _bulan = DateTime(DateTime.now().year, DateTime.now().month);
+  DateTime? _pilih;
+
+  /// Tanggal terpilih: pilihan pengguna bila masih di bulan tampil, bila tidak tenggat
+  /// terdekat pada bulan itu (atau hari ini), sehingga bagian agenda tidak pernah kosong tanpa alasan.
+  DateTime _tanggalAgenda(List<Acara> bulanIni) {
+    final p = _pilih;
+    if (p != null && p.year == _bulan.year && p.month == _bulan.month) {
+      return p;
+    }
+    final n = DateTime.now();
+    final hariIni = DateTime(n.year, n.month, n.day);
+    final urut = bulanIni.where((a) => a.tenggat).map((a) => a.tanggal).toList()
+      ..sort();
+    final depan = urut.where((d) => !d.isBefore(hariIni));
+    if (depan.isNotEmpty) return depan.first;
+    if (urut.isNotEmpty) return urut.first;
+    return n.year == _bulan.year && n.month == _bulan.month
+        ? hariIni
+        : DateTime(_bulan.year, _bulan.month);
+  }
 
   void _geser(int n) =>
       setState(() => _bulan = DateTime(_bulan.year, _bulan.month + n));
@@ -120,13 +140,8 @@ class _KalenderPageState extends State<KalenderPage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
           children: [
-            Text('Kalender dan Checklist', style: t.headlineMedium),
-            const SizedBox(height: 4),
-            Text(
-              'Tenggat beasiswa tersimpan, tugas pribadi, dan berkas yang perlu disiapkan.',
-              style: t.bodyMedium,
-            ),
-            const SizedBox(height: 16),
+            Text('Kalender', style: t.headlineMedium),
+            const SizedBox(height: 14),
             kalender.when(
               loading: () => const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
@@ -147,6 +162,14 @@ class _KalenderPageState extends State<KalenderPage> {
                           a.tanggal.month == _bulan.month,
                     )
                     .toList();
+                final pilih = _tanggalAgenda(bulanIni);
+                final hariIni = bulanIni
+                    .where(
+                      (a) =>
+                          a.tanggal.day == pilih.day &&
+                          a.tanggal.month == pilih.month,
+                    )
+                    .toList();
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -155,21 +178,26 @@ class _KalenderPageState extends State<KalenderPage> {
                       acara: bulanIni,
                       mundur: () => _geser(-1),
                       maju: () => _geser(1),
+                      dipilih: pilih,
+                      onPilih: (d) => setState(() => _pilih = d),
                     ),
                     const SizedBox(height: 16),
                     JudulBagian(
-                      'Agenda ${namaBulan(_bulan.month)} ${_bulan.year}',
+                      '${pilih.day} ${namaBulan(pilih.month)}',
                       aksi: '+ Tugas',
                       onAksi: _tambahTugas,
                     ),
-                    if (bulanIni.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
+                    if (hariIni.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text(
-                          'Tidak ada tenggat atau tugas pada bulan ini. Simpan beasiswa atau tambah tugas pribadi.',
+                          bulanIni.isEmpty
+                              ? 'Tidak ada tenggat atau tugas pada bulan ini. Simpan beasiswa atau tambah tugas pribadi.'
+                              : 'Tidak ada tenggat atau tugas pada tanggal ini.',
+                          style: t.bodySmall,
                         ),
                       ),
-                    for (final a in bulanIni)
+                    for (final a in hariIni)
                       _BarisAcara(
                         acara: a,
                         onBuka: a.tenggat
@@ -189,7 +217,7 @@ class _KalenderPageState extends State<KalenderPage> {
               },
             ),
             const SizedBox(height: 20),
-            const JudulBagian('Checklist Berkas'),
+            const JudulBagian('Checklist berkas'),
             const SizedBox(height: 8),
             checklist.when(
               loading: () => const SizedBox(height: 100, child: MemuatState()),
@@ -240,8 +268,12 @@ class _GridBulan extends StatelessWidget {
     required this.acara,
     required this.mundur,
     required this.maju,
+    required this.dipilih,
+    required this.onPilih,
   });
 
+  final DateTime dipilih;
+  final ValueChanged<DateTime> onPilih;
   final DateTime bulan;
   final List<Acara> acara;
   final VoidCallback mundur;
@@ -262,11 +294,12 @@ class _GridBulan extends StatelessWidget {
       for (final a in acara.where((a) => !a.tenggat)) a.tanggal.day,
     };
 
-    return Container(
+    final kartu = Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Warna.kartu,
-        borderRadius: BorderRadius.circular(Jari.kartu),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Warna.container4),
         boxShadow: bayanganKartu,
       ),
       child: Column(
@@ -296,7 +329,12 @@ class _GridBulan extends StatelessWidget {
             children: [
               for (final h in _hari)
                 Expanded(
-                  child: Center(child: Text(h, style: t.labelSmall)),
+                  child: Center(
+                    child: Text(
+                      h,
+                      style: t.labelSmall?.copyWith(letterSpacing: 0),
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -305,7 +343,7 @@ class _GridBulan extends StatelessWidget {
             crossAxisCount: 7,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 1.15,
+            childAspectRatio: 1.1,
             children: [
               for (var i = 0; i < geser; i++) const SizedBox.shrink(),
               for (var d = 1; d <= jumlah; d++)
@@ -317,36 +355,42 @@ class _GridBulan extends StatelessWidget {
                       n.day == d,
                   tenggat: tenggat.contains(d),
                   tugas: tugas.contains(d),
+                  onTap: () => onPilih(DateTime(bulan.year, bulan.month, d)),
                 ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Wrap(
-            alignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 16,
-            runSpacing: 4,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.circle, size: 8, color: Warna.error),
-                  const SizedBox(width: 4),
-                  Text('Tenggat', style: t.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.circle, size: 8, color: Warna.primary),
-                  const SizedBox(width: 4),
-                  Text('Tugas pribadi', style: t.bodySmall),
-                ],
-              ),
             ],
           ),
         ],
       ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        kartu,
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 16,
+          runSpacing: 4,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.circle, size: 8, color: Warna.error),
+                const SizedBox(width: 6),
+                Text('Tenggat', style: t.bodySmall),
+              ],
+            ),
+            if (tugas.isNotEmpty)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.circle, size: 8, color: Warna.primary),
+                  const SizedBox(width: 6),
+                  Text('Tugas pribadi', style: t.bodySmall),
+                ],
+              ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -357,42 +401,55 @@ class _Sel extends StatelessWidget {
     required this.hariIni,
     required this.tenggat,
     required this.tugas,
+    required this.onTap,
   });
 
   final int hari;
   final bool hariIni;
   final bool tenggat;
   final bool tugas;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    return Center(
-      child: Container(
-        width: 34,
-        height: 34,
-        decoration: BoxDecoration(
-          color: hariIni ? Warna.primary : (tenggat ? Warna.errorSoft : null),
-          shape: BoxShape.circle,
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Text(
-              '$hari',
-              style: t.bodyMedium?.copyWith(
-                color: hariIni
-                    ? Warna.putih
-                    : (tenggat ? Warna.error : Warna.ink),
-                fontWeight: tenggat || hariIni ? FontWeight.w700 : null,
+    return InkResponse(
+      onTap: onTap,
+      radius: 22,
+      child: Center(
+        child: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: hariIni ? Warna.primary : null,
+            shape: BoxShape.circle,
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Text(
+                '$hari',
+                style: t.bodyMedium?.copyWith(
+                  color: hariIni
+                      ? Warna.putih
+                      : (tenggat ? Warna.error : Warna.ink),
+                  fontWeight: tenggat || hariIni
+                      ? FontWeight.w700
+                      : FontWeight.w500,
+                ),
               ),
-            ),
-            if (tugas)
-              Positioned(
-                bottom: 3,
-                child: Icon(Icons.circle, size: 5, color: Warna.primary),
-              ),
-          ],
+              if (tenggat && !hariIni)
+                Positioned(
+                  bottom: -1,
+                  child: Icon(Icons.circle, size: 6, color: Warna.error),
+                ),
+              if (tugas && !tenggat)
+                Positioned(
+                  bottom: -1,
+                  child: Icon(Icons.circle, size: 6, color: Warna.primary),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -418,19 +475,32 @@ class _BarisAcara extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(top: 8),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(Jari.kartuDalam),
+        borderRadius: BorderRadius.circular(Jari.kartu),
         boxShadow: bayanganKartu,
       ),
       child: Material(
         color: Warna.kartu,
-        borderRadius: BorderRadius.circular(Jari.kartuDalam),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Jari.kartu),
+          side: BorderSide(color: Warna.container4),
+        ),
         clipBehavior: Clip.antiAlias,
         child: ListTile(
           onTap: onBuka,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
           leading: acara.tenggat
-              ? CircleAvatar(
-                  backgroundColor: Warna.errorSoft,
-                  child: Icon(Icons.timer_outlined, color: Warna.error),
+              ? Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: Warna.errorSoft,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.calendar_today_outlined,
+                    size: 20,
+                    color: Warna.error,
+                  ),
                 )
               : Checkbox(
                   value: acara.selesai,
@@ -439,15 +509,19 @@ class _BarisAcara extends StatelessWidget {
           title: Text(
             acara.judul,
             style: t.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
               decoration: acara.selesai ? TextDecoration.lineThrough : null,
             ),
           ),
           subtitle: Text(
-            '${formatTanggal(acara.tanggal)} · ${acara.tenggat ? 'Tenggat pendaftaran' : 'Tugas pribadi'}',
-            style: t.bodySmall,
+            acara.tenggat ? 'Tenggat pendaftaran' : 'Tugas pribadi',
+            style: t.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: acara.tenggat ? Warna.error : Warna.muted,
+            ),
           ),
           trailing: onHapus == null
-              ? const Icon(Icons.chevron_right)
+              ? null
               : IconButton(
                   tooltip: 'Hapus tugas',
                   icon: const Icon(Icons.delete_outline),
@@ -474,14 +548,8 @@ class _KartuChecklist extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final total = data.berkas.length;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Warna.kartu,
-        borderRadius: BorderRadius.circular(Jari.kartu),
-        boxShadow: bayanganKartu,
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
       child: Material(
         type: MaterialType.transparency,
         child: Column(
@@ -494,26 +562,65 @@ class _KartuChecklist extends StatelessWidget {
                   Expanded(
                     child: Text(data.beasiswa.nama, style: t.titleSmall),
                   ),
-                  ChipStatus(label: '${data.jumlahSelesai}/$total siap'),
+                  Lencana('${data.jumlahSelesai}/$total siap'),
                 ],
               ),
             ),
             const SizedBox(height: 8),
-            BarProgres(nilai: total == 0 ? 0 : data.jumlahSelesai / total),
-            for (final b in data.berkas)
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-                controlAffinity: ListTileControlAffinity.leading,
-                value: b.selesai,
-                title: Text(
-                  b.namaBerkas,
-                  style: TextStyle(
-                    decoration: b.selesai ? TextDecoration.lineThrough : null,
+            for (final b in data.berkas) ...[
+              InkWell(
+                borderRadius: BorderRadius.circular(Jari.kartuDalam),
+                onTap: () => onCentang(b, !b.selesai),
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 44),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Warna.kartu,
+                    border: Border.all(color: Warna.container4),
+                    borderRadius: BorderRadius.circular(Jari.kartuDalam),
+                  ),
+                  child: Row(
+                    children: [
+                      b.selesai
+                          ? Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color: Warna.sukses,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.check_rounded,
+                                size: 16,
+                                color: Warna.putih,
+                              ),
+                            )
+                          : Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Warna.outline,
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          b.namaBerkas,
+                          style: t.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                onChanged: (v) => onCentang(b, v ?? false),
               ),
+              const SizedBox(height: 6),
+            ],
           ],
         ),
       ),

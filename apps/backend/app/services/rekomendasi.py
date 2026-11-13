@@ -4,7 +4,7 @@ import uuid
 from collections import defaultdict
 from datetime import date
 
-from sqlalchemy import delete, func, insert, or_, select
+from sqlalchemy import delete, func, insert, or_, select, text
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -75,7 +75,15 @@ def _masukan(sesi: Session, hari_ini: date) -> list[MasukanBeasiswa]:
     ]
 
 
+def _kunci_hitung(sesi: Session, p: Pengguna) -> None:
+    """Beranda meminta ringkasan dan beberapa daftar sekaligus; tanpa kunci, hitung ulang yang serentak saling bentrok
+    pada indeks unik (pengguna, beasiswa). Kunci penasihat tingkat transaksi menyerialkan hitung ulang per pengguna."""
+    if sesi.get_bind().dialect.name == "postgresql":
+        sesi.execute(text("select pg_advisory_xact_lock(hashtextextended(:k, 0))"), {"k": str(p.id)})
+
+
 def hitung(sesi: Session, p: Pengguna, hari_ini: date) -> list[HasilRekomendasi]:
+    _kunci_hitung(sesi, p)
     hasil = susun(
         profil_dari(sesi, p),
         p.minat,
@@ -135,7 +143,9 @@ def daftar(
     sesi: Session, p: Pengguna, hari_ini: date, kategori: str | None, paksa: bool = False
 ) -> list[tuple[Rekomendasi, Beasiswa]]:
     if paksa or _usang(sesi, p):
-        hitung(sesi, p, hari_ini)
+        _kunci_hitung(sesi, p)
+        if paksa or _usang(sesi, p):  # periksa lagi: permintaan lain mungkin sudah menghitung saat menunggu kunci
+            hitung(sesi, p, hari_ini)
     stmt = (
         select(Rekomendasi, Beasiswa)
         .join(Beasiswa, Beasiswa.id == Rekomendasi.beasiswa_id)

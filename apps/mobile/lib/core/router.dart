@@ -21,6 +21,7 @@ import '../features/notifikasi/presentation/notifikasi_page.dart';
 import '../features/profil/presentation/profil_controller.dart';
 import '../features/profil/presentation/profil_page.dart';
 import '../features/rekomendasi/presentation/rekomendasi_page.dart';
+import 'widgets/item_menu_bawah.dart';
 import 'widgets/state_widgets.dart';
 
 /// Penyegar router: dipicu setiap status auth berubah agar redirect dievaluasi ulang.
@@ -106,6 +107,14 @@ GoRouter buatRouter(SegarkanRouter segarkan) {
   );
 }
 
+const _menu = [
+  (Icons.home_outlined, Icons.home_rounded, 'Beranda'),
+  (Icons.star_border_rounded, Icons.star_rounded, 'Rekomendasi'),
+  (Icons.search_rounded, Icons.search_rounded, 'Jelajah'),
+  (Icons.calendar_today_outlined, Icons.calendar_today, 'Kalender'),
+  (Icons.person_outline, Icons.person, 'Profil'),
+];
+
 class _Cangkang extends StatelessWidget {
   const _Cangkang({required this.shell});
 
@@ -143,34 +152,19 @@ class _Cangkang extends StatelessWidget {
               maxScaleFactor: 1.0,
               child: NavigationBar(
                 selectedIndex: shell.currentIndex,
-                onDestinationSelected: (i) =>
-                    shell.goBranch(i, initialLocation: i == shell.currentIndex),
-                destinations: const [
-                  NavigationDestination(
-                    icon: Icon(Icons.space_dashboard_outlined),
-                    selectedIcon: Icon(Icons.space_dashboard_rounded),
-                    label: 'Beranda',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.auto_awesome_outlined),
-                    selectedIcon: Icon(Icons.auto_awesome),
-                    label: 'Rekomendasi',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.explore_outlined),
-                    selectedIcon: Icon(Icons.explore),
-                    label: 'Jelajah',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.calendar_month_outlined),
-                    selectedIcon: Icon(Icons.calendar_month),
-                    label: 'Kalender',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.person_outline),
-                    selectedIcon: Icon(Icons.person),
-                    label: 'Profil',
-                  ),
+                onDestinationSelected: (_) {},
+                destinations: [
+                  for (final (i, m) in _menu.indexed)
+                    ItemMenuBawah(
+                      ikon: m.$1,
+                      ikonAktif: m.$2,
+                      label: m.$3,
+                      aktif: shell.currentIndex == i,
+                      onTap: () => shell.goBranch(
+                        i,
+                        initialLocation: i == shell.currentIndex,
+                      ),
+                    ),
                 ],
               ),
             ),
