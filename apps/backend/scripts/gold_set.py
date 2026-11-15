@@ -47,9 +47,19 @@ PROFIL = [
 
 def _profil(r) -> ProfilKelayakan:
     return ProfilKelayakan(
-        jenjang=r[1], semester=r[2], ipk=r[3], jenis_kampus=r[4], kota_domisili=r[5], negara_domisili="Indonesia",
-        provinsi_domisili=None, daerah_asal=[], tanggal_lahir=date(2004, 5, 5), penghasilan_orang_tua=r[8],
-        skor_bahasa=None, kewarganegaraan="Indonesia", berkas_diunggah=[],
+        jenjang=r[1],
+        semester=r[2],
+        ipk=r[3],
+        jenis_kampus=r[4],
+        kota_domisili=r[5],
+        negara_domisili="Indonesia",
+        provinsi_domisili=None,
+        daerah_asal=[],
+        tanggal_lahir=date(2004, 5, 5),
+        penghasilan_orang_tua=r[8],
+        skor_bahasa=None,
+        kewarganegaraan="Indonesia",
+        berkas_diunggah=[],
     )
 
 
@@ -65,12 +75,28 @@ def kandidat(keluar: str) -> None:
     for r in PROFIL:
         top = susun(_profil(r), r[7], r[6], masukan, hari)
         top = [h for h in top if h.kategori != "belum_memenuhi"][:5]
-        hasil.append({
-            "profil": r[0], "jenjang": r[1], "semester": r[2], "ipk": r[3], "prodi": r[6], "minat": r[7], "kota": r[5],
-            "saran": [{"beasiswa": info[h.beasiswa_id].nama, "penyelenggara": info[h.beasiswa_id].penyelenggara,
-                       "jenjang": info[h.beasiswa_id].jenjang, "kategori": h.kategori, "skor": round(h.skor, 3),
-                       "syarat": syarat.get(h.beasiswa_id, [])[:6]} for h in top],
-        })
+        hasil.append(
+            {
+                "profil": r[0],
+                "jenjang": r[1],
+                "semester": r[2],
+                "ipk": r[3],
+                "prodi": r[6],
+                "minat": r[7],
+                "kota": r[5],
+                "saran": [
+                    {
+                        "beasiswa": info[h.beasiswa_id].nama,
+                        "penyelenggara": info[h.beasiswa_id].penyelenggara,
+                        "jenjang": info[h.beasiswa_id].jenjang,
+                        "kategori": h.kategori,
+                        "skor": round(h.skor, 3),
+                        "syarat": syarat.get(h.beasiswa_id, [])[:6],
+                    }
+                    for h in top
+                ],
+            }
+        )
     json.dump(hasil, open(keluar, "w", encoding="utf-8"), ensure_ascii=False, indent=1, default=str)
     print("profil", len(hasil), "->", keluar)
 

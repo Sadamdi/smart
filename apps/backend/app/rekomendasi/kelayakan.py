@@ -264,7 +264,9 @@ def _bahasa(jenis: str, batas: dict | None, profil: ProfilKelayakan, tol: Tolera
     return HasilSyarat(jenis, GAGAL, 0.0, kekurangan=f"Skor {nama.upper()} {skor:g} jauh di bawah {minimum:g}")
 
 
-_CALON_BARU = re.compile(r"\b(siswa|pelajar|lulusan (sma|smk|ma|smp|satuan pendidikan)|lulusan sma|sederajat|calon mahasiswa)\b")
+_CALON_BARU = re.compile(
+    r"\b(siswa|pelajar|lulusan (sma|smk|ma|smp|satuan pendidikan)|lulusan sma|sederajat|calon mahasiswa)\b"
+)
 _PROFESI = re.compile(
     r"\b(santri|pondok pesantren|pesantren|guru|pendidik|tenaga kependidikan|nuptk|ustadz|ustadzah|pns|profesional|"
     r"dosen|pegawai|karyawan|atlet|penyandang)\b"
@@ -278,11 +280,20 @@ def _kelompok_sasaran(batas: dict | None, profil: ProfilKelayakan) -> HasilSyara
     if not teks:
         return None
     if _CALON_BARU.search(teks) and (profil.semester or 0) >= 1:
-        return HasilSyarat("lainnya", TOLERAN, 0.3, kekurangan="Ditujukan bagi calon mahasiswa baru atau pelajar, periksa laman resmi")
+        return HasilSyarat(
+            "lainnya", TOLERAN, 0.3, kekurangan="Ditujukan bagi calon mahasiswa baru atau pelajar, periksa laman resmi"
+        )
     if teks.startswith("khusus mahasiswa "):  # kampus penyelenggara atau kelompok tertentu pada nama program
-        return HasilSyarat("lainnya", TOLERAN, 0.3, kekurangan="Ditujukan bagi mahasiswa kampus penyelenggara, pastikan kampus Anda sesuai")
+        return HasilSyarat(
+            "lainnya", TOLERAN, 0.3, kekurangan="Ditujukan bagi mahasiswa kampus penyelenggara, pastikan kampus Anda sesuai"
+        )
     if _PROFESI.search(teks):
-        return HasilSyarat("lainnya", TOLERAN, 0.3, kekurangan="Ditujukan bagi kelompok tertentu (santri, pendidik, profesional, dan sejenisnya), pastikan Anda termasuk")
+        return HasilSyarat(
+            "lainnya",
+            TOLERAN,
+            0.3,
+            kekurangan="Ditujukan bagi kelompok tertentu (santri, pendidik, profesional, dll.), pastikan Anda termasuk",
+        )
     return None
 
 

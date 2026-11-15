@@ -11,11 +11,11 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.models import Beasiswa, DokumenPengguna, Pengguna, Persyaratan, Rekomendasi
 from app.rekomendasi.embedding import PengemasHash, teks_profil
-from app.rekomendasi.wilayah import provinsi_kanonik
 from app.rekomendasi.kelayakan import ProfilKelayakan, dengan_jenjang_beasiswa
 from app.rekomendasi.konfigurasi import VERSI_MODEL
 from app.rekomendasi.mesin import HasilRekomendasi, MasukanBeasiswa, susun
 from app.rekomendasi.peringkat import muat, urut_ulang
+from app.rekomendasi.wilayah import provinsi_kanonik
 
 
 def lanjutan(p: Pengguna) -> dict:
@@ -57,7 +57,9 @@ def profil_dari(sesi: Session, p: Pengguna) -> ProfilKelayakan:
 
 
 _BUKAN_KULIAH = re.compile(r"\b(pelatihan|pertukaran|training|short course|pelajar smp|smp, sma|siswa smp)\b")
-_PEMDA = re.compile(r"\bpemerintah (?:kota|kabupaten|provinsi) ([a-z]+(?: [a-z]+)?)\b|\b(?:kabupaten|provinsi) ([a-z]+(?: [a-z]+)?)\b")
+_PEMDA = re.compile(
+    r"\bpemerintah (?:kota|kabupaten|provinsi) ([a-z]+(?: [a-z]+)?)\b|\b(?:kabupaten|provinsi) ([a-z]+(?: [a-z]+)?)\b"
+)
 _KAMPUS = re.compile(r"^(universitas|institut|sekolah tinggi|politeknik|stikes|stie|stai|stmik|stikom|akademi)")
 _KELOMPOK_NAMA = re.compile(r"\b(atlet|santri|guru|difabel|disabilitas|penyandang)\b")
 
@@ -101,7 +103,8 @@ def _masukan(sesi: Session, hari_ini: date) -> list[MasukanBeasiswa]:
             b.penyelenggara,
             b.manfaat,
             b.tenggat,
-            dengan_jenjang_beasiswa(syarat.get(b.id, []), b.jenjang) + _turunan(b.nama, b.penyelenggara, syarat.get(b.id, [])),
+            dengan_jenjang_beasiswa(syarat.get(b.id, []), b.jenjang)
+            + _turunan(b.nama, b.penyelenggara, syarat.get(b.id, [])),
         )
         for b in baris
         if not _BUKAN_KULIAH.search(b.nama.lower())
