@@ -301,7 +301,10 @@ def test_syarat_jenjang_prasyarat_kalah_dari_kolom_jenjang_program():
 
 
 def test_kelompok_sasaran_khusus_tidak_dinyatakan_memenuhi():
-    syarat = [("jenjang", {"nilai": ["S1"]}), ("lainnya", {"teks": "Santri, lulusan pondok pesantren di bawah binaan Kemenag"})]
+    syarat = [
+        ("jenjang", {"nilai": ["S1"]}),
+        ("lainnya", {"teks": "Santri, lulusan pondok pesantren di bawah binaan Kemenag"}),
+    ]
     h = nilai_kelayakan(syarat, _profil(jenjang="S1"), HARI)
     assert h.kategori == HAMPIR and h.skor < 0.7
     pelajar = [("jenjang", {"nilai": ["S1"]}), ("lainnya", {"teks": "Siswa/Pelajar, Lulusan Satuan Pendidikan"})]
@@ -328,5 +331,10 @@ def test_domisili_turunan_menggagalkan_profil_dari_kota_lain():
     from app.rekomendasi.kelayakan import dengan_jenjang_beasiswa
 
     s = dengan_jenjang_beasiswa([], ["S1"]) + [("domisili", {"nilai": ["blitar"]})]
-    assert nilai_kelayakan(s, _profil(jenjang="S1", kota_domisili="Bogor", negara_domisili="Indonesia"), HARI).kategori == BELUM
-    assert nilai_kelayakan(s, _profil(jenjang="S1", kota_domisili="Blitar", negara_domisili="Indonesia"), HARI).kategori == MEMENUHI
+    assert (
+        nilai_kelayakan(s, _profil(jenjang="S1", kota_domisili="Bogor", negara_domisili="Indonesia"), HARI).kategori == BELUM
+    )
+    assert (
+        nilai_kelayakan(s, _profil(jenjang="S1", kota_domisili="Blitar", negara_domisili="Indonesia"), HARI).kategori
+        == MEMENUHI
+    )
