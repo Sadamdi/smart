@@ -45,12 +45,12 @@ def _sumber(sesi):
 
 
 def _beasiswa(sesi, sumber, nama, tenggat=None, status="terbit", syarat=(), berkas=(), **kw):
+    kw.setdefault("jenjang", ["S1"])
     b = Beasiswa(
         id=uuid.uuid4(),
         sumber_id=sumber.id,
         nama=nama,
         penyelenggara="Penyelenggara Uji",
-        jenjang=["S1"],
         tenggat=tenggat,
         tautan_resmi="https://uji.example/" + uuid.uuid4().hex,
         status=status,
@@ -170,7 +170,9 @@ def test_rekomendasi_per_kategori_dengan_alasan_dan_catatan(klien_db, sesi):
     hampir = _beasiswa(
         sesi, s, "Beasiswa Prestasi Uji", HARI + timedelta(days=30), syarat=[("ipk_minimum", {"nilai": 3.65})]
     )
-    belum = _beasiswa(sesi, s, "Beasiswa Magister Uji", HARI + timedelta(days=30), syarat=[("jenjang", {"nilai": ["S2"]})])
+    belum = _beasiswa(
+        sesi, s, "Beasiswa Magister Uji", HARI + timedelta(days=30), syarat=[("jenjang", {"nilai": ["S2"]})], jenjang=["S2"]
+    )
     data = klien_db.get(f"{B}/rekomendasi", headers=h).json()["data"]
     kategori = {x["beasiswa"]["id"]: x for x in data}
     assert kategori[str(ok.id)]["kategori"] == "memenuhi" and kategori[str(ok.id)]["alasan"]
