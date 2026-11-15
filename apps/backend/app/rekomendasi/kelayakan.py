@@ -79,9 +79,15 @@ def dengan_jenjang_beasiswa(
 
     Tanpa ini beasiswa "Under Graduate" (kolom S1) tanpa baris syarat jenjang akan dinyatakan memenuhi untuk mahasiswa S3.
     """
-    if any(j == "jenjang" and _daftar(b) for j, b in syarat):
-        return syarat
     jenjang = [x for x in (jenjang_beasiswa or []) if x in JENJANG_SAH]
+    tercatat = [j for j, b in syarat if j == "jenjang" and _daftar(b)]
+    if tercatat:
+        # Syarat jenjang hasil ekstraksi kadang berisi jenjang prasyarat ("lulusan S1" pada beasiswa S2). Bila sama sekali
+        # tidak beririsan dengan kolom jenjang beasiswa, kolom itulah jenjang program yang ditawarkan.
+        diminta = {x for j, b in syarat if j == "jenjang" for x in _daftar(b)}
+        if jenjang and not diminta & set(jenjang):
+            return [(j, b) for j, b in syarat if j != "jenjang"] + [("jenjang", {"nilai": jenjang})]
+        return syarat
     if not jenjang:
         return syarat
     return [*syarat, ("jenjang", {"nilai": jenjang})]
@@ -258,6 +264,28 @@ def _bahasa(jenis: str, batas: dict | None, profil: ProfilKelayakan, tol: Tolera
     return HasilSyarat(jenis, GAGAL, 0.0, kekurangan=f"Skor {nama.upper()} {skor:g} jauh di bawah {minimum:g}")
 
 
+_CALON_BARU = re.compile(r"\b(siswa|pelajar|lulusan (sma|smk|ma|smp|satuan pendidikan)|lulusan sma|sederajat|calon mahasiswa)\b")
+_PROFESI = re.compile(
+    r"\b(santri|pondok pesantren|pesantren|guru|pendidik|tenaga kependidikan|nuptk|ustadz|ustadzah|pns|profesional|"
+    r"dosen|pegawai|karyawan|atlet|penyandang)\b"
+)
+
+
+def _kelompok_sasaran(batas: dict | None, profil: ProfilKelayakan) -> HasilSyarat | None:
+    """Syarat deskriptif yang menyebut kelompok sasaran khusus. Profil belum memuat status itu, jadi tidak dapat dipastikan:
+    dinilai dalam toleransi dengan skor rendah agar tidak mengalahkan beasiswa yang jelas sesuai."""
+    teks = str((batas or {}).get("teks", "")).lower()
+    if not teks:
+        return None
+    if _CALON_BARU.search(teks) and (profil.semester or 0) >= 1:
+        return HasilSyarat("lainnya", TOLERAN, 0.3, kekurangan="Ditujukan bagi calon mahasiswa baru atau pelajar, periksa laman resmi")
+    if teks.startswith("khusus mahasiswa "):  # kampus penyelenggara atau kelompok tertentu pada nama program
+        return HasilSyarat("lainnya", TOLERAN, 0.3, kekurangan="Ditujukan bagi mahasiswa kampus penyelenggara, pastikan kampus Anda sesuai")
+    if _PROFESI.search(teks):
+        return HasilSyarat("lainnya", TOLERAN, 0.3, kekurangan="Ditujukan bagi kelompok tertentu (santri, pendidik, profesional, dan sejenisnya), pastikan Anda termasuk")
+    return None
+
+
 def periksa_syarat(
     jenis: str, batas: dict | None, profil: ProfilKelayakan, hari_ini: date, tol: Toleransi = TOLERANSI
 ) -> HasilSyarat | None:
@@ -295,6 +323,8 @@ def periksa_syarat(
         return HasilSyarat(jenis, GAGAL, 0.0, kekurangan="Penghasilan orang tua melebihi batas")
     if jenis == "sertifikat_bahasa":
         return _bahasa(jenis, batas, profil, tol)
+    if jenis == "lainnya":
+        return _kelompok_sasaran(batas, profil)
     if jenis == "berkas_pendukung":
         nama = str((batas or {}).get("nama", "")).strip()
         if not nama:

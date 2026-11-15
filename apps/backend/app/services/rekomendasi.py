@@ -1,5 +1,6 @@
 """Layanan rekomendasi: menyusun masukan dari basis data, memanggil mesin, menyimpan hasil per pengguna."""
 
+import re
 import uuid
 from collections import defaultdict
 from datetime import date
@@ -10,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.models import Beasiswa, DokumenPengguna, Pengguna, Persyaratan, Rekomendasi
 from app.rekomendasi.embedding import PengemasHash, teks_profil
+from app.rekomendasi.wilayah import provinsi_kanonik
 from app.rekomendasi.kelayakan import ProfilKelayakan, dengan_jenjang_beasiswa
 from app.rekomendasi.konfigurasi import VERSI_MODEL
 from app.rekomendasi.mesin import HasilRekomendasi, MasukanBeasiswa, susun
@@ -54,6 +56,31 @@ def profil_dari(sesi: Session, p: Pengguna) -> ProfilKelayakan:
     )
 
 
+_BUKAN_KULIAH = re.compile(r"\b(pelatihan|pertukaran|training|short course|pelajar smp|smp, sma|siswa smp)\b")
+_PEMDA = re.compile(r"\bpemerintah (?:kota|kabupaten|provinsi) ([a-z]+(?: [a-z]+)?)\b|\b(?:kabupaten|provinsi) ([a-z]+(?: [a-z]+)?)\b")
+_KAMPUS = re.compile(r"^(universitas|institut|sekolah tinggi|politeknik|stikes|stie|stai|stmik|stikom|akademi)")
+_KELOMPOK_NAMA = re.compile(r"\b(atlet|santri|guru|difabel|disabilitas|penyandang)\b")
+
+
+def _turunan(nama: str, penyelenggara: str | None, syarat: list[tuple[str, dict | None]]) -> list[tuple[str, dict | None]]:
+    """Syarat tambahan yang tersirat pada nama dan penyelenggara, hanya bila syarat serupa belum tercatat:
+    program pemerintah daerah (domisili) dan program kampus tertentu (mahasiswa kampus itu)."""
+    ada = {j for j, _ in syarat}
+    teks = f"{nama} {penyelenggara or ''}".lower()
+    tambahan: list[tuple[str, dict | None]] = []
+    if "domisili" not in ada:
+        m = _PEMDA.search(teks)
+        if m:
+            kata = (m.group(1) or m.group(2)).split()
+            dua = " ".join(kata[:2])
+            tambahan.append(("domisili", {"nilai": [dua if provinsi_kanonik(dua) else kata[0]]}))
+    if _KAMPUS.match((penyelenggara or "").lower()) and "kampus" not in nama.lower():
+        tambahan.append(("lainnya", {"teks": f"Khusus mahasiswa {penyelenggara}"}))
+    if _KELOMPOK_NAMA.search(nama.lower()):
+        tambahan.append(("lainnya", {"teks": f"Khusus mahasiswa kelompok tertentu pada nama program: {nama}"}))
+    return tambahan
+
+
 def _masukan(sesi: Session, hari_ini: date) -> list[MasukanBeasiswa]:
     baris = list(
         sesi.scalars(
@@ -69,9 +96,15 @@ def _masukan(sesi: Session, hari_ini: date) -> list[MasukanBeasiswa]:
             syarat[s.beasiswa_id].append((s.jenis, s.nilai_batas))
     return [
         MasukanBeasiswa(
-            b.id, b.nama, b.penyelenggara, b.manfaat, b.tenggat, dengan_jenjang_beasiswa(syarat.get(b.id, []), b.jenjang)
+            b.id,
+            b.nama,
+            b.penyelenggara,
+            b.manfaat,
+            b.tenggat,
+            dengan_jenjang_beasiswa(syarat.get(b.id, []), b.jenjang) + _turunan(b.nama, b.penyelenggara, syarat.get(b.id, [])),
         )
         for b in baris
+        if not _BUKAN_KULIAH.search(b.nama.lower())
     ]
 
 
