@@ -222,11 +222,11 @@ def test_kolom_jenjang_beasiswa_menjadi_syarat_bila_tanpa_baris_jenjang():
     assert s3.kategori == BELUM  # sebelumnya memenuhi karena kolom jenjang tidak dipakai
 
 
-def test_kolom_jenjang_tidak_menimpa_syarat_jenjang_tercatat_dan_mengabaikan_nilai_asing():
+def test_kolom_jenjang_tidak_menimpa_syarat_jenjang_beririsan_dan_mengabaikan_nilai_asing():
     from app.rekomendasi.kelayakan import dengan_jenjang_beasiswa
 
-    tercatat = [("jenjang", {"nilai": ["S2"]})]
-    assert dengan_jenjang_beasiswa(tercatat, ["S1"]) == tercatat
+    tercatat = [("jenjang", {"nilai": ["S2", "S3"]})]
+    assert dengan_jenjang_beasiswa(tercatat, ["S3"]) == tercatat
     assert dengan_jenjang_beasiswa([], ["Sarjana", ""]) == []
     assert dengan_jenjang_beasiswa([], None) == []
 
@@ -289,3 +289,44 @@ def test_kunci_hitung_dilewati_di_basis_data_lain():
         id = "u-1"
 
     r._kunci_hitung(Sesi(), P())
+
+
+def test_syarat_jenjang_prasyarat_kalah_dari_kolom_jenjang_program():
+    from app.rekomendasi.kelayakan import dengan_jenjang_beasiswa
+
+    s = dengan_jenjang_beasiswa([("jenjang", {"nilai": ["S1"]}), ("ipk_minimum", {"nilai": 3.0})], ["S2", "S3"])
+    assert ("jenjang", {"nilai": ["S2", "S3"]}) in s and ("jenjang", {"nilai": ["S1"]}) not in s
+    assert nilai_kelayakan(s, _profil(jenjang="S1"), HARI).kategori == BELUM
+    assert nilai_kelayakan(s, _profil(jenjang="S2"), HARI).kategori != BELUM
+
+
+def test_kelompok_sasaran_khusus_tidak_dinyatakan_memenuhi():
+    syarat = [("jenjang", {"nilai": ["S1"]}), ("lainnya", {"teks": "Santri, lulusan pondok pesantren di bawah binaan Kemenag"})]
+    h = nilai_kelayakan(syarat, _profil(jenjang="S1"), HARI)
+    assert h.kategori == HAMPIR and h.skor < 0.7
+    pelajar = [("jenjang", {"nilai": ["S1"]}), ("lainnya", {"teks": "Siswa/Pelajar, Lulusan Satuan Pendidikan"})]
+    assert nilai_kelayakan(pelajar, _profil(jenjang="S1"), HARI).kategori == HAMPIR
+
+
+def test_kata_beasiswa_bukan_kelompok_pelajar():
+    umum = [("jenjang", {"nilai": ["S1"]}), ("lainnya", {"teks": "Penerima beasiswa lain tidak diperkenankan"})]
+    assert nilai_kelayakan(umum, _profil(jenjang="S1"), HARI).kategori == MEMENUHI
+
+
+def test_syarat_turunan_dari_nama_dan_penyelenggara():
+    from app.services.rekomendasi import _BUKAN_KULIAH, _turunan
+
+    assert _turunan("Beasiswa Pemerintah Kota Blitar", "Pemerintah Kota Blitar", []) == [("domisili", {"nilai": ["blitar"]})]
+    assert _turunan("Beasiswa X", None, []) == []
+    assert _turunan("Beasiswa Unggulan", "Universitas Udayana", [])[0][0] == "lainnya"
+    assert _turunan("Beasiswa Kota Blitar", "Pemerintah Kota Blitar", [("domisili", {"nilai": ["Jawa Timur"]})]) == []
+    assert _BUKAN_KULIAH.search("pelatihan kepemimpinan asia foundation")
+    assert not _BUKAN_KULIAH.search("beasiswa sarjana")
+
+
+def test_domisili_turunan_menggagalkan_profil_dari_kota_lain():
+    from app.rekomendasi.kelayakan import dengan_jenjang_beasiswa
+
+    s = dengan_jenjang_beasiswa([], ["S1"]) + [("domisili", {"nilai": ["blitar"]})]
+    assert nilai_kelayakan(s, _profil(jenjang="S1", kota_domisili="Bogor", negara_domisili="Indonesia"), HARI).kategori == BELUM
+    assert nilai_kelayakan(s, _profil(jenjang="S1", kota_domisili="Blitar", negara_domisili="Indonesia"), HARI).kategori == MEMENUHI
