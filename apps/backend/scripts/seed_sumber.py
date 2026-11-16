@@ -117,6 +117,20 @@ SUMBER_AWAL = [
     ("Beasiswa.id", "https://www.beasiswa.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
     ("Info Beasiswa", "https://www.infobeasiswa.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
     ("INDBeasiswa beranda", "https://indbeasiswa.com/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    # Tambahan 16 November 2026 (penyelenggara resmi, robots.txt mengizinkan):
+    (
+        "AMINEF Fulbright untuk WNI",
+        "https://www.aminef.or.id/grants-for-indonesians/fulbright-programs/",
+        "pantau_otomatis",
+        "Amerika Serikat",
+        "30 5 * * *",
+        True,
+    ),
+    ("Beasiswa UGM", "https://beasiswa.ugm.ac.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    ("Bantuan Biaya Pendidikan ITB", "https://finaid.itb.ac.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    ("Kemahasiswaan ITB", "https://kemahasiswaan.itb.ac.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    ("Kemahasiswaan IPB", "https://kemahasiswaan.ipb.ac.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    ("Sampoerna Foundation", "https://www.sampoernafoundation.org/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
 ]
 
 
