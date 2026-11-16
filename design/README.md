@@ -4,7 +4,7 @@ Berkas desain UI web dan mobile dibuat dengan FigCraft (bagian dari ArtCraft, te
 
 | Berkas | Isi |
 | --- | --- |
-| `smart-ui.figcraft` | Berkas desain: 6 layar mobile (390 px: pembuka, masuk, beranda, jelajah, rekomendasi, detail) dan 2 layar web (1280 px: dashboard, jelajah). Buka dengan `figcraft.exe`. |
+| `smart-ui.figcraft` | Berkas desain: 13 layar mobile (390 px: pembuka, masuk, beranda, jelajah, rekomendasi, detail, kalender, profil, dokumen, chat, pengaturan, tersimpan, keadaan memuat/kosong/galat/tanpa jaringan) dan 12 layar web (1280 px: dashboard, jelajah, rekomendasi, detail, kalender, profil, dokumen, chat, masuk, tersimpan, antrean validasi admin, keadaan). Semuanya dalam mode terang dan gelap (berakhiran "(gelap)"). Buka dengan `figcraft.exe`. |
 | `render/*.png` | Hasil render tiap layar |
 | `logo-smart.svg`, `logo-smart-512.png` | Logo SMART (vektor dan PNG 512) |
 | `logo-smart-animasi.svg` | Logo beranimasi (topi turun, jumbai naik, bintang berkilau); menghormati `prefers-reduced-motion` |
@@ -18,6 +18,6 @@ python build_figcraft.py
 & "C:\Program Files\ArtCraft\FigCraft\figcraft-cli.exe" export smart-ui.figcraft --out render --format png
 ```
 
-Token warna dan jari-jari sama dengan `apps/web/src/app/globals.css` dan `apps/mobile/lib/core/theme/app_theme.dart`. Huruf aplikasi Plus Jakarta Sans; berkas desain memakai Inter bawaan FigCraft karena Plus Jakarta Sans tidak terpasang di PC. Data di layar adalah contoh.
+Token warna dan jari-jari sama dengan `apps/web/src/app/globals.css` dan `apps/mobile/lib/core/theme/app_theme.dart`. Huruf aplikasi Plus Jakarta Sans; berkas desain memakai Inter bawaan FigCraft karena Plus Jakarta Sans tidak terpasang di PC. Data di layar adalah contoh dengan nama beasiswa nyata dan tanggal rekaan. Web dan mobile memakai token, ikon, istilah, dan urutan menu yang sama dengan aplikasi (`AppShell.tsx`).
 
 Server MCP FigCraft (lingkup lokal, tidak masuk repo): `claude mcp add --scope local figcraft -- "C:\Program Files\ArtCraft\FigCraft\figcraft-cli.exe" mcp --automation-read-root <design> --automation-write-root <design>`. Aktif di sesi Claude Code berikutnya.
