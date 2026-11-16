@@ -126,6 +126,11 @@ SUMBER_AWAL = [
         "30 5 * * *",
         True,
     ),
+    ("Beasiswa UGM", "https://beasiswa.ugm.ac.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    ("Bantuan Biaya Pendidikan ITB", "https://finaid.itb.ac.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    ("Kemahasiswaan ITB", "https://kemahasiswaan.itb.ac.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    ("Kemahasiswaan IPB", "https://kemahasiswaan.ipb.ac.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    ("Sampoerna Foundation", "https://www.sampoernafoundation.org/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
 ]
 
 

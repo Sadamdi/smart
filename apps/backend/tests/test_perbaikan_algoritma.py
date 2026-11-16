@@ -320,6 +320,7 @@ def test_syarat_turunan_dari_nama_dan_penyelenggara():
     from app.services.rekomendasi import _BUKAN_KULIAH, _turunan
 
     assert _turunan("Beasiswa Pemerintah Kota Blitar", "Pemerintah Kota Blitar", []) == [("domisili", {"nilai": ["blitar"]})]
+    assert _turunan("Beasiswa Strata 1 Diploma 4 Kab Gianyar", None, []) == [("domisili", {"nilai": ["gianyar"]})]
     assert _turunan("Beasiswa X", None, []) == []
     assert _turunan("Beasiswa Unggulan", "Universitas Udayana", [])[0][0] == "lainnya"
     assert _turunan("Beasiswa Kota Blitar", "Pemerintah Kota Blitar", [("domisili", {"nilai": ["Jawa Timur"]})]) == []
@@ -338,3 +339,10 @@ def test_domisili_turunan_menggagalkan_profil_dari_kota_lain():
         nilai_kelayakan(s, _profil(jenjang="S1", kota_domisili="Blitar", negara_domisili="Indonesia"), HARI).kategori
         == MEMENUHI
     )
+
+
+def test_nama_kurang_mampu_menjadi_kelompok_sasaran():
+    from app.services.rekomendasi import _turunan
+
+    hasil = _turunan("Beasiswa Mahasiswa S1 Kurang Mampumiskin", None, [])
+    assert hasil and hasil[0][0] == "lainnya"
