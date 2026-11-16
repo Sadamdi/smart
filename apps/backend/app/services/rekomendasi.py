@@ -59,9 +59,13 @@ def profil_dari(sesi: Session, p: Pengguna) -> ProfilKelayakan:
 _BUKAN_KULIAH = re.compile(r"\b(pelatihan|pertukaran|training|short course|pelajar smp|smp, sma|siswa smp)\b")
 _PEMDA = re.compile(
     r"\bpemerintah (?:kota|kabupaten|provinsi) ([a-z]+(?: [a-z]+)?)\b|\b(?:kabupaten|provinsi) ([a-z]+(?: [a-z]+)?)\b"
+    r"|\b(?:pemkab|pemkot|pemprov|kab)\.? ([a-z]+)\b"
 )
 _KAMPUS = re.compile(r"^(universitas|institut|sekolah tinggi|politeknik|stikes|stie|stai|stmik|stikom|akademi)")
-_KELOMPOK_NAMA = re.compile(r"\b(atlet|santri|guru|difabel|disabilitas|penyandang)\b")
+_KELOMPOK_NAMA = re.compile(
+    r"\b(atlet|santri|guru|difabel|disabilitas|penyandang)\b|kurang\s*mampu|tidak\s*mampu|miskin"
+    r"|\b(?:dosen|keagamaan|muhammadiyah|banggit|pjj)\b|lanjut doktor"
+)
 
 
 def _turunan(nama: str, penyelenggara: str | None, syarat: list[tuple[str, dict | None]]) -> list[tuple[str, dict | None]]:
@@ -73,7 +77,7 @@ def _turunan(nama: str, penyelenggara: str | None, syarat: list[tuple[str, dict 
     if "domisili" not in ada:
         m = _PEMDA.search(teks)
         if m:
-            kata = (m.group(1) or m.group(2)).split()
+            kata = (m.group(1) or m.group(2) or m.group(3)).split()
             dua = " ".join(kata[:2])
             tambahan.append(("domisili", {"nilai": [dua if provinsi_kanonik(dua) else kata[0]]}))
     if _KAMPUS.match((penyelenggara or "").lower()) and "kampus" not in nama.lower():
