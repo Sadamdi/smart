@@ -45,8 +45,8 @@ export function CincinSkor({ skor, warna, ukuran = 56, tebal = 6 }: { skor: numb
           />
         )}
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center font-extrabold leading-none text-navy" style={{ fontSize: ukuran * 0.3 }}>
-        {skor == null ? <span className="text-muted">-</span> : <>{skor}<span className="font-bold text-muted" style={{ fontSize: ukuran * 0.16 }}>%</span></>}
+      <span className="absolute inset-0 flex items-center justify-center font-extrabold leading-none text-navy" style={{ fontSize: ukuran * ((skor ?? 0) >= 100 ? 0.23 : 0.3) }}>
+        {skor == null ? <span className="text-muted">-</span> : <>{skor}<span className="font-bold text-muted" style={{ fontSize: ukuran * ((skor ?? 0) >= 100 ? 0.12 : 0.16) }}>%</span></>}
       </span>
     </span>
   );
