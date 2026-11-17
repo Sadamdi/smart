@@ -1,5 +1,6 @@
 import logging
 import uuid
+from collections.abc import Iterator
 from datetime import date
 from typing import Annotated, Literal
 
@@ -24,6 +25,23 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/beasiswa", tags=["beasiswa"])
 
 RepoDep = Annotated[BeasiswaRepo, Depends(get_beasiswa_repo)]
+
+
+def sesi_opsional() -> Iterator[Session | None]:
+    """Sesi basis data untuk skor kartu. Skor hanya pelengkap: tanpa sesi, daftar tetap tampil tanpa skor."""
+    try:
+        gen = get_session()
+        sesi = next(gen)
+    except Exception:  # noqa: BLE001 - pengaturan basis data tidak ada atau tidak terjangkau
+        logger.warning("Sesi basis data untuk skor kartu tidak tersedia", exc_info=True)
+        yield None
+        return
+    try:
+        yield sesi
+    finally:
+        gen.close()
+
+
 SaatIni = Annotated[Pengguna, Depends(pengguna_saat_ini)]
 
 
@@ -40,7 +58,7 @@ ProfilDep = Annotated[ProfilKelayakan, Depends(profil_kelayakan)]
     response_model=Amplop[list[BeasiswaKartu]],
 )
 def daftar(
-    sesi: Annotated[Session, Depends(get_session)],
+    sesi: Annotated[Session | None, Depends(sesi_opsional)],
     pengguna: SaatIni,
     repo: RepoDep,
     q: Annotated[str | None, Query(max_length=100, description="Cari pada nama atau penyelenggara")] = None,
@@ -52,14 +70,15 @@ def daftar(
 ) -> Amplop[list[BeasiswaRingkas]]:
     halaman = layanan.daftar(repo, FilterBeasiswa(q=q, jenjang=jenjang, negara=negara), kursor, batas, date.today())
     item = [b for b in halaman.item if sesuai_wilayah(b.negara, wilayah)]
+    nilai: dict = {}
     try:
-        nilai = layanan_rek.peta(sesi, pengguna, [b.id for b in item], date.today())
-        sesi.commit()
+        if sesi is not None:
+            nilai = layanan_rek.peta(sesi, pengguna, [b.id for b in item], date.today())
+            sesi.commit()
     except SQLAlchemyError:
         # Skor kartu hanya pelengkap: kegagalan menghitungnya tidak boleh menggagalkan daftar beasiswa.
         logger.warning("Skor kelayakan kartu tidak dapat dihitung", exc_info=True)
         sesi.rollback()
-        nilai = {}
     data = []
     for b in item:
         r = nilai.get(b.id)
