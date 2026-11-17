@@ -169,7 +169,7 @@ class _RekomendasiPageState extends State<RekomendasiPage> {
             nilai.when(
               loading: () => const Padding(
                 padding: EdgeInsets.only(top: 60),
-                child: MemuatState(),
+                child: MemuatState(jam: true),
               ),
               error: (e, _) => Padding(
                 padding: const EdgeInsets.only(top: 40),
