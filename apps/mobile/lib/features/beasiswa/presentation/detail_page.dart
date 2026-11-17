@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/format.dart';
 import '../../../core/dependensi.dart';
@@ -93,15 +94,41 @@ class _DetailPageState extends State<DetailPage> {
               child: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
-                  child: FilledButton.icon(
-                    onPressed: () => _bukaPortal(context, nilai.value!.ringkas),
-                    icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                    label: const Text('Buka Laman Resmi'),
-                    style: FilledButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  child: Row(
+                    children: [
+                      Tooltip(
+                        message: 'Tanya chatbot AI',
+                        child: OutlinedButton(
+                          onPressed: () => context.push('/chat'),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(52, 48),
+                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            size: 20,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () =>
+                              _bukaPortal(context, nilai.value!.ringkas),
+                          icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                          label: const Text('Buka Laman Resmi'),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
