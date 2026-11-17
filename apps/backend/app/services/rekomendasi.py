@@ -257,3 +257,38 @@ def ringkasan(sesi: Session, p: Pengguna, hari_ini: date, wilayah: str | None = 
     for kategori, jumlah in sesi.execute(stmt).all():
         hasil[kategori] = int(jumlah)
     return hasil
+
+
+def sinkron(sesi: Session, hari_ini: date) -> list[dict]:
+    """Paket data beasiswa untuk mode luring di perangkat: setiap beasiswa terbit beserta syarat efektif (sama dengan yang
+    dipakai mesin kelayakan di server) dan data pendukung estimasi peluang, sehingga perangkat dapat menghitung sendiri."""
+    from app.rekomendasi import statistik
+    from app.rekomendasi.peluang import tingkat_persaingan
+    from app.services.kartu import luar_negeri
+
+    masukan = {m.id: m for m in _masukan(sesi, hari_ini)}
+    hasil: list[dict] = []
+    if not masukan:
+        return hasil
+    for b in sesi.scalars(select(Beasiswa).where(Beasiswa.id.in_(list(masukan)))):
+        m = masukan[b.id]
+        luar = luar_negeri(b.negara)
+        entri = statistik.cari(b.nama, b.penyelenggara, b.jenjang)
+        dasar = statistik.rasio_terbaru(entri)
+        hasil.append(
+            {
+                "id": str(b.id),
+                "nama": b.nama,
+                "penyelenggara": b.penyelenggara,
+                "negara": b.negara,
+                "jenjang": b.jenjang,
+                "tenggat": b.tenggat.isoformat() if b.tenggat else None,
+                "tautan_resmi": b.tautan_resmi,
+                "manfaat": b.manfaat,
+                "syarat": [[j, bt] for j, bt in m.syarat],
+                "luar_negeri": luar,
+                "dasar_statistik": dasar,
+                "tingkat": None if dasar is not None else tingkat_persaingan(b.nama, b.penyelenggara, luar),
+            }
+        )
+    return hasil
