@@ -36,3 +36,30 @@ def metrik(skor_kelayakan, alasan: list[str] | None, catatan: list[str] | None) 
         "syarat_terpenuhi": len(alasan),
         "syarat_total": total,
     }
+
+
+def peluang_untuk(pengguna, beasiswa, kategori: str | None, skor_kelayakan, alasan, catatan) -> dict:
+    """Estimasi peluang untuk satu beasiswa dan pengguna. Kosong (None) bila belum ada syarat terukur."""
+    from app.rekomendasi.peluang import alasan_peluang, estimasi_peluang, kekuatan_profil, persaingan_dasar
+
+    m = metrik(skor_kelayakan, alasan, catatan)
+    luar = luar_negeri(beasiswa.negara)
+    kuat = kekuatan_profil(
+        float(pengguna.ipk) if pengguna.ipk is not None else None,
+        pengguna.profil_lanjutan,
+        pengguna.skor_bahasa,
+    )
+    nilai = estimasi_peluang(
+        kategori=kategori,
+        ada_syarat_terukur=m["syarat_total"] > 0,
+        nama=beasiswa.nama,
+        penyelenggara=beasiswa.penyelenggara,
+        luar_negeri=luar,
+        kekuatan=kuat,
+    )
+    hasil = {**m, "luar_negeri": luar, "estimasi_peluang": nilai}
+    if nilai is not None:
+        hasil["_alasan_peluang"] = alasan_peluang(
+            kategori, persaingan_dasar(beasiswa.nama, beasiswa.penyelenggara, luar), kuat
+        )
+    return hasil

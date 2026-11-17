@@ -57,6 +57,8 @@ export type BeasiswaRingkas = {
   /** Penilaian untuk pengguna; ada di daftar Jelajah dan Detail. */
   kategori?: string | null;
   skor_kelayakan?: number | null;
+  /** Estimasi peluang diterima (2 sampai 90), perkiraan dari kecocokan syarat, kekuatan profil, dan persaingan umum. */
+  estimasi_peluang?: number | null;
   syarat_terpenuhi?: number;
   syarat_total?: number;
   luar_negeri?: boolean;
@@ -80,6 +82,7 @@ export type BeasiswaDetail = BeasiswaRingkas & {
   kategori?: Kategori | string | null;
   alasan?: string[];
   catatan_kekurangan?: string[];
+  alasan_peluang?: string[];
 };
 export type DetailAdmin = BeasiswaDetail & { status: string; alasan_ditandai?: string | null };
 export type AntreanItem = BeasiswaRingkas & { status: string; alasan_ditandai?: string | null; nama_sumber: string };
@@ -91,6 +94,7 @@ export type Rekomendasi = {
   catatan_kekurangan: string[];
   tenggat?: string | null;
   skor_kelayakan?: number | null;
+  estimasi_peluang?: number | null;
   syarat_terpenuhi?: number;
   syarat_total?: number;
   luar_negeri?: boolean;

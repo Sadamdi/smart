@@ -189,7 +189,10 @@ class _Isi extends StatelessWidget {
         ),
         if (detail.ringkas.kelayakan != null) ...[
           const SizedBox(height: 16),
-          _KartuSkor(kelayakan: detail.ringkas.kelayakan!),
+          _KartuSkor(
+            kelayakan: detail.ringkas.kelayakan!,
+            alasan: detail.alasanPeluang,
+          ),
         ],
         const SizedBox(height: 16),
         _KotakInfo(
@@ -492,9 +495,10 @@ class _RencanaDaftar extends StatelessWidget {
 
 /// Skor kelayakan besar di atas Detail: cincin, angka, dan jumlah syarat terpenuhi.
 class _KartuSkor extends StatelessWidget {
-  const _KartuSkor({required this.kelayakan});
+  const _KartuSkor({required this.kelayakan, this.alasan = const []});
 
   final Kelayakan kelayakan;
+  final List<String> alasan;
 
   @override
   Widget build(BuildContext context) {
@@ -511,7 +515,7 @@ class _KartuSkor extends StatelessWidget {
       child: Row(
         children: [
           CincinSkor(
-            skor: kelayakan.adaAngka ? kelayakan.skor : null,
+            skor: kelayakan.peluang,
             warna: warna,
             ukuran: 92,
             tebal: 11,
@@ -521,27 +525,35 @@ class _KartuSkor extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Skor kelayakan', style: t.bodySmall),
+                Text('Estimasi peluang', style: t.bodySmall),
                 const SizedBox(height: 2),
                 if (kelayakan.adaAngka) ...[
                   Text(
-                    '${kelayakan.skor}%',
+                    '${kelayakan.peluang}%',
                     style: t.headlineMedium?.copyWith(
                       fontSize: 30,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    'Syarat terpenuhi ${kelayakan.terpenuhi} dari ${kelayakan.total}',
-                    style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                  ),
+                  if (kelayakan.adaSyarat)
+                    Text(
+                      'Syarat terpenuhi ${kelayakan.terpenuhi} dari ${kelayakan.total}',
+                      style: t.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   const SizedBox(height: 6),
-                  TitikSyarat(
-                    terpenuhi: kelayakan.terpenuhi,
-                    total: kelayakan.total,
-                    warna: warna,
-                  ),
+                  if (kelayakan.adaSyarat)
+                    TitikSyarat(
+                      terpenuhi: kelayakan.terpenuhi,
+                      total: kelayakan.total,
+                      warna: warna,
+                    ),
+                  for (final a in alasan) ...[
+                    const SizedBox(height: 4),
+                    Text('- $a', style: t.bodySmall),
+                  ],
                 ] else
                   Text(
                     'Belum tersedia. Syarat beasiswa ini belum tercatat, cek laman resmi.',
@@ -549,7 +561,7 @@ class _KartuSkor extends StatelessWidget {
                   ),
                 const SizedBox(height: 8),
                 Text(
-                  'Ukuran syarat yang sudah kamu penuhi, bukan peluang diterima.',
+                  'Perkiraan dari kecocokan syarat, kekuatan profil, dan persaingan umum. Bukan jaminan diterima.',
                   style: t.bodySmall?.copyWith(fontSize: 11.5),
                 ),
               ],
