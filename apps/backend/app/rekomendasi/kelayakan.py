@@ -347,6 +347,8 @@ def periksa_syarat(
 
 
 _LEMAH = {"jenjang", "berkas_pendukung"}
+# Syarat terukur selain jenjang dan berkas yang diperlukan agar boleh disebut memenuhi (keputusan 17 November 2026).
+SYARAT_KUAT_MINIMUM = 2
 
 
 @dataclass
@@ -371,10 +373,16 @@ def nilai_kelayakan(
     if gagal:
         return HasilKelayakan(BELUM, skor, alasan, [h.kekurangan for h in gagal if h.kekurangan] + kurang)
     if all(h.status == OK for h in hasil):
-        if all(h.jenis in _LEMAH for h in hasil):
+        kuat = [h for h in hasil if h.jenis not in _LEMAH]
+        if not kuat:
             # Hanya jenjang (atau berkas) yang terukur: belum cukup untuk menyatakan memenuhi.
             return HasilKelayakan(
                 HAMPIR, min(skor, 0.5), alasan, ["Hanya jenjang yang tercatat, periksa syarat lain di laman resmi"]
+            )
+        if len(kuat) < SYARAT_KUAT_MINIMUM:
+            # Satu syarat terukur (mis. hanya kewarganegaraan) terlalu tipis untuk disebut memenuhi.
+            return HasilKelayakan(
+                HAMPIR, min(skor, 0.5), alasan, ["Syarat terukur masih sedikit, periksa syarat lain di laman resmi"]
             )
         return HasilKelayakan(MEMENUHI, skor, alasan, [])
     return HasilKelayakan(HAMPIR, skor, alasan, kurang)

@@ -16,6 +16,21 @@ class BeasiswaRingkas(BaseModel):
     tautan_resmi: str
 
 
+class StatistikSeleksi(BaseModel):
+    """Data seleksi yang dipublikasikan: kuota, pendaftar, penerima, rasio, dan sumbernya."""
+
+    program: str
+    periode: str
+    kuota: int | None = None
+    pendaftar: int | None = None
+    diterima: int | None = None
+    rasio: float | None = None
+    keandalan: str = "sedang"
+    catatan: str | None = None
+    sumber: str
+    url: str
+
+
 class KelayakanKartu(BaseModel):
     """Penilaian terhadap profil pengguna untuk kartu. Skor adalah skor kelayakan, bukan peluang diterima."""
 
@@ -58,3 +73,5 @@ class BeasiswaDetail(BeasiswaRingkas, KelayakanKartu):
     alasan: list[str] = []
     catatan_kekurangan: list[str] = []
     alasan_peluang: list[str] = []
+    dasar_peluang: str | None = None  # statistik (ada rasio terdokumentasi) atau perkiraan
+    statistik_seleksi: list[StatistikSeleksi] = []

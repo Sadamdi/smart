@@ -79,11 +79,13 @@ def estimasi_peluang(
     penyelenggara: str | None,
     luar_negeri: bool,
     kekuatan: float,
+    dasar_statistik: float | None = None,
 ) -> int | None:
     """Persen 2 sampai 90, atau None bila beasiswa belum punya syarat terukur (tidak ada dasar untuk menghitung)."""
     if kategori is None or not ada_syarat_terukur:
         return None
-    dasar = persaingan_dasar(nama, penyelenggara, luar_negeri)
+    # Rasio penerimaan yang terdokumentasi (bila ada) menggantikan perkiraan persaingan umum.
+    dasar = dasar_statistik if dasar_statistik is not None else persaingan_dasar(nama, penyelenggara, luar_negeri)
     faktor_profil = 0.6 + 0.8 * max(0.0, min(1.0, kekuatan))  # 0,6 untuk profil kosong sampai 1,4 untuk profil kuat
     nilai = dasar * FAKTOR_KATEGORI.get(kategori, 0.15) * faktor_profil * 100
     return int(round(max(2.0, min(90.0, nilai))))

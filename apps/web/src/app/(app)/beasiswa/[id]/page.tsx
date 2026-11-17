@@ -132,6 +132,38 @@ export default function DetailBeasiswa() {
                   </div>
                 </div>
               )}
+              {adaSkor(b) && (
+                <div className="mt-3 rounded-[20px] border border-c4/60 bg-card p-4">
+                  <p className="text-sm font-bold text-navy">Data seleksi sebelumnya</p>
+                  {(b.statistik_seleksi ?? []).length === 0 ? (
+                    <p className="mt-1 text-xs text-ink">
+                      Belum ada data resmi jumlah pendaftar dan penerima untuk program ini. Estimasi memakai perkiraan tingkat persaingan umum, bukan data seleksi program ini.
+                    </p>
+                  ) : (
+                    <ul className="mt-2 space-y-3">
+                      {b.statistik_seleksi?.map((s) => (
+                        <li key={`${s.program}-${s.periode}`} className="text-sm text-ink">
+                          <p className="font-semibold text-navy">{s.program}, {s.periode}</p>
+                          <p className="text-xs">
+                            {[
+                              s.kuota != null ? `kuota ${s.kuota.toLocaleString("id-ID")}` : null,
+                              s.pendaftar != null ? `${s.pendaftar.toLocaleString("id-ID")} pendaftar` : null,
+                              s.diterima != null ? `${s.diterima.toLocaleString("id-ID")} diterima` : null,
+                              s.rasio != null ? `rasio sekitar ${Math.round(s.rasio * 100)}%` : null,
+                            ]
+                              .filter(Boolean)
+                              .join(", ")}
+                          </p>
+                          {s.catatan && <p className="text-xs text-muted">{s.catatan}</p>}
+                          <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-primary underline">
+                            Sumber: {s.sumber}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
               <div
                 className={cx(
                   "mt-5 flex flex-wrap items-center gap-2 rounded-[14px] px-4 py-3 text-sm font-semibold",

@@ -1,0 +1,75 @@
+{
+  "catatan": "Data seleksi yang dipublikasikan pihak penyelenggara atau dikutip media. Hanya angka yang punya sumber yang dimasukkan. Sebagian besar beasiswa tidak mengumumkan jumlah pendaftar, sehingga rasio tidak tersedia. Tambahkan entri baru hanya dengan sumber dan tanggal akses.",
+  "entri": [
+    {
+      "kunci": ["lpdp"],
+      "program": "LPDP (beasiswa S2 dan S3)",
+      "periode": "2023",
+      "kuota": null,
+      "pendaftar": null,
+      "diterima": 9154,
+      "rasio": 0.29,
+      "keandalan": "sedang",
+      "catatan": "Penerima dari Laporan Tahunan LPDP 2023 (5.097 dalam negeri dan 4.057 luar negeri, dijumlahkan oleh GoodStats). Rasio sekitar 29 persen menurut artikel yang sama.",
+      "sumber": "GoodStats, 19 Desember 2024, mengutip Laporan Tahunan LPDP 2023",
+      "url": "https://goodstats.id/article/lpdp-dibuka-januari-2025-simak-keketatan-seleksi-periode-sebelumnya-TwicS",
+      "diakses": "2026-11-17"
+    },
+    {
+      "kunci": ["lpdp"],
+      "program": "LPDP (beasiswa S2 dan S3)",
+      "periode": "2024",
+      "kuota": 10000,
+      "pendaftar": 51027,
+      "diterima": null,
+      "rasio": 0.19,
+      "keandalan": "rendah",
+      "catatan": "Pendaftar 51.027 disampaikan Direktur Utama LPDP kepada Komisi X DPR RI (30 Agustus 2024). Jumlah penerima 2024 belum dirilis resmi pada artikel sumber; rasio sekitar 19 persen adalah perkiraan artikel dari kuota 8.000 sampai 10.000.",
+      "sumber": "GoodStats, 19 Desember 2024, mengutip paparan Dirut LPDP di Komisi X DPR RI",
+      "url": "https://goodstats.id/article/lpdp-dibuka-januari-2025-simak-keketatan-seleksi-periode-sebelumnya-TwicS",
+      "diakses": "2026-11-17"
+    },
+    {
+      "kunci": ["kip kuliah"],
+      "program": "KIP Kuliah",
+      "periode": "2024",
+      "kuota": 200000,
+      "pendaftar": null,
+      "diterima": null,
+      "rasio": null,
+      "keandalan": "sedang",
+      "catatan": "Kuota penerima baru 200.000 dari total sasaran 985.577 mahasiswa (termasuk penerima berjalan). Jumlah pendaftar tidak diumumkan, jadi rasio keterima tidak dapat dihitung.",
+      "sumber": "Kemendikbudristek, dikutip Republika dan Kompas, Februari 2024",
+      "url": "https://news.republika.co.id/berita/s8qlmh349/kemendikbudristek-kuota-kip-kuliah-2024-capai-985-577-mahasiswa",
+      "diakses": "2026-11-17"
+    },
+    {
+      "kunci": ["chevening"],
+      "program": "Chevening (Indonesia dan Timor Leste)",
+      "periode": "2017/2018",
+      "kuota": null,
+      "pendaftar": null,
+      "diterima": 73,
+      "rasio": null,
+      "keandalan": "sedang",
+      "catatan": "73 beasiswa untuk Indonesia dan Timor Leste digabung. Jumlah pelamar tidak dipublikasikan, jadi rasio keterima tidak dapat dihitung.",
+      "sumber": "GOV.UK, siaran Kedutaan Besar Inggris di Jakarta",
+      "url": "https://www.gov.uk/government/news/73-indonesian-future-leaders-awarded-chevening-scholarships-to-uk",
+      "diakses": "2026-11-17"
+    },
+    {
+      "kunci": ["australia awards"],
+      "program": "Australia Awards Indonesia (beasiswa jangka panjang)",
+      "periode": "2014-2020",
+      "kuota": null,
+      "pendaftar": null,
+      "diterima": 2070,
+      "rasio": null,
+      "keandalan": "sedang",
+      "catatan": "Total 2.070 penerima beasiswa jangka panjang selama 2014 sampai 2020 (rata-rata sekitar 300 per tahun). Jumlah pendaftar tidak dipublikasikan.",
+      "sumber": "DFAT, Australia Awards Indonesia End-of-Program Review",
+      "url": "https://www.dfat.gov.au/sites/default/files/australia-awards-indonesia-end-program-review-report.docx",
+      "diakses": "2026-11-17"
+    }
+  ]
+}

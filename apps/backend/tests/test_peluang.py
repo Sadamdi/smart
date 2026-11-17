@@ -123,3 +123,24 @@ def test_berkas_dihapus_setelah_dibaca_dan_hasil_tetap(tmp_path):
         _Sesi(), _P2(), "cv", "cv.txt", b"IPK 3,75 semester 5 TOEFL 520 organisasi BEM Fakultas Teknik periode 2024", st2
     )
     assert d2.lokasi_penyimpanan and Path(d2.lokasi_penyimpanan).exists()
+
+
+def test_statistik_lpdp_cocok_dan_rasio_dipakai():
+    from app.rekomendasi import statistik
+
+    entri = statistik.cari("LPDP Reguler Magister dan Doktor", "Kemenkeu")
+    assert [e["periode"] for e in entri] == ["2024", "2023"]
+    assert all(e["sumber"] and e["url"].startswith("https://") for e in entri)
+    assert statistik.rasio_terbaru(entri) == 0.19
+    assert statistik.cari("Beasiswa Tanpa Data", None) == []
+    assert statistik.rasio_terbaru([]) is None
+    # KIP Kuliah hanya punya kuota, tanpa rasio: dasar tetap perkiraan
+    assert statistik.rasio_terbaru(statistik.cari("KIP Kuliah", None)) is None
+
+
+def test_peluang_untuk_memakai_statistik_dan_menandai_dasarnya():
+    h = peluang_untuk(_P(ipk=3.6), _B("LPDP Reguler", "Kemenkeu", "Indonesia"), "memenuhi", 1.0, ["a", "b"], [])
+    assert h["_dasar_peluang"] == "statistik" and h["_statistik"]
+    assert h["_alasan_peluang"][0].startswith("Persaingan memakai rasio")
+    h2 = peluang_untuk(_P(ipk=3.6), _B("Beasiswa Lokal Biasa"), "memenuhi", 1.0, ["a", "b"], [])
+    assert h2["_dasar_peluang"] == "perkiraan" and h2["_statistik"] == []

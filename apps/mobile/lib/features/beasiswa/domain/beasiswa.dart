@@ -173,6 +173,46 @@ class BerkasWajib {
   Map<String, dynamic> toJson() => {'id': id, 'nama_berkas': namaBerkas};
 }
 
+/// Data seleksi yang dipublikasikan (kuota, pendaftar, penerima) beserta sumbernya.
+class StatistikSeleksi {
+  const StatistikSeleksi({
+    required this.program,
+    required this.periode,
+    this.kuota,
+    this.pendaftar,
+    this.diterima,
+    this.rasio,
+    this.keandalan = 'sedang',
+    this.catatan,
+    required this.sumber,
+    required this.url,
+  });
+
+  final String program;
+  final String periode;
+  final int? kuota;
+  final int? pendaftar;
+  final int? diterima;
+  final double? rasio;
+  final String keandalan;
+  final String? catatan;
+  final String sumber;
+  final String url;
+
+  factory StatistikSeleksi.fromJson(Map<String, dynamic> j) => StatistikSeleksi(
+    program: (j['program'] ?? '') as String,
+    periode: (j['periode'] ?? '') as String,
+    kuota: (j['kuota'] as num?)?.toInt(),
+    pendaftar: (j['pendaftar'] as num?)?.toInt(),
+    diterima: (j['diterima'] as num?)?.toInt(),
+    rasio: (j['rasio'] as num?)?.toDouble(),
+    keandalan: (j['keandalan'] ?? 'sedang') as String,
+    catatan: j['catatan'] as String?,
+    sumber: (j['sumber'] ?? '') as String,
+    url: (j['url'] ?? '') as String,
+  );
+}
+
 class BeasiswaDetail {
   const BeasiswaDetail({
     required this.ringkas,
@@ -184,9 +224,13 @@ class BeasiswaDetail {
     this.alasan = const [],
     this.catatanKekurangan = const [],
     this.alasanPeluang = const [],
+    this.dasarPeluang,
+    this.statistik = const [],
   });
 
   final List<String> alasanPeluang;
+  final String? dasarPeluang;
+  final List<StatistikSeleksi> statistik;
   final String? kategori;
   final List<String> alasan;
   final List<String> catatanKekurangan;
@@ -214,6 +258,11 @@ class BeasiswaDetail {
       for (final x in (j['catatan_kekurangan'] as List? ?? [])) '$x',
     ],
     alasanPeluang: [for (final x in (j['alasan_peluang'] as List? ?? [])) '$x'],
+    dasarPeluang: j['dasar_peluang'] as String?,
+    statistik: [
+      for (final x in (j['statistik_seleksi'] as List? ?? []))
+        StatistikSeleksi.fromJson(x as Map<String, dynamic>),
+    ],
   );
 
   /// Bentuk datar seperti respons API: kolom ringkasan berada di tingkat atas.
