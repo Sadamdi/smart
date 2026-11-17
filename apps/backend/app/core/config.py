@@ -34,6 +34,8 @@ class Settings(BaseSettings):
 
     upload_dir: str = "data/unggahan"
     upload_maks_byte: int = 5 * 1024 * 1024
+    # False (bawaan): berkas asli dihapus segera setelah dibaca, hanya hasil baca yang disimpan.
+    upload_simpan_berkas: bool = False
 
     @field_validator("destructive_db_hosts", "cors_origins", mode="before")
     @classmethod

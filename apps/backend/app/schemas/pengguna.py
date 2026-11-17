@@ -68,8 +68,12 @@ class Prestasi(BaseModel):
     tahun: Tahun = None
 
 
+JENIS_SERTIFIKAT = Literal["keahlian", "bahasa", "kepanitiaan", "pelatihan", "kompetensi", "lainnya"]
+
+
 class Sertifikat(BaseModel):
     nama: Pendek
+    jenis: JENIS_SERTIFIKAT | None = None
     penerbit: Annotated[str, StringConstraints(strip_whitespace=True, max_length=120)] | None = None
     tahun: Tahun = None
 

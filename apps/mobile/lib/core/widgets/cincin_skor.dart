@@ -41,8 +41,8 @@ class CincinSkor extends StatelessWidget {
     final tujuan = (skor ?? 0) / 100;
     return Semantics(
       label: skor == null
-          ? 'Skor kelayakan belum tersedia'
-          : 'Skor kelayakan $skor persen',
+          ? 'Estimasi peluang belum tersedia'
+          : 'Estimasi peluang $skor persen',
       child: ExcludeSemantics(
         child: SizedBox(
           width: ukuran,
@@ -68,7 +68,7 @@ class CincinSkor extends StatelessWidget {
                         TextSpan(
                           text: '${(v * 100).round()}',
                           style: TextStyle(
-                            fontSize: ukuran * 0.3,
+                            fontSize: ukuran * (skor! >= 100 ? 0.2 : 0.26),
                             fontWeight: FontWeight.w800,
                             color: Warna.navy,
                             height: 1,
@@ -77,7 +77,7 @@ class CincinSkor extends StatelessWidget {
                             TextSpan(
                               text: '%',
                               style: TextStyle(
-                                fontSize: ukuran * 0.16,
+                                fontSize: ukuran * (skor! >= 100 ? 0.1 : 0.12),
                                 fontWeight: FontWeight.w700,
                                 color: Warna.muted,
                               ),

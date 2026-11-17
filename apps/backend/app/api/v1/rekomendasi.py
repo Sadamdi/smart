@@ -11,7 +11,7 @@ from app.models import Pengguna
 from app.schemas.beasiswa import BeasiswaRingkas, KelayakanKartu
 from app.schemas.common import Amplop
 from app.services import rekomendasi as layanan
-from app.services.kartu import luar_negeri, metrik
+from app.services.kartu import peluang_untuk
 
 router = APIRouter(prefix="/rekomendasi", tags=["rekomendasi"])
 
@@ -38,15 +38,17 @@ class RingkasanOut(BaseModel):
     belum_memenuhi: int
 
 
-def _item(r, b) -> RekomendasiOut:
+def _item(r, b, p) -> RekomendasiOut:
+    ekstra = peluang_untuk(p, b, r.kategori, r.skor_kelayakan, r.alasan, r.catatan_kekurangan)
+    for k in ("_alasan_peluang", "_statistik", "_dasar_peluang", "_tingkat"):
+        ekstra.pop(k, None)
     return RekomendasiOut(
         beasiswa=BeasiswaRingkas.model_validate(b),
         kategori=r.kategori,
         alasan=r.alasan or [],
         catatan_kekurangan=r.catatan_kekurangan or [],
         tenggat=b.tenggat,
-        luar_negeri=luar_negeri(b.negara),
-        **metrik(r.skor_kelayakan, r.alasan, r.catatan_kekurangan),
+        **ekstra,
     )
 
 
@@ -59,7 +61,7 @@ def daftar(
 ) -> Amplop[list[RekomendasiOut]]:
     baris = layanan.daftar(sesi, p, date.today(), kategori, wilayah=wilayah)
     sesi.commit()
-    return Amplop(data=[_item(r, b) for r, b in baris])
+    return Amplop(data=[_item(r, b, p) for r, b in baris])
 
 
 @router.get("/ringkasan", summary="Jumlah rekomendasi per kategori", response_model=Amplop[RingkasanOut])
@@ -73,4 +75,4 @@ def ringkasan(sesi: SesiDep, p: SaatIni, wilayah: Annotated[Wilayah | None, Quer
 def hitung_ulang(sesi: SesiDep, p: SaatIni) -> Amplop[list[RekomendasiOut]]:
     baris = layanan.daftar(sesi, p, date.today(), None, paksa=True)
     sesi.commit()
-    return Amplop(data=[_item(r, b) for r, b in baris])
+    return Amplop(data=[_item(r, b, p) for r, b in baris])
