@@ -4,9 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Animasi pembuka, disusun dari potongan logo yang bergerak sendiri-sendiri: topi toga jatuh dan memantul,
-/// alasnya naik, jumbai turun, bintang pemandu muncul, gelombang pantau merambat keluar, lalu huruf SMART
-/// muncul satu per satu. Hanya visual, tidak menahan sentuhan.
+/// Animasi pembuka Toga Lipat: alasnya turun, empat lipatan kertas membuka satu per satu menjadi topi toga,
+/// jumbai emas berayun lalu diam, kemudian huruf SMART muncul satu per satu. Hanya visual, tidak menahan sentuhan.
 class LayarPembuka extends StatefulWidget {
   const LayarPembuka({super.key, required this.child, this.aktif = true});
 
@@ -92,23 +91,10 @@ class _IsiPembuka extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 96,
-              height: 96,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(22),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF2F6FC0), Color(0xFF143F7C)],
-                ),
-              ),
-              child: SizedBox(
-                width: 87,
-                height: 60,
-                child: CustomPaint(painter: _PainterLogo(ms)),
-              ),
+            SizedBox(
+              width: 112,
+              height: 112,
+              child: CustomPaint(painter: _PainterLogo(ms)),
             ),
             const SizedBox(height: 16),
             Row(
@@ -164,113 +150,107 @@ class _IsiPembuka extends StatelessWidget {
   }
 }
 
-/// Lambang tanpa latar kotak, dalam ruang gambar 64 x 64 yang sama dengan logo.svg.
+/// Toga Lipat dalam ruang gambar 120 x 120 yang sama dengan logo.svg (kotak biru tua, empat lipatan, jumbai emas).
 class _PainterLogo extends CustomPainter {
   _PainterLogo(this.ms);
 
   final double ms;
 
+  static const _navy = Color(0xFF143F7C);
   static const _emas = Color(0xFFF5B73B);
+  static const _alas = Color(0xFF7FA8E0);
+
+  /// Empat lipatan: titik segitiga, warna, dan waktu mulai membuka (ms).
+  static const _lipatan = <(List<Offset>, Color, double)>[
+    ([Offset(60, 52), Offset(60, 22), Offset(14, 52)], Color(0xFFBCD2F1), 300),
+    ([Offset(60, 52), Offset(60, 22), Offset(106, 52)], Color(0xFFFFFFFF), 420),
+    ([Offset(60, 52), Offset(106, 52), Offset(60, 82)], Color(0xFF3E83D6), 540),
+    ([Offset(60, 52), Offset(60, 82), Offset(14, 52)], _alas, 660),
+  ];
 
   @override
   void paint(Canvas canvas, Size size) {
-    final k = math.min(size.width / 58, size.height / 40);
-    // Lambang menempati x 6 sampai 60 dan y 13 sampai 48 pada kotak 64.
-    canvas.translate(
-      (size.width - 54 * k) / 2 - 6 * k,
-      (size.height - 35 * k) / 2 - 13 * k,
-    );
+    final k = math.min(size.width, size.height) / 120;
     canvas.scale(k);
 
-    final topi = _tahap(ms, 0, 850, Curves.bounceOut);
-    final topiMuncul = _tahap(ms, 0, 250, Curves.easeOut);
-    final alas = _tahap(ms, 300, 750, Curves.easeOutCubic);
-    final jumbai = _tahap(ms, 750, 1050, Curves.easeOut);
-    final bintang = _tahap(ms, 1000, 1450, Curves.easeOutBack);
-
-    // Alas topi.
+    // Kotak biru tua tumbuh dari tengah.
+    final kotak = _tahap(ms, 0, 350, Curves.easeOutBack);
     canvas.save();
-    canvas.translate(0, 8 * (1 - alas));
-    canvas.drawPath(
-      Path()
-        ..moveTo(17, 29.5)
-        ..lineTo(30, 36)
-        ..lineTo(43, 29.5)
-        ..lineTo(43, 38.5)
-        ..cubicTo(43, 42.5, 37, 45.5, 30, 45.5)
-        ..cubicTo(23, 45.5, 17, 42.5, 17, 38.5)
-        ..close(),
-      Paint()..color = Colors.white.withValues(alpha: 0.85 * alas),
+    canvas.translate(60, 60);
+    canvas.scale(kotak.clamp(0.0, 1.06));
+    canvas.translate(-60, -60);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(0, 0, 120, 120),
+        const Radius.circular(26),
+      ),
+      Paint()..color = _navy,
     );
     canvas.restore();
 
-    // Topi toga: jatuh dari atas lalu memantul.
-    canvas.save();
-    canvas.translate(0, -22 * (1 - topi));
-    canvas.drawPath(
-      Path()
-        ..moveTo(30, 13)
-        ..lineTo(54, 24)
-        ..lineTo(30, 35)
-        ..lineTo(6, 24)
-        ..close(),
-      Paint()..color = Colors.white.withValues(alpha: topiMuncul),
-    );
-    canvas.restore();
+    canvas.translate(60, 60);
+    canvas.scale(0.9);
+    canvas.translate(-60, -57);
 
-    // Jumbai turun dari ujung topi.
-    if (jumbai > 0) {
-      canvas.drawLine(
-        const Offset(47, 27.4),
-        Offset(47, 27.4 + 12.6 * jumbai),
-        Paint()
-          ..color = _emas
-          ..strokeWidth = 2.4
-          ..strokeCap = StrokeCap.round,
-      );
-    }
-
-    // Bintang pemandu.
-    if (bintang > 0) {
+    // Alas topi turun.
+    final alas = _tahap(ms, 100, 700, Curves.easeOut);
+    if (alas > 0) {
       canvas.save();
-      canvas.translate(47, 44);
-      canvas.rotate(-0.8 * (1 - bintang));
-      canvas.scale(bintang.clamp(0.0, 1.4));
-      canvas.translate(-47, -44);
+      canvas.translate(0, -14 * (1 - alas));
       canvas.drawPath(
         Path()
-          ..moveTo(47, 39.8)
-          ..lineTo(48.4, 42.6)
-          ..lineTo(51.2, 44)
-          ..lineTo(48.4, 45.4)
-          ..lineTo(47, 48.2)
-          ..lineTo(45.6, 45.4)
-          ..lineTo(42.8, 44)
-          ..lineTo(45.6, 42.6)
+          ..moveTo(36, 62)
+          ..lineTo(36, 84)
+          ..cubicTo(45, 92, 75, 92, 84, 84)
+          ..lineTo(84, 62)
+          ..lineTo(60, 74)
           ..close(),
-        Paint()..color = _emas,
+        Paint()..color = _alas.withValues(alpha: alas),
       );
       canvas.restore();
     }
 
-    // Gelombang pantau: merambat keluar dari bintang, berulang pelan.
-    for (var i = 0; i < 2; i++) {
-      final awal = 1400.0 + i * 260;
-      final fase = ((ms - awal) / 900).clamp(0.0, 1.0);
-      if (fase <= 0) continue;
-      final r = (i == 0 ? 8.5 : 12.0) + 3 * fase;
-      final alpha = math.sin(fase * math.pi) * (i == 0 ? 0.95 : 0.6);
-      canvas.drawArc(
-        Rect.fromCircle(center: const Offset(47, 44), radius: r),
-        -65 * math.pi / 180,
-        50 * math.pi / 180,
-        false,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round
-          ..strokeWidth = 1.8
-          ..color = _emas.withValues(alpha: alpha),
+    // Lipatan membuka satu per satu dari titik tengah.
+    for (final (titik, warna, mulai) in _lipatan) {
+      final v = _tahap(ms, mulai, mulai + 700, Curves.easeOutBack);
+      final a = _tahap(ms, mulai, mulai + 250, Curves.easeOut);
+      if (a <= 0) continue;
+      canvas.save();
+      canvas.translate(60, 52);
+      canvas.rotate(-0.7 * (1 - v));
+      canvas.scale(v.clamp(0.0, 1.12));
+      canvas.translate(-60, -52);
+      canvas.drawPath(
+        Path()..addPolygon(titik, true),
+        Paint()..color = warna.withValues(alpha: a),
       );
+      canvas.restore();
+    }
+
+    // Jumbai emas berayun lalu diam.
+    final muncul = _tahap(ms, 900, 1200, Curves.easeOut);
+    if (muncul > 0) {
+      final s = ms - 1050;
+      final sudut = s < 0
+          ? -0.52
+          : -0.52 * math.exp(-s / 500) * math.cos(s / 150);
+      canvas.save();
+      canvas.translate(106, 52);
+      canvas.rotate(sudut);
+      canvas.translate(-106, -52);
+      final cat = Paint()..color = _emas.withValues(alpha: muncul);
+      canvas.drawLine(
+        const Offset(106, 52),
+        const Offset(106, 78),
+        cat
+          ..strokeWidth = 3.5
+          ..style = PaintingStyle.stroke,
+      );
+      canvas.drawRect(
+        const Rect.fromLTWH(101, 78, 10, 13),
+        cat..style = PaintingStyle.fill,
+      );
+      canvas.restore();
     }
   }
 

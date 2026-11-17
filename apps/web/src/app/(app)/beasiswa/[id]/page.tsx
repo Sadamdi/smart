@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import type { ComponentType } from "react";
 import { DaftarChecklist } from "@/components/DaftarChecklist";
 import { Tampil, pesanGalat } from "@/components/state";
+import { adaAngka, adaPenilaian as adaSkor, BarisSyarat, CincinSkor, warnaSkor } from "@/components/Skor";
 import { ChipStatus, JudulBagian, Kartu, Lencana, Pilihan, Tombol, cx } from "@/components/ui";
 import { kirim } from "@/lib/api";
 import { kunci, useAksi, useChecklist, useDetail, useTersimpan } from "@/lib/hooks";
@@ -114,6 +115,16 @@ export default function DetailBeasiswa() {
                 </div>
                 <div className="hidden lg:block">{tombolSimpan()}</div>
               </div>
+              {adaSkor(b) && (
+                <div className="mt-5 flex items-center gap-5 rounded-[20px] border border-c4/60 bg-c1 p-4">
+                  <CincinSkor skor={adaAngka(b) ? b.skor_kelayakan : null} warna={warnaSkor(b.kategori)} ukuran={88} tebal={10} />
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-muted">Skor kelayakan</p>
+                    <BarisSyarat k={b} />
+                    <p className="mt-1 text-xs text-muted">Ukuran syarat yang sudah Anda penuhi, bukan peluang diterima.</p>
+                  </div>
+                </div>
+              )}
               <div
                 className={cx(
                   "mt-5 flex flex-wrap items-center gap-2 rounded-[14px] px-4 py-3 text-sm font-semibold",

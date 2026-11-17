@@ -3,6 +3,7 @@ import { Globe, Search, SearchX } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { KartuBeasiswa } from "@/components/KartuBeasiswa";
+import { TabWilayah, type Wilayah } from "@/components/Skor";
 import { GalatState, KosongState, MemuatKisi } from "@/components/state";
 import { ChipFilter, JudulHalaman, Masukan, Tombol, TautanTombol } from "@/components/ui";
 import { useJelajah } from "@/lib/hooks";
@@ -13,6 +14,7 @@ function Isi({ awal }: { awal: string }) {
   const [teks, setTeks] = useState(awal);
   const [q, setQ] = useState(awal);
   const [jenjang, setJenjang] = useState("");
+  const [wilayah, setWilayah] = useState<Wilayah>("dalam");
   const [negara, setNegara] = useState("");
   const [negaraTerapan, setNegaraTerapan] = useState("");
 
@@ -25,13 +27,14 @@ function Isi({ awal }: { awal: string }) {
     return () => clearTimeout(t);
   }, [negara]);
 
-  const kueri = useJelajah({ q, jenjang, negara: negaraTerapan });
+  const kueri = useJelajah({ q, jenjang, negara: negaraTerapan, wilayah });
   const item = kueri.data?.pages.flatMap((p) => p.item) ?? [];
 
   return (
     <div>
       <JudulHalaman judul="Jelajah Beasiswa" deskripsi="Telusuri beasiswa yang sedang dibuka dari sumber resmi." />
       <div className="mb-5 space-y-3">
+        <TabWilayah nilai={wilayah} onPilih={setWilayah} />
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />

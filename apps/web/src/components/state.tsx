@@ -47,12 +47,16 @@ export function MemuatKisi({ jumlah = 6 }: { jumlah?: number }) {
   );
 }
 
-export function KosongState({ judul, pesan, aksi, ikon: Ikon = Inbox }: { judul: string; pesan?: string; aksi?: ReactNode; ikon?: LucideIcon }) {
+export function KosongState({ judul, pesan, aksi, ikon: Ikon = Inbox, ilustrasi }: { judul: string; pesan?: string; aksi?: ReactNode; ikon?: LucideIcon; ilustrasi?: ReactNode }) {
   return (
     <div className="flex flex-col items-center rounded-kartu border border-dashed border-line/60 bg-card px-6 py-12 text-center">
-      <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-c2 text-primary">
-        <Ikon className="h-7 w-7" aria-hidden />
-      </span>
+      {ilustrasi ? (
+        <span className="mb-3">{ilustrasi}</span>
+      ) : (
+        <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-c2 text-primary">
+          <Ikon className="h-7 w-7" aria-hidden />
+        </span>
+      )}
       <p className="text-base font-bold text-navy">{judul}</p>
       {pesan && <p className="mt-1 max-w-md text-sm text-ink">{pesan}</p>}
       {aksi && <div className="mt-5">{aksi}</div>}

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
+import '../../../core/widgets/cincin_skor.dart';
 import '../../../core/widgets/kartu_beasiswa.dart';
 import '../../../core/widgets/smart_app_bar.dart';
 import '../../../core/widgets/state_widgets.dart';
@@ -102,6 +103,8 @@ class _RekomendasiPageState extends State<RekomendasiPage> {
               style: t.bodyMedium,
             ),
             const SizedBox(height: 14),
+            TabWilayah(nilai: _c.wilayah.value, onPilih: _c.pilihWilayah),
+            const SizedBox(height: 12),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -195,6 +198,7 @@ class _RekomendasiPageState extends State<RekomendasiPage> {
                         key: ValueKey('${r.beasiswa.id}-${r.kategori.kode}'),
                         beasiswa: r.beasiswa,
                         kategori: r.kategori,
+                        kelayakan: r.kelayakan,
                         alasan: r.alasan,
                         catatan: r.catatanKekurangan,
                         tersimpan: tersimpan.contains(r.beasiswa.id),

@@ -1,8 +1,10 @@
 "use client";
 import { CalendarClock, ChevronRight, ClipboardCheck, MessageCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { DaftarChecklist } from "@/components/DaftarChecklist";
 import { KartuBeasiswa } from "@/components/KartuBeasiswa";
+import { TabWilayah, type Wilayah } from "@/components/Skor";
 import { KosongState, Tampil } from "@/components/state";
 import { BarProgres, ChipStatus, Donat, JudulBagian, Kartu, Metrik, TautanTombol } from "@/components/ui";
 import { kirim } from "@/lib/api";
@@ -12,8 +14,9 @@ import { kelengkapanProfil } from "@/lib/profil";
 
 export default function Dashboard() {
   const saya = useSaya().data;
-  const ringkasan = useRingkasan();
-  const rekom = useRekomendasi();
+  const [wilayah, setWilayah] = useState<Wilayah>("dalam");
+  const ringkasan = useRingkasan(wilayah);
+  const rekom = useRekomendasi(undefined, wilayah);
   const checklist = useChecklist();
   const kalender = useKalender();
   const centang = useAksi(
@@ -80,6 +83,8 @@ export default function Dashboard() {
         </div>
       </section>
 
+      <TabWilayah nilai={wilayah} onPilih={setWilayah} />
+
       <div className="grid gap-4 grid-cols-2 xl:grid-cols-4">
         <Metrik label="Memenuhi syarat" nilai={ringkasan.data?.memenuhi ?? "-"} catatan="Rekomendasi utama" nada="utama" memuat={ringkasan.isPending} />
         <Metrik label="Hampir memenuhi" nilai={ringkasan.data?.hampir_memenuhi ?? "-"} catatan="Ada syarat yang dapat dikejar" memuat={ringkasan.isPending} />
@@ -111,7 +116,7 @@ export default function Dashboard() {
             >
               {() =>
                 utama ? (
-                  <KartuBeasiswa beasiswa={utama.beasiswa} kepala={<ChipStatus kategori={utama.kategori} />}>
+                  <KartuBeasiswa beasiswa={utama.beasiswa} kelayakan={utama} kepala={<ChipStatus kategori={utama.kategori} />}>
                     <ul className="list-disc space-y-1 pl-5 text-sm text-ink">
                       {utama.alasan.slice(0, 3).map((a) => (
                         <li key={a}>{a}</li>
