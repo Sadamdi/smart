@@ -1,0 +1,247 @@
+<!doctype html><meta charset="utf-8"><title>10 tema SMART</title>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@700&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@700&family=Press+Start+2P&family=VT323&family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&family=Shippori+Mincho:wght@500;800&family=Fredoka:wght@500;700&family=Cinzel:wght@600;800&family=Zen+Kaku+Gothic+New:wght@500;700&family=Anton&family=Audiowide&family=Chakra+Petch:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e4e6eb;font-family:system-ui;padding:20px}
+h1{font:700 20px system-ui;margin:0 0 14px;color:#222}
+.grid{display:grid;grid-template-columns:repeat(5,300px);gap:22px 18px;justify-content:center}
+.wrap{width:300px}
+.cap{font:700 13px system-ui;margin:0 0 6px;color:#222}
+.fr{width:300px;height:648px;overflow:hidden;border-radius:26px;position:relative;box-shadow:0 6px 20px #0003}
+.ph{width:390px;height:844px;transform:scale(.769);transform-origin:0 0;position:relative;overflow:hidden}
+.in{padding:18px 18px 0;position:relative;height:100%}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;position:relative;z-index:2}
+.brand{display:flex;align-items:center;gap:8px;font-size:21px;font-weight:700}
+.logo{width:36px;height:36px}
+.bell{position:relative;width:40px;height:40px;display:grid;place-items:center}
+.bell i{position:absolute;top:-2px;right:-3px;min-width:18px;height:18px;border-radius:9px;display:grid;place-items:center;font:700 10px system-ui;font-style:normal;padding:0 4px}
+.hello{font-size:28px;font-weight:800;margin-top:4px;position:relative;z-index:2}
+.sub{font-size:14px;margin-top:4px;max-width:260px;position:relative;z-index:2}
+.tabs{display:flex;gap:8px;margin:14px 0;position:relative;z-index:2}
+.tabs span{padding:9px 16px;font-size:14px;font-weight:700}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;padding:14px 6px;margin-bottom:12px;position:relative;z-index:2}
+.sum b{display:block;font-size:34px;line-height:1}
+.sum small{font-size:12px}
+h3{font-size:19px;margin:6px 0 10px;position:relative;z-index:2}
+.c{position:relative;z-index:2;padding:14px;margin-bottom:12px}
+.c h4{font-size:16px;line-height:1.2;padding-right:78px}
+.by{font-size:12px;opacity:.7;margin:2px 0 8px}
+.meta{display:flex;gap:8px;align-items:center;font-size:12.5px;flex-wrap:wrap}
+.badge{font-size:12px;font-weight:700;padding:3px 10px}
+.ter{font-size:13px;font-weight:700;margin-top:8px}
+.skor{position:absolute;top:10px;right:10px;width:66px;height:66px;display:grid;place-items:center;text-align:center;align-content:center}
+.skor b{display:block;font-size:19px;line-height:1}
+.skor small{font-size:8px;display:block}
+.nav{position:absolute;left:0;right:0;bottom:0;height:70px;display:flex;justify-content:space-around;align-items:center;font-size:11px;font-weight:700;z-index:3}
+.nav span{padding:7px 9px}
+.deco{position:absolute;inset:0;pointer-events:none;z-index:1}
+
+/* 1 SPIDER-VERSE KOMIK */
+.t1{background:#ffe14a;background-image:radial-gradient(#ff3d8b 22%,transparent 24%);background-size:9px 9px;color:#111;font-family:'Comic Neue'}
+.t1 .brand,.t1 h3,.t1 .hello,.t1 .sum b,.t1 h4{font-family:Bangers;letter-spacing:.04em;font-weight:400}
+.t1 .hello{font-size:40px;text-shadow:3px 3px 0 #00d4ff,-2px -2px 0 #ff3d8b;color:#fff;-webkit-text-stroke:2px #111}
+.t1 .sub{background:#fff;border:3px solid #111;padding:4px 8px;font-weight:700;transform:rotate(-1.5deg)}
+.t1 .tabs span{background:#fff;border:3px solid #111;border-radius:6px;box-shadow:3px 3px 0 #111}
+.t1 .tabs span.on{background:#00d4ff}
+.t1 .sum{background:#fff;border:3px solid #111;box-shadow:5px 5px 0 #ff3d8b;transform:rotate(.8deg)}
+.t1 .sum b{font-size:44px}
+.t1 h3{background:#111;color:#ffe14a;display:inline-block;padding:0 10px;font-size:26px;transform:rotate(-1.5deg)}
+.t1 .c{background:#fff;border:3px solid #111;box-shadow:5px 5px 0 #00d4ff}
+.t1 h4{font-size:23px;line-height:1.05}
+.t1 .badge{background:#111;color:#ffe14a;border-radius:4px}
+.t1 .skor{background:#ff3d8b;border:3px solid #111;border-radius:50%;color:#fff;box-shadow:3px 3px 0 #111}
+.t1 .skor b{font:400 24px Bangers}
+.t1 .nav{background:#111;color:#fff;font-family:Bangers;font-size:15px;letter-spacing:.05em;font-weight:400}
+.t1 .nav .on{background:#ffe14a;color:#111;border-radius:6px}
+.t1 .bell i{background:#ff3d8b;color:#fff;border:2px solid #111}
+
+/* 2 NEO-BRUTALIS */
+.t2{background:#b9f3d8;color:#111;font-family:'Space Grotesk'}
+.t2 .brand,.t2 .hello,.t2 h3{font-weight:700}
+.t2 .hello{font-size:30px;letter-spacing:-.02em}
+.t2 .tabs span{background:#fff;border:3px solid #111;border-radius:10px;box-shadow:3px 3px 0 #111}
+.t2 .tabs span.on{background:#ffd23f}
+.t2 .sum{background:#fff;border:3px solid #111;border-radius:14px;box-shadow:6px 6px 0 #111}
+.t2 .sum b{font-family:'Space Mono'}
+.t2 .c{background:#fff;border:3px solid #111;border-radius:14px;box-shadow:6px 6px 0 #111}
+.t2 .badge{border:2px solid #111;border-radius:99px;background:#9ef0b6}
+.t2 .badge.h{background:#ffd23f}
+.t2 .skor{background:#ff5c8a;border:3px solid #111;border-radius:12px;font-family:'Space Mono'}
+.t2 .nav{background:#fff;border-top:3px solid #111}
+.t2 .nav .on{background:#ff5c8a;border:2px solid #111;border-radius:10px}
+.t2 .bell i{background:#ff5c8a;border:2px solid #111;color:#111}
+
+/* 3 PIKSEL 8-BIT */
+.t3{background:#1a1c3a;color:#fff;font-family:VT323}
+.t3 *{font-family:'Press Start 2P',monospace}
+.t3 .brand{font-size:15px}.t3 .hello{font-size:15px;line-height:1.5;margin-top:10px}
+.t3 .sub{font-size:8px;line-height:1.7;font-family:VT323;font-size:17px}
+.t3 .tabs span{font-size:9px;background:#2d3070;box-shadow:0 0 0 3px #fff}
+.t3 .tabs span.on{background:#f8d030;color:#1a1c3a}
+.t3 .sum{background:#2d3070;box-shadow:0 0 0 4px #fff,0 0 0 8px #1a1c3a,0 0 0 11px #58c46a}
+.t3 .sum b{font-size:20px;color:#f8d030}.t3 .sum small{font-size:7px}
+.t3 h3{font-size:11px;color:#f8d030}
+.t3 .c{background:#2d3070;box-shadow:0 0 0 3px #fff,0 0 0 6px #1a1c3a}
+.t3 .c h4{font-size:9px;line-height:1.5;padding-right:70px}
+.t3 .by,.t3 .meta,.t3 .ter{font-family:VT323;font-size:16px}
+.t3 .badge{font-size:8px;background:#58c46a;color:#1a1c3a}.t3 .badge.h{background:#f8d030}
+.t3 .skor{background:none;width:62px;height:40px;place-items:start end;text-align:right}
+.t3 .skor b{font-size:12px;color:#58c46a}
+.t3 .skor small{font-size:6px}
+.t3 .skor::after{content:"";display:block;width:62px;height:8px;margin-top:3px;background:linear-gradient(90deg,#58c46a var(--p),#0e0f22 0);box-shadow:0 0 0 2px #fff}
+.t3 .nav{background:#0e0f22;font-size:7px}
+.t3 .nav .on{background:#f8d030;color:#1a1c3a}
+.t3 .bell i{background:#e03c3c;border-radius:0}
+
+/* 4 CYBERPUNK */
+.t4{background:#0a0e14;color:#e8fbff;font-family:Rajdhani}
+.t4 .brand,.t4 h3,.t4 .hello,.t4 h4{font-family:Orbitron;font-weight:900}
+.t4 .hello{font-size:22px;color:#fcee0a;margin-top:12px}
+.t4 .sub{font-size:16px;font-weight:600;color:#00f0ff}
+.t4 .tabs span{background:#0a0e14;border:2px solid #00f0ff;color:#00f0ff;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
+.t4 .tabs span.on{background:#fcee0a;color:#0a0e14;border-color:#fcee0a}
+.t4 .sum{background:#11202b;border:2px solid #ff2a6d;clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px))}
+.t4 .sum b{font:900 30px Orbitron;color:#fcee0a}
+.t4 .sum small{font-size:14px;color:#00f0ff}
+.t4 h3{font-size:14px;color:#ff2a6d}
+.t4 .c{background:#11202b;border-left:4px solid #fcee0a;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,0 100%)}
+.t4 h4{font-size:12px;line-height:1.35}
+.t4 .badge{background:#00f0ff;color:#0a0e14;font-size:14px;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
+.t4 .badge.h{background:#fcee0a}
+.t4 .skor{border:2px solid #ff2a6d;color:#ff2a6d;box-shadow:0 0 14px #ff2a6d88;font-family:Orbitron}
+.t4 .skor b{font-size:16px}
+.t4 .nav{background:#05070b;border-top:2px solid #00f0ff;font-size:14px;color:#9bdce6}
+.t4 .nav .on{color:#0a0e14;background:#fcee0a}
+.t4 .bell i{background:#ff2a6d;color:#fff}
+.t4 .deco{background:repeating-linear-gradient(0deg,transparent 0 3px,#00f0ff0a 3px 4px)}
+
+/* 5 UKIYO-E */
+.t5{background:#efe6d2;color:#1d3557;font-family:'Shippori Mincho'}
+.t5 .brand,.t5 .hello,.t5 h3,.t5 h4{font-weight:800}
+.t5 .hello{font-size:30px}
+.t5 .tabs span{border:2px solid #1d3557;background:#efe6d2;border-radius:2px}
+.t5 .tabs span.on{background:#1d3557;color:#efe6d2}
+.t5 .sum{background:#fbf6e8;border:2px solid #1d3557;outline:1px solid #1d3557;outline-offset:3px}
+.t5 .sum b{color:#1d3557}.t5 .sum b.n3{color:#8a8a8a}
+.t5 .c{background:#fbf6e8;border:2px solid #1d3557;box-shadow:inset 0 0 0 4px #fbf6e8,inset 0 0 0 5px #1d3557}
+.t5 .badge{background:#1d3557;color:#efe6d2;border-radius:2px}.t5 .badge.h{background:#c1121f}
+.t5 .skor{background:#c1121f;color:#fbf6e8;border-radius:4px;transform:rotate(-4deg);width:58px;height:58px;font-weight:800}
+.t5 .nav{background:#1d3557;color:#efe6d2}
+.t5 .nav .on{background:#c1121f}
+.t5 .bell i{background:#c1121f;color:#fff}
+
+/* 6 KARTUN DATAR */
+.t6{background:#bdf0e6;color:#2b2b2b;font-family:Fredoka}
+.t6 .hello{font-size:30px;font-weight:700}
+.t6 .tabs span{background:#fff;border:4px solid #2b2b2b;border-radius:30px}
+.t6 .tabs span.on{background:#ffe066}
+.t6 .sum{background:#fff;border:4px solid #2b2b2b;border-radius:30px}
+.t6 .sum b.n1{color:#27b777}.t6 .sum b.n2{color:#f59f00}.t6 .sum b.n3{color:#ff6b9b}
+.t6 .c{background:#fff;border:4px solid #2b2b2b;border-radius:28px;box-shadow:0 6px 0 #2b2b2b}
+.t6 .badge{background:#9ef0b6;border:3px solid #2b2b2b;border-radius:20px}.t6 .badge.h{background:#ffe066}
+.t6 .skor{background:#ff8fb8;border:4px solid #2b2b2b;border-radius:48% 52% 46% 54%;color:#2b2b2b}
+.t6 .nav{background:#fff;border-top:4px solid #2b2b2b}
+.t6 .nav .on{background:#7bdcff;border:3px solid #2b2b2b;border-radius:20px}
+.t6 .bell i{background:#ff6b9b;border:2px solid #2b2b2b;color:#fff}
+
+/* 7 RPG MISI */
+.t7{background:#1b2a2f;color:#efe2c0;font-family:'Zen Kaku Gothic New'}
+.t7 .brand,.t7 .hello,.t7 h3,.t7 h4,.t7 .sum b{font-family:Cinzel;font-weight:800}
+.t7 .hello{font-size:24px;color:#d9b46a;margin-top:10px}
+.t7 .tabs span{background:#26393f;border:2px solid #d9b46a;color:#d9b46a;font-family:Cinzel}
+.t7 .tabs span.on{background:#d9b46a;color:#1b2a2f}
+.t7 .sum{background:#26393f;border:2px solid #d9b46a;outline:1px solid #d9b46a;outline-offset:3px}
+.t7 .sum b{color:#d9b46a}
+.t7 h3{color:#d9b46a;font-size:15px;letter-spacing:.14em}
+.t7 .c{background:#efe2c0;color:#3b2a14;border:2px solid #d9b46a;outline:1px solid #3b2a14;outline-offset:-6px}
+.t7 .badge{background:#3b2a14;color:#efe2c0}.t7 .badge.h{background:#a3541c}
+.t7 .skor{background:#1b2a2f;color:#d9b46a;transform:rotate(45deg);width:54px;height:54px;border:2px solid #d9b46a;margin:6px 8px}
+.t7 .skor>*{transform:rotate(-45deg)}
+.t7 .skor small{display:none}
+.t7 .nav{background:#26393f;border-top:2px solid #d9b46a;color:#d9b46a}
+.t7 .nav .on{background:#d9b46a;color:#1b2a2f}
+.t7 .bell i{background:#a3541c;color:#fff}
+
+/* 8 ZEN HANKO */
+.t8{background:#f7f5f0;color:#222;font-family:'Zen Kaku Gothic New'}
+.t8 .brand{font-weight:500;letter-spacing:.2em}
+.t8 .hello{font-size:26px;font-weight:500;margin-top:18px}
+.t8 .sub{color:#666}
+.t8 .tabs{gap:22px;border-bottom:1px solid #222;margin-bottom:18px}
+.t8 .tabs span{padding:8px 0;font-weight:500}
+.t8 .tabs span.on{border-bottom:3px solid #d7302b;margin-bottom:-1px}
+.t8 .sum{border-top:1px solid #222;border-bottom:1px solid #222;padding:18px 0}
+.t8 .sum b{font-weight:500;font-size:38px}
+.t8 .c{border-bottom:1px solid #ccc;padding:14px 0}
+.t8 .badge{padding:0;color:#d7302b;font-weight:700}
+.t8 .skor{background:#d7302b;color:#fff;width:46px;height:46px;border-radius:4px;top:14px;right:0}
+.t8 .skor b{font-size:15px}.t8 .skor small{display:none}
+.t8 .nav{background:#f7f5f0;border-top:1px solid #222}
+.t8 .nav .on{color:#d7302b;border-bottom:2px solid #d7302b}
+.t8 .bell i{background:#d7302b;color:#fff}
+
+/* 9 MANGA */
+.t9{background:#fff;color:#000;font-family:'Zen Kaku Gothic New'}
+.t9 .deco{background-image:radial-gradient(#0003 1.2px,transparent 1.5px);background-size:7px 7px;-webkit-mask-image:linear-gradient(#000,transparent 40%);mask-image:linear-gradient(#000,transparent 40%)}
+.t9 .brand,.t9 .hello,.t9 h3,.t9 .sum b,.t9 h4{font-family:Anton;font-weight:400;letter-spacing:.02em}
+.t9 .hello{font-size:38px;line-height:1}
+.t9 .sub{font-weight:700}
+.t9 .tabs span{border:3px solid #000;background:#fff}
+.t9 .tabs span.on{background:#000;color:#fff}
+.t9 .sum{border:4px solid #000;clip-path:polygon(0 0,100% 0,100% 100%,0 100%);background:#fff;box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 5px #000}
+.t9 .sum b{font-size:44px}
+.t9 h3{font-size:26px;border-bottom:4px solid #000;display:inline-block}
+.t9 .c{border:4px solid #000;background:#fff}
+.t9 .c::before{content:"";position:absolute;right:0;bottom:0;width:90px;height:50px;background-image:radial-gradient(#000 1.2px,transparent 1.6px);background-size:6px 6px;opacity:.35}
+.t9 h4{font-size:22px;line-height:1.1}
+.t9 .badge{border:2px solid #000}
+.t9 .skor{background:#fff;border:4px solid #000;border-radius:50%;box-shadow:-9px 8px 0 -4px #fff,-9px 8px 0 -1px #000}
+.t9 .skor b{font:400 22px Anton}
+.t9 .nav{background:#000;color:#fff}
+.t9 .nav .on{background:#fff;color:#000}
+.t9 .bell i{background:#000;color:#fff}
+
+/* 10 SYNTHWAVE */
+.t10{background:linear-gradient(#1b1046 0,#4a1d6b 38%,#ff6f6f 62%,#ffd27a 75%,#2a1255 75.1%);color:#fff;font-family:'Chakra Petch'}
+.t10 .brand,.t10 .hello,.t10 h3{font-family:Audiowide;font-weight:400}
+.t10 .hello{font-size:22px;margin-top:14px;text-shadow:0 0 12px #ff6f6f}
+.t10 .tabs span{background:#ffffff1a;border:2px solid #7cf5e6;border-radius:4px;color:#7cf5e6}
+.t10 .tabs span.on{background:#7cf5e6;color:#1b1046}
+.t10 .sum{background:#1b104699;border:2px solid #ff6f6f;border-radius:6px;backdrop-filter:blur(4px)}
+.t10 .sum b{font-family:Audiowide;color:#7cf5e6;text-shadow:0 0 10px #7cf5e6}
+.t10 h3{font-size:16px;color:#ffd27a}
+.t10 .c{background:#1b1046cc;border:2px solid #7cf5e6;border-radius:6px;box-shadow:0 0 18px #7cf5e655}
+.t10 h4{font-size:15px}
+.t10 .badge{background:#ffd27a;color:#1b1046;border-radius:3px}
+.t10 .skor{border:3px solid #ff6f6f;border-radius:50%;box-shadow:0 0 16px #ff6f6f,inset 0 0 12px #ff6f6f66;font-family:Audiowide}
+.t10 .nav{background:#1b1046;border-top:2px solid #ff6f6f;color:#bbb}
+.t10 .nav .on{color:#7cf5e6}
+.t10 .bell i{background:#ff6f6f;color:#1b1046}
+</style>
+<body><h1>SMART, 10 gaya tampilan (Beranda mobile, data contoh)</h1><div class="grid" id="g"></div>
+<script>
+const nama=['1 Komik Spider-Verse','2 Neo-brutalis','3 Piksel 8-bit (Pokemon)','4 Cyberpunk neon','5 Ukiyo-e Jepang','6 Kartun datar (Adventure Time)','7 RPG misi (Genshin)','8 Zen Jepang (hanko)','9 Manga hitam-putih','10 Synthwave senja'];
+const col=['#fff','#111','#fff','#0a0e14','#1d3557','#2b2b2b','#d9b46a','#222','#000','#fff'];
+const bell=c=>`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>`;
+const logo=`<svg class="logo" viewBox="0 0 100 100"><path d="M50 13L7 33L50 55Z" fill="#143F7C"/><path d="M50 13L93 33L50 55Z" fill="#2B6BC0"/><path d="M25 47V63C25 71 75 71 75 63V47L50 57Z" fill="#0E2D5A"/><path d="M50 13V55" stroke="#EAF1FF" stroke-width="2"/><path d="M87 34V60" stroke="#F5B73B" stroke-width="3" stroke-linecap="round"/><path d="M87 59L89 64L94 66L89 68L87 73L85 68L80 66L85 64Z" fill="#F5B73B"/></svg>`;
+const kartu=(n,by,s,t,tg,b,c)=>`<div class="c" style="--p:${s}%"><h4>${n}</h4><div class="by">${by}</div><div class="skor"><div><b>${s}%</b><small>SKOR</small></div></div><div class="meta"><span class="badge ${c}">${b}</span><span>${tg}</span></div><div class="ter">${t}</div></div>`;
+const deco={
+ 5:`<svg class="deco" viewBox="0 0 390 844" preserveAspectRatio="none"><g fill="none" stroke="#1d3557" stroke-width="2" opacity=".35">${[0,1,2,3].map(i=>`<path d="M0 ${230+i*14}q25-26 50 0t50 0 50 0 50 0 50 0 50 0 50 0 50 0"/>`).join('')}</g><circle cx="320" cy="90" r="26" fill="#c1121f" opacity=".9"/></svg>`,
+ 10:`<svg class="deco" viewBox="0 0 390 844"><circle cx="195" cy="350" r="70" fill="#ffd27a"/><g fill="#4a1d6b">${[0,1,2,3].map(i=>`<rect x="120" y="${340+i*10}" width="150" height="${2+i*2}"/>`).join('')}</g><g stroke="#7cf5e6" stroke-opacity=".5" fill="none">${Array.from({length:9},(_,i)=>`<path d="M${195+(i-4)*12} 430L${195+(i-4)*90} 844"/>`).join('')}${Array.from({length:7},(_,i)=>`<path d="M0 ${440+i*i*9+i*14}H390"/>`).join('')}</g></svg>`,
+ 4:'<div class="deco"></div>',9:'<div class="deco"></div>'
+};
+const sub=['SIAPA YANG BISA DIAMBIL, KETAHUAN!','Beasiswa yang cocok dengan profilmu.','pilih misimu, level 5','Pindai peluang, ambil yang cocok.','Beasiswa yang sesuai profilmu.','Yuk lihat beasiswa seru buatmu!','Misi beasiswa yang menantimu.','Beasiswa yang sesuai profilmu.','Beasiswa yang paling pas untukmu!','Beasiswa di cakrawala.'];
+const hello=['HALO, MAHASISWA!','Halo, Mahasiswa','HALO, MAHASISWA','HALO, MAHASISWA','ようこそ、Mahasiswa','Halo, Mahasiswa!','Selamat datang, Petualang','Halo, Mahasiswa','HALO, MAHASISWA','HALO, MAHASISWA'];
+const g=document.getElementById('g');
+for(let i=1;i<=10;i++){
+ g.insertAdjacentHTML('beforeend',`<div class="wrap"><div class="cap">${nama[i-1]}</div><div class="fr"><div class="ph t${i}">${deco[i]||''}<div class="in">
+ <div class="top"><div class="brand">${logo}SMART</div><div class="bell">${bell(col[i-1])}<i>2</i></div></div>
+ <div class="hello">${hello[i-1]}</div><div class="sub">${sub[i-1]}</div>
+ <div class="tabs"><span class="on">Dalam negeri</span><span>Luar negeri</span></div>
+ <div class="sum"><div><b class="n1">39</b><small>Memenuhi</small></div><div><b class="n2">16</b><small>Hampir</small></div><div><b class="n3">41</b><small>Belum</small></div></div>
+ <h3>Pilihan utama</h3>
+ ${kartu('Beasiswa AWS AI Academy untuk Masyarakat Indonesia','Amazon Web Services',82,'Syarat terpenuhi 4 dari 5','Tenggat 38 hari','Memenuhi','')}
+ ${kartu('Beasiswa LPDP Magister Dalam Negeri','LPDP',64,'Syarat terpenuhi 3 dari 5. Kurang: TOEFL','Tenggat 12 hari','Hampir','h')}
+ </div><div class="nav"><span class="on">Beranda</span><span>Rekomendasi</span><span>Jelajah</span><span>Kalender</span><span>Profil</span></div></div></div></div>`);
+}
+</script>

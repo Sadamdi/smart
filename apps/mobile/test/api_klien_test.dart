@@ -226,6 +226,7 @@ void main() {
       expect(r.single.catatanKekurangan.single, contains('IPK kurang'));
       expect(s.permintaan.single.queryParameters, {
         'kategori': 'hampir_memenuhi',
+        'urut': 'peluang',
       });
     });
   });

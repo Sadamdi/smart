@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><title>SMART, empat tema formal</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Familjen+Grotesk:wght@600;700&family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600&family=Hanken+Grotesk:wght@400;500;700;800&family=Zilla+Slab:wght@500;700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#d9dde3;font-family:system-ui,sans-serif;padding:28px;display:flex;gap:26px;justify-content:center;align-items:flex-start;width:1700px}
+.wrap{display:flex;flex-direction:column;gap:12px;width:390px}
+.cap{font:600 13px/1.3 'IBM Plex Sans',sans-serif;color:#222}
+.cap small{display:block;font-weight:400;color:#555;margin-top:2px}
+.ph{width:390px;height:790px;overflow:hidden;position:relative;border-radius:22px;box-shadow:0 0 0 7px #15181d}
+.ph svg{display:block}
+.row{display:flex;align-items:center}
+/* ===== 1 LEDGER ===== */
+.t1{background:#EDF1EE;color:#10281F;font-family:'IBM Plex Sans',sans-serif;padding:20px 22px}
+.t1 .top{display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:2px solid #0E3B2E}
+.t1 h1{font:700 22px 'Familjen Grotesk';letter-spacing:-.01em;color:#0E3B2E}
+.t1 .tabs{display:flex;margin-top:16px;border-bottom:1px solid #b9c7be}
+.t1 .tabs b{font-weight:500;font-size:14px;padding:8px 0;margin-right:22px;color:#58705f}
+.t1 .tabs b.on{color:#0E3B2E;border-bottom:3px solid #B58A1B;margin-bottom:-1px}
+.t1 .sum{display:grid;grid-template-columns:1.5fr 1fr 1fr;margin:16px 0 6px;border-bottom:1px solid #b9c7be;padding-bottom:14px}
+.t1 .sum div{font-size:12px;color:#58705f}
+.t1 .sum strong{display:block;font:600 30px 'IBM Plex Mono';color:#0E3B2E;letter-spacing:-.03em}
+.t1 .sum div:first-child strong{font-size:38px}
+.t1 .it{display:grid;grid-template-columns:70px 1fr;gap:14px;padding:16px 0;border-bottom:1px solid #b9c7be}
+.t1 .sc{font:600 30px 'IBM Plex Mono';letter-spacing:-.04em;color:#0E3B2E}
+.t1 .sc i{font-size:14px;font-style:normal;color:#58705f}
+.t1 .it h2{font:600 16px/1.25 'IBM Plex Sans'}
+.t1 .it p{font-size:12.5px;color:#58705f;margin-top:3px}
+.t1 .ok{margin-top:8px;font-size:12px;color:#0E3B2E;font-weight:600;display:flex;align-items:center;gap:6px}
+.t1 .ok:before{content:"";width:12px;height:12px;border:2px solid #0E3B2E;border-radius:1px}
+.t1 .tag{display:inline-block;margin-top:8px;font-size:11px;padding:2px 7px;border:1px solid #B58A1B;color:#7a5c0e;border-radius:2px}
+/* ===== 2 KONSULAT ===== */
+.t2{background:#0B1F3A;color:#E7ECF4;font-family:'Source Sans 3',sans-serif;padding:20px 20px}
+.t2 .top{display:flex;justify-content:space-between;align-items:flex-end}
+.t2 h1{font:700 30px 'Barlow Condensed';letter-spacing:.06em;text-transform:uppercase;color:#F2C230}
+.t2 .tabs{display:grid;grid-template-columns:1fr 1fr;margin-top:16px;border:1px solid #38527a}
+.t2 .tabs b{text-align:center;padding:9px 0;font:600 15px 'Barlow Condensed';letter-spacing:.1em;text-transform:uppercase;color:#9fb1cc}
+.t2 .tabs b.on{background:#F2C230;color:#0B1F3A}
+.t2 .sum{display:flex;gap:0;margin:16px 0;border-top:1px solid #38527a;border-bottom:1px solid #38527a}
+.t2 .sum div{flex:1;padding:12px 0 12px 12px;border-left:1px solid #38527a;font-size:12px;color:#9fb1cc}
+.t2 .sum div:first-child{border-left:0;padding-left:0}
+.t2 .sum strong{display:block;font:700 34px 'Barlow Condensed';color:#fff;line-height:1}
+.t2 .cd{background:#12294a;padding:16px;margin-bottom:12px;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,0 100%)}
+.t2 .cd h2{font:700 21px/1.1 'Barlow Condensed';letter-spacing:.04em;text-transform:uppercase}
+.t2 .cd p{font-size:13px;color:#9fb1cc;margin-top:3px}
+.t2 .seg{display:flex;gap:3px;margin:14px 0 6px}
+.t2 .seg i{flex:1;height:10px;background:#274468}
+.t2 .seg i.f{background:#F2C230}
+.t2 .m{display:flex;justify-content:space-between;font-size:12.5px;color:#cfd8e6}
+.t2 .m b{font:700 18px 'Barlow Condensed';color:#F2C230;letter-spacing:.04em}
+/* ===== 3 SWISS ===== */
+.t3{background:#fff;color:#0d0d0d;font-family:'Hanken Grotesk',sans-serif;padding:22px}
+.t3 .top{display:flex;justify-content:space-between;font-weight:800;font-size:15px;letter-spacing:.02em}
+.t3 .top span:last-child{font-weight:500;color:#666}
+.t3 h1{font:800 44px/.95 'Hanken Grotesk';letter-spacing:-.04em;margin:22px 0 14px}
+.t3 .tabs{display:flex;gap:18px;font-weight:500;font-size:14px;color:#888;padding-bottom:12px;border-bottom:1px solid #0d0d0d}
+.t3 .tabs b.on{color:#0d0d0d;text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:7px;text-decoration-color:#D7261E}
+.t3 .sum{display:flex;gap:26px;padding:14px 0;font-size:12px;color:#666;border-bottom:1px solid #d6d6d6}
+.t3 .sum strong{font-size:22px;color:#0d0d0d;margin-right:5px;font-weight:800}
+.t3 .it{padding:16px 0 18px;border-bottom:1px solid #0d0d0d}
+.t3 .big{font:800 84px/.85 'Hanken Grotesk';letter-spacing:-.06em}
+.t3 .big sup{font-size:28px;letter-spacing:0;vertical-align:top;margin-left:2px;color:#D7261E}
+.t3 .it h2{font:700 17px/1.2 'Hanken Grotesk';margin-top:12px}
+.t3 .it p{font-size:12.5px;color:#666;margin-top:3px}
+.t3 .ok{font-size:12px;margin-top:9px;font-weight:700}
+.t3 .ok em{font-style:normal;color:#D7261E}
+/* ===== 4 AKADEMIK ===== */
+.t4{background:#E8EBF0;color:#241418;font-family:'Public Sans',sans-serif}
+.t4 .hd{background:#5A1424;color:#fff;padding:20px 22px 22px;border-radius:0 0 18px 18px}
+.t4 h1{font:700 24px 'Zilla Slab'}
+.t4 .tabs{display:flex;gap:6px;margin-top:14px}
+.t4 .tabs b{font-weight:500;font-size:13px;padding:7px 14px;border-radius:4px;background:rgba(255,255,255,.12)}
+.t4 .tabs b.on{background:#fff;color:#5A1424;font-weight:600}
+.t4 .sum{display:flex;justify-content:space-between;margin-top:16px;font-size:12px;color:#e7c9d0}
+.t4 .sum strong{display:block;font:700 28px 'Zilla Slab';color:#fff}
+.t4 .bd{padding:16px 16px}
+.t4 .cd{background:#fff;border-radius:10px;padding:14px;display:flex;gap:14px;margin-bottom:12px;box-shadow:0 1px 0 #cfd4dc}
+.t4 .ring{width:62px;height:62px;border-radius:50%;flex:none;display:grid;place-items:center;font:700 17px 'Zilla Slab';color:#5A1424;background:conic-gradient(#5A1424 var(--p),#e5d6da 0)}
+.t4 .ring span{width:48px;height:48px;border-radius:50%;background:#fff;display:grid;place-items:center}
+.t4 .cd h2{font:700 16px/1.2 'Zilla Slab'}
+.t4 .cd p{font-size:12.5px;color:#6b5a5e;margin-top:3px}
+.t4 .ok{margin-top:8px;font-size:12px;font-weight:600;color:#5A1424}
+.t4 .sec{font:700 13px 'Zilla Slab';letter-spacing:.08em;text-transform:uppercase;color:#6b5a5e;margin:2px 0 10px}
+</style></head><body>
+
+<div class="wrap"><div class="cap">1. Ledger Hijau<small>Buku besar kantor arsip. Abu kehijauan, hijau botol, kuningan. Skor sebagai angka mono, tanpa kartu.</small></div>
+<div class="ph t1">
+ <div class="top"><h1>SMART</h1><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E3B2E" stroke-width="2"><path d="M6 17V11a6 6 0 0112 0v6l2 2H4z"/><path d="M10 21h4"/></svg></div>
+ <div class="tabs"><b class="on">Dalam negeri</b><b>Luar negeri</b></div>
+ <div class="sum"><div><strong>39</strong>beasiswa memenuhi</div><div><strong>16</strong>hampir</div><div><strong>41</strong>belum</div></div>
+ <div class="it"><div class="sc">82<i>%</i></div><div><h2>AWS AI Academy Scholarship</h2><p>Amazon Web Services, S1</p><div class="ok">Syarat terpenuhi 5 dari 6</div><span class="tag">Tenggat 14 Des 2026</span></div></div>
+ <div class="it"><div class="sc">64<i>%</i></div><div><h2>LPDP Reguler Magister dan Doktor</h2><p>Kemenkeu, S2 dan S3</p><div class="ok">Syarat terpenuhi 4 dari 7</div><span class="tag">Tenggat belum diumumkan</span></div></div>
+ <div class="it"><div class="sc" style="color:#7f9186">&ndash;</div><div><h2>Beasiswa Unggulan Kemdiktisaintek</h2><p>Kemdiktisaintek, S1</p><div class="ok" style="color:#58705f">Syarat belum tercatat</div></div></div>
+</div></div>
+
+<div class="wrap"><div class="cap">2. Konsulat Navy<small>Paspor dan papan keberangkatan. Navy pekat, kuning natrium, huruf sempit kapital. Skor sebagai segmen.</small></div>
+<div class="ph t2">
+ <div class="top"><h1>SMART</h1><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F2C230" stroke-width="2"><path d="M6 17V11a6 6 0 0112 0v6l2 2H4z"/><path d="M10 21h4"/></svg></div>
+ <div class="tabs"><b class="on">Dalam negeri</b><b>Luar negeri</b></div>
+ <div class="sum"><div><strong>39</strong>memenuhi</div><div><strong>16</strong>hampir</div><div><strong>41</strong>belum</div></div>
+ <div class="cd"><h2>AWS AI Academy Scholarship</h2><p>Amazon Web Services, S1</p><div class="seg"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></div><div class="m"><span>Syarat terpenuhi 5 dari 6</span><b>SKOR 82%</b></div></div>
+ <div class="cd"><h2>LPDP Reguler Magister dan Doktor</h2><p>Kemenkeu, S2 dan S3</p><div class="seg"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i><i></i></div><div class="m"><span>Syarat terpenuhi 4 dari 7</span><b>SKOR 64%</b></div></div>
+ <div class="cd"><h2>Beasiswa Unggulan Kemdiktisaintek</h2><p>Kemdiktisaintek, S1</p><div class="seg"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="m"><span>Syarat belum tercatat</span><b>SKOR &ndash;</b></div></div>
+</div></div>
+
+<div class="wrap"><div class="cap">3. Swiss Putih<small>Gaya tipografi internasional. Putih, hitam, satu merah sinyal. Skor raksasa jadi isi kartu.</small></div>
+<div class="ph t3">
+ <div class="top"><span>SMART</span><span>Beranda</span></div>
+ <h1>Beasiswa untuk Anda</h1>
+ <div class="tabs"><b class="on">Dalam negeri</b><b>Luar negeri</b></div>
+ <div class="sum"><span><strong>39</strong>memenuhi</span><span><strong>16</strong>hampir</span><span><strong>41</strong>belum</span></div>
+ <div class="it"><div class="big">82<sup>%</sup></div><h2>AWS AI Academy Scholarship</h2><p>Amazon Web Services, S1. Tenggat 14 Des 2026</p><div class="ok">Syarat terpenuhi <em>5 dari 6</em></div></div>
+ <div class="it"><div class="big">64<sup>%</sup></div><h2>LPDP Reguler Magister dan Doktor</h2><p>Kemenkeu, S2 dan S3</p><div class="ok">Syarat terpenuhi <em>4 dari 7</em></div></div>
+</div></div>
+
+<div class="wrap"><div class="cap">4. Akademik Marun<small>Toga dan transkrip. Marun tua, abu kebiruan, huruf slab. Skor sebagai cincin.</small></div>
+<div class="ph t4">
+ <div class="hd"><div class="row" style="justify-content:space-between"><h1>SMART</h1><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M6 17V11a6 6 0 0112 0v6l2 2H4z"/><path d="M10 21h4"/></svg></div>
+  <div class="tabs"><b class="on">Dalam negeri</b><b>Luar negeri</b></div>
+  <div class="sum"><span><strong>39</strong>memenuhi</span><span><strong>16</strong>hampir</span><span><strong>41</strong>belum</span></div></div>
+ <div class="bd"><div class="sec">Paling sesuai profil Anda</div>
+  <div class="cd"><div class="ring" style="--p:82%"><span>82%</span></div><div><h2>AWS AI Academy Scholarship</h2><p>Amazon Web Services, S1</p><div class="ok">Syarat terpenuhi 5 dari 6</div></div></div>
+  <div class="cd"><div class="ring" style="--p:64%"><span>64%</span></div><div><h2>LPDP Reguler Magister dan Doktor</h2><p>Kemenkeu, S2 dan S3</p><div class="ok">Syarat terpenuhi 4 dari 7</div></div></div>
+  <div class="cd"><div class="ring" style="--p:0%;background:#e5d6da"><span style="color:#8a7a7e">&ndash;</span></div><div><h2>Beasiswa Unggulan Kemdiktisaintek</h2><p>Kemdiktisaintek, S1</p><div class="ok" style="color:#6b5a5e">Syarat belum tercatat</div></div></div>
+ </div>
+</div></div>
+</body></html>

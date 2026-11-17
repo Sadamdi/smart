@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="SMART"><style>
+  .bs{transform-box:fill-box;transform-origin:center;animation:boil .55s steps(1) infinite}
+  .bs2{animation-direction:reverse;animation-duration:.55s}
+  @keyframes boil{0%{transform:rotate(0) scale(1)}50%{transform:rotate(4deg) scale(1.03)}}
+  .bm{transform-box:fill-box;transform-origin:center;animation:ledak .45s cubic-bezier(.2,1.6,.4,1) .05s both}
+  @keyframes ledak{from{transform:scale(0) rotate(-30deg)}}
+  .cap{animation:banting .4s cubic-bezier(.3,1.4,.5,1) .35s both}
+  @keyframes banting{from{transform:translateY(-90px) skewX(-18deg);opacity:0}60%{opacity:1}}
+  .pl{animation:tampar .35s cubic-bezier(.2,1.5,.4,1) var(--d) both}
+  @keyframes tampar{from{transform:translateY(-70px);opacity:0}}
+  @media (prefers-reduced-motion:reduce){.bs,.bm,.cap,.pl{animation:none}}
+</style>
+  <g class="bm"><polygon class="bs" points="201.8,98.0 146.8,120.1 180.9,166.3 123.1,142.7 119.4,187.2 87.8,153.8 52.7,190.7 57.0,132.1 9.5,134.8 53.1,102.1 9.1,61.0 56.8,63.5 47.7,11.1 93.4,51.5 113.3,8.9 125.0,53.4 170.6,37.2 152.0,78.4" fill="#E60012"/></g>
+  <g transform="translate(0 -30)"><g class="pl" style="--d:0.9s" transform="rotate(-5 35 172)"><g class="pl2"><path d="M18 152L54 148L52 192L16 190Z" fill="#0B0B0B" stroke="#FFFFFF" stroke-width="2"/><text x="34" y="184" text-anchor="middle" font-size="40" font-family="Impact,'Arial Black',sans-serif" font-weight="900" fill="#FFFFFF">S</text></g></g><g class="pl" style="--d:0.99s" transform="rotate(4 69 172)"><g class="pl2"><path d="M52 152L88 148L86 192L50 190Z" fill="#E60012" stroke="#FFFFFF" stroke-width="2"/><text x="68" y="184" text-anchor="middle" font-size="40" font-family="Impact,'Arial Black',sans-serif" font-weight="900" fill="#FFFFFF">M</text></g></g><g class="pl" style="--d:1.08s" transform="rotate(-3 103 172)"><g class="pl2"><path d="M86 152L122 148L120 192L84 190Z" fill="#FFFFFF" stroke="#0B0B0B" stroke-width="2"/><text x="102" y="184" text-anchor="middle" font-size="40" font-family="Impact,'Arial Black',sans-serif" font-weight="900" fill="#0B0B0B">A</text></g></g><g class="pl" style="--d:1.17s" transform="rotate(5 137 172)"><g class="pl2"><path d="M120 152L156 148L154 192L118 190Z" fill="#0B0B0B" stroke="#FFFFFF" stroke-width="2"/><text x="136" y="184" text-anchor="middle" font-size="40" font-family="Impact,'Arial Black',sans-serif" font-weight="900" fill="#FFFFFF">R</text></g></g><g class="pl" style="--d:1.26s" transform="rotate(-4 171 172)"><g class="pl2"><path d="M154 152L190 148L188 192L152 190Z" fill="#E60012" stroke="#FFFFFF" stroke-width="2"/><text x="170" y="184" text-anchor="middle" font-size="40" font-family="Impact,'Arial Black',sans-serif" font-weight="900" fill="#FFFFFF">T</text></g></g></g>
+  <g class="cap" transform="translate(0 -4) scale(.55) translate(80 30)"><g >
+  <path d="M58 96V126L100 144L142 126V96L100 112Z" fill="#0B0B0B" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="miter"/>
+  <path d="M100 38L172 74L100 112L28 74Z" fill="#0B0B0B" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="miter"/>
+  <path d="M100 38V112" stroke="#FFFFFF" stroke-width="3"/>
+  <path d="M160 79V130" stroke="#FFFFFF" stroke-width="5"/>
+  <path d="M160 126L166 140L180 146L166 152L160 166L154 152L140 146L154 140Z" fill="#FFFFFF" stroke="#0B0B0B" stroke-width="2"/>
+</g></g>
+</svg>

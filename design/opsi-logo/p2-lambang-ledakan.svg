@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="SMART"><style>
+  .bs{transform-box:fill-box;transform-origin:center;animation:boil .55s steps(1) infinite}
+  .bs2{animation-direction:reverse;animation-duration:.55s}
+  @keyframes boil{0%{transform:rotate(0) scale(1)}50%{transform:rotate(4deg) scale(1.03)}}
+  .bm{transform-box:fill-box;transform-origin:center;animation:ledak .45s cubic-bezier(.2,1.6,.4,1) .05s both}
+  @keyframes ledak{from{transform:scale(0) rotate(-30deg)}}
+  .cap{animation:banting .4s cubic-bezier(.3,1.4,.5,1) .35s both}
+  @keyframes banting{from{transform:translateY(-90px) skewX(-18deg);opacity:0}60%{opacity:1}}
+  .pl{animation:tampar .35s cubic-bezier(.2,1.5,.4,1) var(--d) both}
+  @keyframes tampar{from{transform:translateY(-70px);opacity:0}}
+  @media (prefers-reduced-motion:reduce){.bs,.bm,.cap,.pl{animation:none}}
+</style>
+  <g class="bm"><g transform="translate(7 7)"><polygon class="bs" points="192.1,98.8 177.8,118.9 174.6,142.6 149.5,153.3 137.0,177.2 114.6,171.1 91.3,191.0 69.6,178.1 41.9,165.3 37.6,142.8 17.0,125.8 14.4,96.4 10.0,74.0 37.7,64.2 40.1,33.4 72.4,32.7 79.6,-0.4 110.6,28.3 135.8,22.8 156.2,35.6 184.4,50.8 172.2,76.5" fill="#0B0B0B"/></g>
+  <polygon class="bs bs2" points="199.0,96.0 178.9,123.5 175.7,146.5 153.6,166.7 137.6,192.4 108.5,181.3 89.6,193.8 71.8,164.8 45.1,171.1 33.1,145.7 9.5,121.3 14.5,95.5 13.8,69.5 36.7,62.2 39.7,35.3 66.1,22.9 90.5,6.9 113.3,18.4 135.9,9.9 157.0,40.5 180.2,51.8 178.2,73.7" fill="#E60012"/>
+  <circle cx="100" cy="100" r="68" fill="#FFFFFF" stroke="#0B0B0B" stroke-width="4"/></g>
+  <g class="cap"><path d="M100 46L168 80L100 114L32 80Z" fill="#0B0B0B" stroke="#FFFFFF" stroke-width="4"/>
+  <path d="M60 98V126L100 146L140 126V98L100 114Z" fill="#0B0B0B" stroke="#FFFFFF" stroke-width="4"/>
+  <path d="M100 46V114" stroke="#FFFFFF" stroke-width="3"/><path d="M156 84V132" stroke="#FFFFFF" stroke-width="5"/>
+  <path d="M156 128L161 140L173 145L161 150L156 162L151 150L139 145L151 140Z" fill="#FFFFFF" stroke="#0B0B0B" stroke-width="2"/></g>
+</svg>

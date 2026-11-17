@@ -13,6 +13,12 @@ class RekomendasiController extends GetxController {
   /// Wilayah yang sedang dipilih: dalam atau luar negeri. Dipakai Beranda, Rekomendasi, dan ringkasannya.
   final wilayah = 'dalam'.obs;
 
+  /// Urutan daftar: peluang (bawaan, estimasi peluang tertinggi dulu), tenggat, atau kecocokan.
+  final urut = 'peluang'.obs;
+
+  /// Batas bawah estimasi peluang (0 berarti semua).
+  final minPeluang = 0.obs;
+
   late final ringkasan = Muatan<RingkasanRekomendasi>(
     () => _repo.ringkasan(wilayah: wilayah.value),
   );
@@ -45,10 +51,12 @@ class RekomendasiController extends GetxController {
   /// Daftar untuk satu kategori; dibuat saat pertama diminta. Isinya baru dimuat lewat [pastikan] atau [muatSemua].
   Muatan<List<Rekomendasi>> daftarUntuk(Kategori? k) {
     final w = wilayah.value;
+    final u = urut.value;
+    final m = minPeluang.value;
     return _daftar.putIfAbsent(
-      '${k?.kode}|$w',
+      '${k?.kode}|$w|$u|$m',
       () => Muatan<List<Rekomendasi>>(
-        () => _repo.daftar(kategori: k, wilayah: w),
+        () => _repo.daftar(kategori: k, wilayah: w, urut: u, minPeluang: m),
       ),
     );
   }
@@ -63,6 +71,19 @@ class RekomendasiController extends GetxController {
     if (wilayah.value == w) return Future.value();
     wilayah.value = w;
     ringkasan.muat();
+    utamaBeranda.pastikan(); // Beranda menampilkan satu pilihan utama untuk wilayah yang dipilih
+    return pastikan();
+  }
+
+  Future<void> pilihUrut(String u) {
+    if (urut.value == u) return Future.value();
+    urut.value = u;
+    return pastikan();
+  }
+
+  Future<void> pilihMinPeluang(int m) {
+    if (minPeluang.value == m) return Future.value();
+    minPeluang.value = m;
     return pastikan();
   }
 

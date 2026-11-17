@@ -203,14 +203,46 @@ def gabung_profil_lanjutan(lama: dict | None, hasil: dict) -> tuple[dict, list[s
     return baru, terisi
 
 
+def perkecil_gambar(nama: str, isi: bytes, sisi_maks: int) -> bytes:
+    """Memperkecil gambar (sisi terpanjang dan kompresi) supaya hemat ruang server; gagal baca mengembalikan isi asli."""
+    ext = Path(nama).suffix.lower()
+    if ext not in {".png", ".jpg", ".jpeg"}:
+        return isi
+    try:
+        from PIL import Image
+
+        gambar = Image.open(io.BytesIO(isi))
+        gambar.thumbnail((sisi_maks, sisi_maks))
+        keluar = io.BytesIO()
+        if ext == ".png":
+            gambar.save(keluar, "PNG", optimize=True)
+        else:
+            gambar.convert("RGB").save(keluar, "JPEG", quality=80, optimize=True)
+        baru = keluar.getvalue()
+        return baru if len(baru) < len(isi) else isi
+    except Exception:
+        return isi
+
+
+def total_berkas(sesi: Session, p: Pengguna) -> int:
+    total = 0
+    for lokasi in sesi.scalars(select(DokumenPengguna.lokasi_penyimpanan).where(DokumenPengguna.pengguna_id == p.id)):
+        if lokasi and Path(lokasi).exists():
+            total += Path(lokasi).stat().st_size
+    return total
+
+
 def simpan(sesi: Session, p: Pengguna, jenis: str, nama: str, isi: bytes, settings: Settings) -> DokumenPengguna:
     ext = Path(nama).suffix.lower()
     if ext not in TIPE_DIIZINKAN:
         raise ValidationFailed("Tipe berkas harus PDF, DOCX, TXT, PNG, atau JPG")
     if len(isi) > settings.upload_maks_byte:
-        raise ValidationFailed("Ukuran berkas maksimal 5 MB")
+        raise ValidationFailed("Ukuran berkas maksimal 10 MB")
     if not isi:
         raise ValidationFailed("Berkas kosong")
+    isi = perkecil_gambar(nama, isi, settings.upload_gambar_sisi_maks)
+    if settings.upload_simpan_berkas and total_berkas(sesi, p) + len(isi) > settings.upload_total_maks_byte:
+        raise ValidationFailed("Ruang penyimpanan dokumen penuh (maksimal 50 MB). Hapus dokumen lama lebih dulu")
     folder = Path(settings.upload_dir) / str(p.id)
     folder.mkdir(parents=True, exist_ok=True)
     lokasi = folder / f"{uuid.uuid4().hex}{ext}"

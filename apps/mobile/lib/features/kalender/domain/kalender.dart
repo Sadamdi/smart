@@ -8,15 +8,18 @@ class Acara {
     required this.judul,
     required this.refId,
     required this.selesai,
+    this.kategori,
   });
 
-  final String jenis; // tenggat atau tugas
+  final String jenis; // tenggat, tugas, atau rekomendasi
+  final String? kategori;
   final DateTime tanggal;
   final String judul;
   final String refId;
   final bool selesai;
 
-  bool get tenggat => jenis == 'tenggat';
+  bool get tenggat => jenis != 'tugas';
+  bool get rekomendasi => jenis == 'rekomendasi';
 
   factory Acara.fromJson(Map<String, dynamic> j) => Acara(
     jenis: j['jenis'] as String,
@@ -24,6 +27,7 @@ class Acara {
     judul: j['judul'] as String,
     refId: j['ref_id'] as String,
     selesai: (j['selesai'] ?? false) as bool,
+    kategori: j['kategori'] as String?,
   );
 }
 

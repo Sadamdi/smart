@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../core/api_client.dart';
 import '../domain/dokumen.dart';
@@ -27,6 +30,15 @@ class DokumenRepository {
     });
     final r = await _api.post('/me/dokumen', body: form);
     return Dokumen.fromJson(r.data as Map<String, dynamic>);
+  }
+
+  /// Mengunduh berkas asli ke folder sementara dan mengembalikan jalurnya.
+  Future<String> unduhAsli(String id, String nama) async {
+    final dir = await getTemporaryDirectory();
+    final aman = nama.replaceAll(RegExp(r'[^\w.\- ]'), '_');
+    final f = File('${dir.path}/$id-$aman');
+    await _api.unduh('/me/dokumen/$id/berkas', f.path);
+    return f.path;
   }
 
   Future<void> hapus(String id) => _api.delete('/me/dokumen/$id');

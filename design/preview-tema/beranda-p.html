@@ -1,0 +1,120 @@
+<!doctype html><meta charset="utf-8"><title>Preview tema Beranda</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Nunito:wght@500;700&family=Bebas+Neue&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#d9dce2;display:flex;justify-content:center;padding:14px;font-family:Nunito,system-ui,sans-serif}
+.ph{width:390px;height:844px;overflow:hidden;position:relative;border-radius:34px;box-shadow:0 8px 30px #0003}
+.in{height:100%;overflow:hidden;padding:18px 18px 88px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:20px}
+.logo{width:38px;height:38px}
+.bell{position:relative;width:42px;height:42px;display:grid;place-items:center}
+.bell i{position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;border-radius:9px;display:grid;place-items:center;font:700 10px Nunito;font-style:normal;padding:0 4px}
+.tabs{display:flex;gap:8px;margin:12px 0}
+.tabs span{padding:9px 16px;font-weight:700;font-size:14px}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;margin:10px 0 14px}
+.sum b{display:block;font-size:34px;line-height:1}
+.sum small{font-size:12px}
+h3{margin:14px 0 10px;font-size:18px}
+.c{margin-bottom:12px;position:relative;padding:14px 14px 12px}
+.c h4{font-size:16px;line-height:1.25;padding-right:84px}
+.c .by{font-size:12px;opacity:.7;margin:2px 0 8px}
+.meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.badge{font-weight:700;font-size:12px;padding:3px 10px}
+.ter{font-size:13px;font-weight:700;margin-top:8px}
+.skor{position:absolute;top:10px;right:10px;text-align:center}
+.skor b{display:block;line-height:1}
+.skor small{font-size:9.5px;display:block;margin-top:2px}
+.nav{position:absolute;left:0;right:0;bottom:0;height:72px;display:flex;justify-content:space-around;align-items:center;font-size:11px;font-weight:700}
+.nav span{padding:8px 10px;text-align:center}
+/* GHIBLI */
+.g{background:linear-gradient(#a9d8ee 0,#d7eef2 230px,#eaf4e0 330px,#f3f7e8 100%);color:#1f3a5f;font-family:Nunito}
+.g h3,.g h4,.g .brand,.g .sum b,.g .skor b{font-family:'Zen Maru Gothic',sans-serif}
+.g .bell i{background:#f2a99b;color:#fff}
+.g .sky{position:absolute;left:0;right:0;top:0;height:260px;pointer-events:none}
+.g .in{position:relative}
+.g .in>.top,.g .in>div{position:relative}
+.g .hello{font:900 26px 'Zen Maru Gothic';margin-top:6px}
+.g .sub{font-size:13.5px;margin:4px 0 0;max-width:230px}
+.g .tabs span{background:#ffffffaa;border-radius:20px 20px 20px 6px;color:#1f3a5f}
+.g .tabs span.on{background:#fff;box-shadow:0 3px 0 #7fb77e;color:#1f3a5f}
+.g .sum{background:#ffffffcc;border-radius:26px 26px 30px 12px;padding:14px 6px;box-shadow:0 6px 18px #1f3a5f22}
+.g .sum b.n1{color:#4f9a5c}.g .sum b.n2{color:#d9962a}.g .sum b.n3{color:#d2736a}
+.g .c{background:#fffdf4;border-radius:26px 26px 26px 10px;box-shadow:0 6px 16px #1f3a5f1c;border:2px solid #fff}
+.g .badge{border-radius:20px;background:#dff0d4;color:#3c7d49}
+.g .badge.h{background:#fbebc3;color:#9a6a0e}
+.g .skor{width:64px;height:64px;border-radius:50%;background:conic-gradient(#f6c453 var(--p),#e8eed6 0);display:grid;place-items:center}
+.g .skor>div{width:50px;height:50px;border-radius:50%;background:#fffdf4;display:grid;place-items:center;align-content:center}
+.g .skor b{font-size:16px}.g .skor small{font-size:8px;margin:0}
+.g .nav{background:#fffdf4;border-radius:26px 26px 0 0;box-shadow:0 -4px 14px #1f3a5f18;color:#6b86a3}
+.g .nav .on{color:#1f3a5f;background:#dff0d4;border-radius:18px}
+/* PERSONA (merah) dan BRAND (biru) */
+.p,.b{font-family:'Barlow Condensed',sans-serif}
+.p{--bg:#0b0b0b;--ink:#fff;--acc:#e60012;--hi:#fff;--card:#fff;--cardink:#0b0b0b}
+.b{--bg:#eaf1ff;--ink:#0e2d5a;--acc:#2b6bc0;--hi:#f5b73b;--card:#fff;--cardink:#0e2d5a}
+.p,.b{background:var(--bg);color:var(--ink)}
+.p h3,.p h4,.p .brand,.b h3,.b h4,.b .brand{font-family:'Bebas Neue';letter-spacing:.04em;font-weight:400}
+.p .brand,.b .brand{font-size:26px}
+.p .brand,.p .top{color:#fff}
+.b .brand,.b .top{color:#fff}
+.p .bell i,.b .bell i{background:var(--hi);color:#0b0b0b;border-radius:3px;transform:skewX(-8deg)}
+.p .slab,.b .slab{position:absolute;left:-30px;right:-30px;top:-20px;height:230px;background:var(--acc);transform:skewY(-6deg);transform-origin:left top;z-index:0}
+.p .slab::after,.b .slab::after{content:"";position:absolute;left:0;right:0;bottom:-14px;height:14px;background:#000}
+.b .slab::after{background:var(--hi)}
+.p .in,.b .in{position:relative}
+.p .in>*:not(.slab),.b .in>*:not(.slab){position:relative;z-index:1}
+.p .hello,.b .hello{font:400 40px 'Bebas Neue';letter-spacing:.03em;line-height:1;color:#fff;transform:skewX(-8deg);transform-origin:left;margin-top:8px;text-shadow:3px 3px 0 #000}
+.b .hello{text-shadow:3px 3px 0 #0e2d5a}
+.p .sub,.b .sub{font-size:16px;color:#fff;max-width:250px;font-weight:600;margin-top:6px}
+.p .tabs,.b .tabs{margin-top:22px}
+.p .tabs span,.b .tabs span{background:#000;color:#fff;transform:skewX(-12deg);font-size:17px;font-weight:700;letter-spacing:.03em}
+.p .tabs span.on,.b .tabs span.on{background:#fff;color:#000;box-shadow:4px 4px 0 var(--hi)}
+.b .tabs span{background:#0e2d5a}
+.p .sum,.b .sum{background:var(--card);color:var(--cardink);clip-path:polygon(0 0,100% 4%,98% 100%,2% 96%);padding:16px 6px}
+.p .sum b,.b .sum b{font:400 46px 'Bebas Neue'}
+.p .sum b.n1,.b .sum b.n1{color:var(--acc)}
+.p .sum b.n2,.b .sum b.n2{color:#b8860b}
+.p .sum b.n3,.b .sum b.n3{color:#555}
+.p .sum small,.b .sum small{font-weight:600;font-size:15px}
+.p h3,.b h3{font-size:28px;transform:skewX(-8deg);display:inline-block;background:#000;color:#fff;padding:0 12px}
+.b h3{background:#0e2d5a}
+.p .c,.b .c{background:var(--card);color:var(--cardink);transform:skewX(-4deg);box-shadow:6px 6px 0 var(--acc);border:3px solid #000}
+.b .c{border-color:#0e2d5a;box-shadow:6px 6px 0 var(--hi)}
+.p .c>*,.b .c>*{transform:skewX(4deg)}
+.p .c h4,.b .c h4{font-size:24px;line-height:1.05}
+.p .badge,.b .badge{background:#000;color:#fff;border-radius:0;transform:skewX(-10deg);font-size:14px}
+.b .badge{background:#0e2d5a}
+.p .badge.h,.b .badge.h{background:var(--hi);color:#000}
+.p .skor,.b .skor{width:80px;height:72px;background:var(--acc);color:#fff;clip-path:polygon(50% 0,62% 14%,80% 6%,80% 26%,100% 32%,88% 50%,100% 68%,80% 76%,78% 96%,60% 86%,50% 100%,38% 86%,20% 96%,18% 76%,0 68%,12% 50%,0 32%,20% 26%,20% 6%,38% 14%);top:4px;right:4px;display:grid;place-items:center;align-content:center}
+.b .skor{background:var(--hi);color:#0e2d5a}
+.p .skor>div,.b .skor>div{display:grid;place-items:center}
+.p .skor b,.b .skor b{font:400 28px 'Bebas Neue'}
+.p .skor small,.b .skor small{font-size:8px;font-weight:700}
+.p .nav,.b .nav{background:#000;color:#fff;font-size:15px;letter-spacing:.05em}
+.b .nav{background:#0e2d5a}
+.p .nav .on,.b .nav .on{background:var(--acc);transform:skewX(-12deg);padding:8px 14px}
+.b .nav .on{background:var(--hi);color:#0e2d5a}
+.b .ter,.p .ter{font-size:17px}
+</style>
+<body></body>
+<script>
+const T=new URLSearchParams(location.search).get('t')||'p';
+const bellSvg=c=>`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>`;
+const logo=`<svg class="logo" viewBox="0 0 100 100"><path d="M50 13L7 33L50 55Z" fill="#143F7C"/><path d="M50 13L93 33L50 55Z" fill="#2B6BC0"/><path d="M25 47V63C25 71 75 71 75 63V47L50 57Z" fill="#0E2D5A"/><path d="M50 13V55" stroke="#EAF1FF" stroke-width="2"/><path d="M87 34V60" stroke="#F5B73B" stroke-width="3" stroke-linecap="round"/><path d="M87 59L89 64L94 66L89 68L87 73L85 68L80 66L85 64Z" fill="#F5B73B"/></svg>`;
+const card=(n,by,sk,ter,tg,bad,cls)=>`<div class="c"><h4>${n}</h4><div class="by">${by}</div>${sk?(T==='g'?`<div class="skor" style="--p:${sk}%"><div><b>${sk}%</b><small>skor</small></div></div>`:`<div class="skor"><div><b>${sk}%</b><small>SKOR</small></div></div>`):''}<div class="meta"><span class="badge ${cls}">${bad}</span><span>${tg}</span></div><div class="ter">${ter}</div></div>`;
+const sky=`<svg class="sky" viewBox="0 0 390 260" preserveAspectRatio="none"><g fill="#fff" opacity=".9"><ellipse cx="70" cy="60" rx="46" ry="16"/><ellipse cx="102" cy="50" rx="30" ry="18"/><ellipse cx="300" cy="40" rx="40" ry="13"/><ellipse cx="325" cy="32" rx="24" ry="14"/></g><circle cx="335" cy="108" r="26" fill="#f6c453"/><path d="M0 214C70 170 130 200 200 176S330 168 390 196V260H0Z" fill="#9fcf8f"/><path d="M0 234C80 206 150 232 240 210S350 214 390 226V260H0Z" fill="#7fb77e"/></svg>`;
+const slab=`<div class="slab"></div>`;
+const html=`<div class="ph ${T}"><div class="in">${T==='g'?sky:slab}
+<div class="top"><div class="brand">${logo}SMART</div><div class="bell">${bellSvg(T==='g'?'#1f3a5f':'#fff')}<i>2</i></div></div>
+<div class="hello">${T==='g'?'Halo, Mahasiswa':'HALO, MAHASISWA'}</div>
+<div class="sub">${T==='g'?'Lihat beasiswa yang paling sesuai dengan profilmu.':'BEASISWA PALING SESUAI PROFILMU, DI SINI.'}</div>
+<div class="tabs"><span class="on">Dalam negeri</span><span>Luar negeri</span></div>
+<div class="sum"><div><b class="n1">39</b><small>Memenuhi</small></div><div><b class="n2">16</b><small>Hampir</small></div><div><b class="n3">41</b><small>Belum</small></div></div>
+<h3>${T==='g'?'Pilihan utama':'PILIHAN UTAMA'}</h3>
+${card('Beasiswa AWS AI Academy untuk Masyarakat Indonesia','Amazon Web Services',82,'Syarat terpenuhi 4 dari 5','Tenggat 38 hari','Memenuhi','')}
+${card('Beasiswa LPDP Magister Dalam Negeri','LPDP',64,'Syarat terpenuhi 3 dari 5. Kurang: TOEFL','Tenggat 12 hari','Hampir','h')}
+</div>
+<div class="nav"><span class="on">Beranda</span><span>Rekomendasi</span><span>Jelajah</span><span>Kalender</span><span>Profil</span></div></div>`;
+document.body.insertAdjacentHTML('beforeend',html);
+</script>

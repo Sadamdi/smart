@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -7,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/state_widgets.dart';
 import '../../../core/widgets/tombol_bulat.dart';
+import '../data/dokumen_repository.dart';
 import '../domain/dokumen.dart';
 import 'dokumen_controller.dart';
 
@@ -48,6 +50,80 @@ class _DokumenPageState extends State<DokumenPage> {
     }
   }
 
+  Future<void> _lihat(Dokumen d) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (ctx) {
+        final t = Theme.of(ctx).textTheme;
+        final teks = (d.hasilBaca?['ringkasan_teks'] ?? '') as String;
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(ctx).size.height * 0.75,
+            ),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+              shrinkWrap: true,
+              children: [
+                Text(d.namaBerkas, style: t.titleMedium),
+                const SizedBox(height: 8),
+                Text(
+                  d.ringkasan.isEmpty
+                      ? 'Belum ada nilai yang terbaca.'
+                      : 'Terbaca: ${d.ringkasan.join(', ')}',
+                  style: t.bodyMedium,
+                ),
+                if (teks.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text('Cuplikan isi', style: t.labelLarge),
+                  const SizedBox(height: 4),
+                  Text(teks, style: t.bodySmall),
+                ],
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: d.adaBerkas
+                      ? () {
+                          Navigator.pop(ctx);
+                          _bukaAsli(d);
+                        }
+                      : null,
+                  icon: const Icon(Icons.open_in_new_rounded),
+                  label: Text(
+                    d.adaBerkas
+                        ? 'Buka berkas asli'
+                        : 'Berkas asli tidak tersimpan',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _bukaAsli(Dokumen d) async {
+    final pesan = ScaffoldMessenger.of(context);
+    try {
+      final jalur = await Get.find<DokumenRepository>().unduhAsli(
+        d.id,
+        d.namaBerkas,
+      );
+      final r = await OpenFilex.open(jalur);
+      if (r.type != ResultType.done) {
+        pesan.showSnackBar(
+          const SnackBar(
+            content: Text('Tidak ada aplikasi di HP untuk membuka berkas ini.'),
+          ),
+        );
+      }
+    } catch (e) {
+      pesan.showSnackBar(SnackBar(content: Text(pesanGalat(e))));
+    }
+  }
+
   Future<void> _hapus(Dokumen d) async {
     final pesan = ScaffoldMessenger.of(context);
     try {
@@ -84,7 +160,7 @@ class _DokumenPageState extends State<DokumenPage> {
           ),
           const SizedBox(height: 4),
           Text(
-            'PDF, DOCX, TXT, PNG, atau JPG, maksimal 5 MB. Gambar dibaca oleh layanan AI.',
+            'PDF, DOCX, TXT, PNG, atau JPG, maksimal 10 MB. Berkas disimpan di server agar bisa dilihat dari web dan HP. Gambar diperkecil otomatis dan dibaca oleh layanan AI.',
             style: t.bodySmall,
           ),
           const SizedBox(height: 16),
@@ -131,6 +207,7 @@ class _DokumenPageState extends State<DokumenPage> {
                           d: d,
                           jenis: _jenis[d.jenis] ?? d.jenis,
                           onHapus: () => _hapus(d),
+                          onLihat: () => _lihat(d),
                         ),
                     ],
                   ),
@@ -146,11 +223,13 @@ class _KartuDokumen extends StatelessWidget {
     required this.d,
     required this.jenis,
     required this.onHapus,
+    required this.onLihat,
   });
 
   final Dokumen d;
   final String jenis;
   final VoidCallback onHapus;
+  final VoidCallback onLihat;
 
   @override
   Widget build(BuildContext context) {
@@ -216,6 +295,11 @@ class _KartuDokumen extends StatelessWidget {
                       ),
               ],
             ),
+          ),
+          IconButton(
+            tooltip: 'Lihat isi',
+            onPressed: onLihat,
+            icon: Icon(Icons.visibility_outlined, color: Warna.primary),
           ),
           IconButton(
             tooltip: 'Hapus',

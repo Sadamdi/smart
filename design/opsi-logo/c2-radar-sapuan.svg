@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="SMART">
+  <style>
+    .sapu{transform-origin:50px 50px;animation:putar 4s linear infinite}
+    @keyframes putar{to{transform:rotate(360deg)}}
+    .b{transform-box:fill-box;transform-origin:center;animation:kedip 4s ease-out infinite}
+    .b1{animation-delay:.5s}.b2{animation-delay:2s}.b3{animation-delay:3.2s}
+    @keyframes kedip{0%{opacity:.25;transform:scale(.8)}12%{opacity:1;transform:scale(1.35)}40%,100%{opacity:.85;transform:scale(1)}}
+    .cincin{transform-box:fill-box;transform-origin:center;animation:denyut 4s ease-out 3.2s infinite}
+    @keyframes denyut{0%{opacity:.9;transform:scale(1)}60%,100%{opacity:0;transform:scale(2.6)}}
+    @media (prefers-reduced-motion:reduce){.sapu,.b,.cincin{animation:none}.cincin{opacity:0}}
+  </style>
+  <g fill="none" stroke="#143F7C" stroke-width="2.6">
+    <circle cx="50" cy="50" r="42" stroke-opacity=".28"/>
+    <circle cx="50" cy="50" r="29" stroke-opacity=".45"/>
+  </g>
+  <g class="sapu"><path d="M50 50L50 8A42 42 0 0 1 79.7 20.3Z" fill="#3E83D6" fill-opacity=".28"/><path d="M50 50V8" stroke="#3E83D6" stroke-width="2.4" stroke-linecap="round"/></g>
+  <circle class="b b1" cx="73" cy="30" r="3.4" fill="#3E83D6"/>
+  <circle class="b b2" cx="27" cy="68" r="3.4" fill="#3E83D6"/>
+  <circle class="cincin" cx="70" cy="70" r="5" fill="none" stroke="#F5B73B" stroke-width="2"/>
+  <circle class="b b3" cx="70" cy="70" r="5" fill="#F5B73B"/>
+  <path d="M33 47L50 39L67 47L50 55Z" fill="#143F7C"/>
+  <path d="M39 51V58C39 62 61 62 61 58V51L50 55Z" fill="#0E2D5A"/>
+</svg>
