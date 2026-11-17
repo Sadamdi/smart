@@ -20,7 +20,7 @@ class _P:
 
 def test_persaingan_ketat_dan_longgar():
     assert persaingan_dasar("LPDP Reguler", "Kemenkeu", False) == DASAR_KETAT
-    assert persaingan_dasar("Chevening", None, True) == DASAR_KETAT
+    assert persaingan_dasar("Chevening", None, True) == 0.02  # sangat ketat
     assert persaingan_dasar("KIP Kuliah", None, False) == DASAR_LONGGAR
     assert persaingan_dasar("Beasiswa X", None, True) < persaingan_dasar("Beasiswa X", None, False)
 
@@ -131,7 +131,7 @@ def test_statistik_lpdp_cocok_dan_rasio_dipakai():
     entri = statistik.cari("LPDP Reguler Magister dan Doktor", "Kemenkeu")
     assert [e["periode"] for e in entri] == ["2024", "2023"]
     assert all(e["sumber"] and e["url"].startswith("https://") for e in entri)
-    assert statistik.rasio_terbaru(entri) == 0.19
+    assert round(statistik.rasio_terbaru(entri), 3) == 0.23  # 60 persen 2024 (0,19) + 40 persen 2023 (0,29)
     assert statistik.cari("Beasiswa Tanpa Data", None) == []
     assert statistik.rasio_terbaru([]) is None
     # KIP Kuliah hanya punya kuota, tanpa rasio: dasar tetap perkiraan
@@ -141,6 +141,31 @@ def test_statistik_lpdp_cocok_dan_rasio_dipakai():
 def test_peluang_untuk_memakai_statistik_dan_menandai_dasarnya():
     h = peluang_untuk(_P(ipk=3.6), _B("LPDP Reguler", "Kemenkeu", "Indonesia"), "memenuhi", 1.0, ["a", "b"], [])
     assert h["_dasar_peluang"] == "statistik" and h["_statistik"]
-    assert h["_alasan_peluang"][0].startswith("Persaingan memakai rasio")
+    assert any(a.startswith("Persaingan memakai rasio") for a in h["_alasan_peluang"])
     h2 = peluang_untuk(_P(ipk=3.6), _B("Beasiswa Lokal Biasa"), "memenuhi", 1.0, ["a", "b"], [])
     assert h2["_dasar_peluang"] == "perkiraan" and h2["_statistik"] == []
+
+
+def test_statistik_memilih_data_menurut_jenjang():
+    from app.rekomendasi import statistik
+
+    assert statistik.cari("IISMA 2025", None, ["S1"])  # IISMA mencakup S1 dan vokasi
+    assert not statistik.cari("IISMA 2025", None, ["S3"])  # tidak ada data S3
+    assert statistik.cari("Gates Cambridge", None, ["S3"])
+    assert not statistik.cari("Gates Cambridge", None, ["S1"])
+
+
+def test_tingkat_persaingan_program_tanpa_data_mengikuti_kalibrasi():
+    from app.rekomendasi.peluang import tingkat_persaingan
+
+    assert tingkat_persaingan("Beasiswa Djarum", None, False) == "sangat_ketat"
+    assert tingkat_persaingan("Erasmus Mundus", None, True) == "ketat"
+    assert tingkat_persaingan("Beasiswa Pemda Kabupaten", None, False) == "longgar"
+    assert tingkat_persaingan("Beasiswa Universitas Luar X", None, True) == "ketat"
+    assert tingkat_persaingan("Beasiswa Yayasan Lokal", None, False) == "sedang"
+
+
+def test_peluang_untuk_program_tanpa_data_menyebut_tingkat():
+    h = peluang_untuk(_P(ipk=3.4), _B("Beasiswa Yayasan Lokal"), "memenuhi", 1.0, ["a", "b"], [])
+    assert h["_tingkat"] == "sedang" and h["_dasar_peluang"] == "perkiraan"
+    assert any("diperkirakan sedang" in a for a in h["_alasan_peluang"])

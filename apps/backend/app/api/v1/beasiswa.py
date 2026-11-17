@@ -88,7 +88,7 @@ def daftar(
                 "kategori": r.kategori,
                 **peluang_untuk(pengguna, b, r.kategori, r.skor_kelayakan, r.alasan, r.catatan_kekurangan),
             }
-            for k in ("_alasan_peluang", "_statistik", "_dasar_peluang"):
+            for k in ("_alasan_peluang", "_statistik", "_dasar_peluang", "_tingkat"):
                 ekstra.pop(k, None)
         else:
             ekstra = {"luar_negeri": luar_negeri(b.negara)}
@@ -116,6 +116,7 @@ def detail(beasiswa_id: uuid.UUID, pengguna: SaatIni, repo: RepoDep, profil: Pro
     alasan_p = ekstra_detail.pop("_alasan_peluang", [])
     statistik_d = ekstra_detail.pop("_statistik", [])
     dasar_d = ekstra_detail.pop("_dasar_peluang", None)
+    tingkat_d = ekstra_detail.pop("_tingkat", None)
     return Amplop(
         data=BeasiswaDetail(
             **ringkas,
@@ -137,6 +138,7 @@ def detail(beasiswa_id: uuid.UUID, pengguna: SaatIni, repo: RepoDep, profil: Pro
             alasan_peluang=alasan_p,
             dasar_peluang=dasar_d,
             statistik_seleksi=statistik_d,
+            tingkat_persaingan=tingkat_d,
             alasan=nilai.kelayakan.alasan,
             catatan_kekurangan=nilai.kelayakan.catatan_kekurangan,
         )
