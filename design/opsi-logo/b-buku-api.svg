@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="SMART">
+  <path d="M50 74C38 66 22 64 8 68V38C22 34 38 36 50 44Z" fill="#3E83D6"/>
+  <path d="M50 74C62 66 78 64 92 68V38C78 34 62 36 50 44Z" fill="#143F7C"/>
+  <path d="M50 82C37 75 22 73 8 77V70C22 66 38 68 50 76C62 68 78 66 92 70V77C78 73 63 75 50 82Z" fill="#BCD2F1"/>
+  <path d="M50 43C37 33 41 19 50 6C59 19 63 33 50 43Z" fill="#F5B73B"/>
+  <path d="M50 38C44 31 46 24 50 17C54 24 56 31 50 38Z" fill="#FFE08A"/>
+  <path d="M78 18L80 24L86 26L80 28L78 34L76 28L70 26L76 24Z" fill="#F5B73B"/>
+</svg>

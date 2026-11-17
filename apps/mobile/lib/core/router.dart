@@ -14,6 +14,7 @@ import '../features/beasiswa/presentation/jelajah_page.dart';
 import '../features/beasiswa/presentation/tersimpan_page.dart';
 import '../features/beranda/presentation/beranda_page.dart';
 import '../features/chat/presentation/chat_page.dart';
+import 'cache_lokal.dart';
 import '../features/dokumen/presentation/dokumen_page.dart';
 import '../features/pengaturan/presentation/pengaturan_page.dart';
 import '../features/profil/presentation/profil_lanjutan_page.dart';
@@ -115,7 +116,7 @@ const _menu = [
   (Icons.star_border_rounded, Icons.star_rounded, 'Rekomendasi'),
   (Icons.search_rounded, Icons.search_rounded, 'Jelajah'),
   (Icons.calendar_today_outlined, Icons.calendar_today, 'Kalender'),
-  (Icons.person_outline, Icons.person, 'Profil'),
+  (Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded, 'Asisten AI'),
 ];
 
 class _Cangkang extends StatelessWidget {
@@ -146,6 +147,35 @@ class _Cangkang extends StatelessWidget {
               top: 0,
               child: SafeArea(bottom: false, child: BannerPerbarui()),
             ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 8,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: Get.find<CacheLokal>().luring,
+                builder: (_, luring, _) => luring
+                    ? Center(
+                        child: Material(
+                          color: Warna.navy,
+                          borderRadius: BorderRadius.circular(20),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            child: Text(
+                              'Mode luring: menampilkan data terakhir',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ),
           ],
         ),
         bottomNavigationBar: DecoratedBox(
@@ -173,11 +203,13 @@ class _Cangkang extends StatelessWidget {
                       ikon: m.$1,
                       ikonAktif: m.$2,
                       label: m.$3,
-                      aktif: shell.currentIndex == i,
-                      onTap: () => shell.goBranch(
-                        i,
-                        initialLocation: i == shell.currentIndex,
-                      ),
+                      aktif: i != 4 && shell.currentIndex == i,
+                      onTap: () => i == 4
+                          ? context.push('/chat')
+                          : shell.goBranch(
+                              i,
+                              initialLocation: i == shell.currentIndex,
+                            ),
                     ),
                 ],
               ),

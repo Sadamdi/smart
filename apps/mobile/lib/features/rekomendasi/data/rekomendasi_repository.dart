@@ -10,10 +10,18 @@ class RekomendasiRepository {
     Kategori? kategori,
     String? wilayah,
     int? batas,
+    String urut = 'peluang',
+    int minPeluang = 0,
   }) async {
     final r = await _api.get(
       '/rekomendasi',
-      query: {'kategori': kategori?.kode, 'wilayah': wilayah, 'batas': batas},
+      query: {
+        'kategori': kategori?.kode,
+        'wilayah': wilayah,
+        'batas': batas,
+        'urut': urut,
+        'min_peluang': minPeluang == 0 ? null : minPeluang,
+      },
     );
     return [
       for (final x in r.data as List)

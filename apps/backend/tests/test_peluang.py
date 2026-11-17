@@ -108,6 +108,9 @@ def test_berkas_dihapus_setelah_dibaca_dan_hasil_tetap(tmp_path):
         def flush(self):
             pass
 
+        def scalars(self, _):
+            return []
+
     class _P2:
         id = "11111111-1111-1111-1111-111111111111"
 
@@ -194,3 +197,19 @@ def test_teladan_hanya_milik_tanoto():
     assert statistik.cari("Beasiswa TELADAN", "Tanoto Foundation")
     assert not statistik.cari("Beasiswa Kepemimpinan Teladan", "Kementerian Pendidikan Tinggi, Sains, dan Teknologi")
     assert not statistik.cari("Tanoto Foundation: BEACON", "Tanoto Foundation")
+
+
+def test_perkecil_gambar_dan_batas_total(tmp_path):
+    import io
+
+    from PIL import Image
+
+    from app.services import dokumen
+
+    besar = io.BytesIO()
+    Image.effect_noise((3000, 2000), 80).convert("RGB").save(besar, "JPEG", quality=95)
+    kecil = dokumen.perkecil_gambar("foto.jpg", besar.getvalue(), 1600)
+    assert len(kecil) < len(besar.getvalue())
+    assert max(Image.open(io.BytesIO(kecil)).size) <= 1600
+    assert dokumen.perkecil_gambar("a.pdf", b"%PDF", 1600) == b"%PDF"
+    assert dokumen.perkecil_gambar("rusak.png", b"bukan gambar", 1600) == b"bukan gambar"

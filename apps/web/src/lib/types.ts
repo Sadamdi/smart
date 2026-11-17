@@ -123,6 +123,7 @@ export type Dokumen = {
   status_baca: string;
   hasil_baca?: Record<string, unknown> | null;
   tanggal_unggah: string;
+  ada_berkas?: boolean;
 };
 
 export type Tersimpan = { beasiswa: BeasiswaRingkas; status_rencana?: string | null };
@@ -130,7 +131,7 @@ export type ChecklistBeasiswa = {
   beasiswa: BeasiswaRingkas;
   berkas: { id: string; nama_berkas: string; selesai: boolean }[];
 };
-export type Acara = { jenis: "tenggat" | "tugas"; tanggal: string; judul: string; ref_id: string; selesai: boolean };
+export type Acara = { jenis: "tenggat" | "tugas" | "rekomendasi"; kategori?: string | null; tanggal: string; judul: string; ref_id: string; selesai: boolean };
 export type Tugas = { id: string; judul: string; tanggal: string; selesai: boolean };
 export type Notifikasi = {
   id: string;
