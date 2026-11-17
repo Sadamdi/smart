@@ -1,5 +1,5 @@
 "use client";
-import { ArrowLeft, Bookmark, BookmarkCheck, CalendarDays, CircleAlert, CircleCheck, CircleHelp, CircleX, ExternalLink, Globe, Info } from "lucide-react";
+import { ArrowLeft, Bookmark, BookmarkCheck, CalendarDays, CircleAlert, CircleCheck, CircleHelp, CircleX, ExternalLink, Globe, Info, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import type { ComponentType } from "react";
@@ -89,6 +89,9 @@ export default function DetailBeasiswa() {
           <div className="halaman-masuk space-y-6 pb-24 lg:pb-0">
             <Link href="/jelajah" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary">
               <ArrowLeft className="h-4 w-4" aria-hidden /> Kembali ke Jelajah
+            </Link>
+            <Link href="/chat" className="ml-4 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary">
+              <MessageCircle className="h-4 w-4" aria-hidden /> Tanya chatbot
             </Link>
 
             <section className="rounded-hero border border-c4/60 bg-card p-5 shadow-kartu sm:p-7">
