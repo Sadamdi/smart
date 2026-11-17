@@ -244,7 +244,7 @@ def _cuplikan(teks: str, nama: str, lebar: int = 2500) -> str:
 
 
 def validasi_beasiswa(sesi: Session, settings: Settings, b: Beasiswa, hari_ini: date, teks: str | None = None) -> str:
-    """Memvalidasi satu beasiswa dengan AI. Hasilnya 'terbit', 'kedaluwarsa', 'ditolak' (laman menolak robot), atau 'menunggu'.
+    """Memvalidasi satu beasiswa dengan AI. Hasilnya 'terbit', 'kedaluwarsa', 'ditolak', atau 'menunggu'.
 
     Melempar UpstreamUnavailable bila layanan AI mati (beasiswa tidak ditandai sudah diproses, jadi dicoba lagi nanti).
     """
