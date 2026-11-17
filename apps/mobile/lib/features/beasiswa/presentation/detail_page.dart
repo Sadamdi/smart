@@ -196,7 +196,10 @@ class _Isi extends StatelessWidget {
         ],
         if (detail.ringkas.kelayakan != null) ...[
           const SizedBox(height: 12),
-          _DataSeleksi(statistik: detail.statistik),
+          _DataSeleksi(
+            statistik: detail.statistik,
+            tingkat: detail.tingkatPersaingan,
+          ),
         ],
         const SizedBox(height: 16),
         _KotakInfo(
@@ -581,10 +584,18 @@ String _ribuan(int n) =>
     n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => '.');
 
 /// Data seleksi sebelumnya sebagai dasar estimasi peluang, lengkap dengan sumbernya. Tanpa data, dinyatakan terus terang.
+const _labelTingkat = {
+  'sangat_ketat': 'sangat ketat (program sejenis menerima sekitar 2% pelamar)',
+  'ketat': 'ketat (program sejenis menerima sekitar 15% pelamar)',
+  'sedang': 'sedang (perkiraan)',
+  'longgar': 'longgar (perkiraan)',
+};
+
 class _DataSeleksi extends StatelessWidget {
-  const _DataSeleksi({required this.statistik});
+  const _DataSeleksi({required this.statistik, this.tingkat});
 
   final List<StatistikSeleksi> statistik;
+  final String? tingkat;
 
   @override
   Widget build(BuildContext context) {
@@ -604,7 +615,7 @@ class _DataSeleksi extends StatelessWidget {
           const SizedBox(height: 6),
           if (statistik.isEmpty)
             Text(
-              'Belum ada data resmi jumlah pendaftar dan penerima untuk program ini. Estimasi memakai perkiraan tingkat persaingan umum, bukan data seleksi program ini.',
+              'Belum ada data resmi jumlah pendaftar dan penerima untuk program ini. Estimasi memakai tingkat persaingan program sejenis: ${_labelTingkat[tingkat] ?? 'perkiraan'}. Ini bukan data seleksi program ini.',
               style: t.bodySmall,
             )
           else

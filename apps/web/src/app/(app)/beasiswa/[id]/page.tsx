@@ -25,6 +25,13 @@ const STATUS_SYARAT: Record<string, TampilanSyarat> = {
   tidak_diketahui: { label: "Belum dapat dinilai", ikon: CircleHelp, kelas: "bg-c2 text-ink" },
 };
 
+const LABEL_TINGKAT: Record<string, string> = {
+  sangat_ketat: "sangat ketat (program sejenis menerima sekitar 2% pelamar)",
+  ketat: "ketat (program sejenis menerima sekitar 15% pelamar)",
+  sedang: "sedang (perkiraan)",
+  longgar: "longgar (perkiraan)",
+};
+
 export default function DetailBeasiswa() {
   const { id } = useParams<{ id: string }>();
   const detail = useDetail(id);
@@ -137,7 +144,8 @@ export default function DetailBeasiswa() {
                   <p className="text-sm font-bold text-navy">Data seleksi sebelumnya</p>
                   {(b.statistik_seleksi ?? []).length === 0 ? (
                     <p className="mt-1 text-xs text-ink">
-                      Belum ada data resmi jumlah pendaftar dan penerima untuk program ini. Estimasi memakai perkiraan tingkat persaingan umum, bukan data seleksi program ini.
+                      Belum ada data resmi jumlah pendaftar dan penerima untuk program ini. Estimasi memakai tingkat persaingan program sejenis:{" "}
+                      {LABEL_TINGKAT[b.tingkat_persaingan ?? ""] ?? "perkiraan"}. Ini bukan data seleksi program ini.
                     </p>
                   ) : (
                     <ul className="mt-2 space-y-3">

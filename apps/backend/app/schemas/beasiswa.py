@@ -21,6 +21,7 @@ class StatistikSeleksi(BaseModel):
 
     program: str
     periode: str
+    jenjang: list[str] = []
     kuota: int | None = None
     pendaftar: int | None = None
     diterima: int | None = None
@@ -75,3 +76,4 @@ class BeasiswaDetail(BeasiswaRingkas, KelayakanKartu):
     alasan_peluang: list[str] = []
     dasar_peluang: str | None = None  # statistik (ada rasio terdokumentasi) atau perkiraan
     statistik_seleksi: list[StatistikSeleksi] = []
+    tingkat_persaingan: str | None = None  # sangat_ketat, ketat, sedang, longgar (bila tanpa rasio terdokumentasi)

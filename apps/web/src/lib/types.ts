@@ -96,6 +96,7 @@ export type BeasiswaDetail = BeasiswaRingkas & {
   catatan_kekurangan?: string[];
   alasan_peluang?: string[];
   dasar_peluang?: "statistik" | "perkiraan" | null;
+  tingkat_persaingan?: "sangat_ketat" | "ketat" | "sedang" | "longgar" | null;
   statistik_seleksi?: StatistikSeleksi[];
 };
 export type DetailAdmin = BeasiswaDetail & { status: string; alasan_ditandai?: string | null };

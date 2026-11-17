@@ -225,11 +225,15 @@ class BeasiswaDetail {
     this.catatanKekurangan = const [],
     this.alasanPeluang = const [],
     this.dasarPeluang,
+    this.tingkatPersaingan,
     this.statistik = const [],
   });
 
   final List<String> alasanPeluang;
   final String? dasarPeluang;
+
+  /// sangat_ketat, ketat, sedang, atau longgar; hanya bila program tidak punya rasio penerimaan terdokumentasi.
+  final String? tingkatPersaingan;
   final List<StatistikSeleksi> statistik;
   final String? kategori;
   final List<String> alasan;
@@ -259,6 +263,7 @@ class BeasiswaDetail {
     ],
     alasanPeluang: [for (final x in (j['alasan_peluang'] as List? ?? [])) '$x'],
     dasarPeluang: j['dasar_peluang'] as String?,
+    tingkatPersaingan: j['tingkat_persaingan'] as String?,
     statistik: [
       for (final x in (j['statistik_seleksi'] as List? ?? []))
         StatistikSeleksi.fromJson(x as Map<String, dynamic>),

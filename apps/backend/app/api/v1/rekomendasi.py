@@ -40,7 +40,7 @@ class RingkasanOut(BaseModel):
 
 def _item(r, b, p) -> RekomendasiOut:
     ekstra = peluang_untuk(p, b, r.kategori, r.skor_kelayakan, r.alasan, r.catatan_kekurangan)
-    for k in ("_alasan_peluang", "_statistik", "_dasar_peluang"):
+    for k in ("_alasan_peluang", "_statistik", "_dasar_peluang", "_tingkat"):
         ekstra.pop(k, None)
     return RekomendasiOut(
         beasiswa=BeasiswaRingkas.model_validate(b),

@@ -41,7 +41,12 @@ def metrik(skor_kelayakan, alasan: list[str] | None, catatan: list[str] | None) 
 def peluang_untuk(pengguna, beasiswa, kategori: str | None, skor_kelayakan, alasan, catatan) -> dict:
     """Estimasi peluang untuk satu beasiswa dan pengguna. Kosong (None) bila belum ada syarat terukur."""
     from app.rekomendasi import statistik
-    from app.rekomendasi.peluang import alasan_peluang, estimasi_peluang, kekuatan_profil, persaingan_dasar
+    from app.rekomendasi.peluang import (
+        alasan_peluang,
+        estimasi_peluang,
+        kekuatan_profil,
+        tingkat_persaingan,
+    )
 
     m = metrik(skor_kelayakan, alasan, catatan)
     luar = luar_negeri(beasiswa.negara)
@@ -50,7 +55,7 @@ def peluang_untuk(pengguna, beasiswa, kategori: str | None, skor_kelayakan, alas
         pengguna.profil_lanjutan,
         pengguna.skor_bahasa,
     )
-    entri = statistik.cari(beasiswa.nama, beasiswa.penyelenggara)
+    entri = statistik.cari(beasiswa.nama, beasiswa.penyelenggara, getattr(beasiswa, "jenjang", None))
     dasar_stat = statistik.rasio_terbaru(entri)
     nilai = estimasi_peluang(
         kategori=kategori,
@@ -61,13 +66,11 @@ def peluang_untuk(pengguna, beasiswa, kategori: str | None, skor_kelayakan, alas
         kekuatan=kuat,
         dasar_statistik=dasar_stat,
     )
+    tingkat = None if dasar_stat is not None else tingkat_persaingan(beasiswa.nama, beasiswa.penyelenggara, luar)
     hasil = {**m, "luar_negeri": luar, "estimasi_peluang": nilai}
     if nilai is not None:
-        dasar = dasar_stat if dasar_stat is not None else persaingan_dasar(beasiswa.nama, beasiswa.penyelenggara, luar)
-        alasan_p = alasan_peluang(kategori, dasar, kuat)
-        if dasar_stat is not None:
-            alasan_p.insert(0, "Persaingan memakai rasio penerimaan yang dipublikasikan (lihat sumber data).")
-        hasil["_alasan_peluang"] = alasan_p
+        hasil["_alasan_peluang"] = alasan_peluang(kategori, tingkat, kuat, dasar_stat is not None)
     hasil["_statistik"] = entri
     hasil["_dasar_peluang"] = "statistik" if dasar_stat is not None else "perkiraan"
+    hasil["_tingkat"] = tingkat
     return hasil
