@@ -68,7 +68,7 @@ class CincinSkor extends StatelessWidget {
                         TextSpan(
                           text: '${(v * 100).round()}',
                           style: TextStyle(
-                            fontSize: ukuran * 0.3,
+                            fontSize: ukuran * (skor! >= 100 ? 0.23 : 0.3),
                             fontWeight: FontWeight.w800,
                             color: Warna.navy,
                             height: 1,
@@ -77,7 +77,7 @@ class CincinSkor extends StatelessWidget {
                             TextSpan(
                               text: '%',
                               style: TextStyle(
-                                fontSize: ukuran * 0.16,
+                                fontSize: ukuran * (skor! >= 100 ? 0.12 : 0.16),
                                 fontWeight: FontWeight.w700,
                                 color: Warna.muted,
                               ),
