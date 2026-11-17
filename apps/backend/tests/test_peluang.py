@@ -186,3 +186,11 @@ def test_pencocokan_statistik_tidak_salah_penyelenggara():
     # Türkiye dan Pertamina
     assert statistik.rasio_terbaru(statistik.cari("Türkiye Scholarships (Graduate)", "Türkiye Scholarships")) == 0.041
     assert statistik.cari("Beasiswa Pertamina Sobat Bumi 2026", "Pertamina Foundation")
+
+
+def test_teladan_hanya_milik_tanoto():
+    from app.rekomendasi import statistik
+
+    assert statistik.cari("Beasiswa TELADAN", "Tanoto Foundation")
+    assert not statistik.cari("Beasiswa Kepemimpinan Teladan", "Kementerian Pendidikan Tinggi, Sains, dan Teknologi")
+    assert not statistik.cari("Tanoto Foundation: BEACON", "Tanoto Foundation")
