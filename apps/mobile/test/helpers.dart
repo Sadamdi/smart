@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:smart_mobile/core/api_client.dart';
+import 'package:smart_mobile/core/cache_lokal.dart';
 import 'package:smart_mobile/core/dependensi.dart';
 import 'package:smart_mobile/core/token_storage.dart';
 import 'package:smart_mobile/main.dart';
@@ -161,6 +163,7 @@ void pasangGetUji(
   Get.testMode = true;
   Get.reset();
   pasangDependensi(
+    cache: CacheLokal(Directory.systemTemp.createTempSync('cache_uji')),
     dio: dioPalsu(s),
     storage: storage ?? MemoryTokenStorage(),
     bukaTautan: bukaTautan,
