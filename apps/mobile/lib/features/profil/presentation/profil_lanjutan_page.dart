@@ -55,6 +55,7 @@ class _ProfilLanjutanPageState extends State<ProfilLanjutanPage> {
       'nama',
       'penerbit',
       'tahun',
+      'jenis',
     ]);
     _ctl('pengalaman').text = formatBaris(l['pengalaman'] as List? ?? [], [
       'nama',
@@ -107,6 +108,7 @@ class _ProfilLanjutanPageState extends State<ProfilLanjutanPage> {
         'nama',
         'penerbit',
         'tahun',
+        'jenis',
       ]),
       'pengalaman': uraiBaris(_ctl('pengalaman').text, [
         'nama',
@@ -212,8 +214,8 @@ class _ProfilLanjutanPageState extends State<ProfilLanjutanPage> {
           ),
           _kolom(
             'sertifikat',
-            'Sertifikat (nama | penerbit | tahun)',
-            hint: 'TOEFL ITP | ETS | 2026',
+            'Sertifikat (nama | penerbit | tahun | jenis: keahlian, bahasa, kepanitiaan, pelatihan, kompetensi, lainnya)',
+            hint: 'Panitia Seminar | HMJ | 2025 | kepanitiaan',
             baris: 3,
           ),
           _kolom(

@@ -47,3 +47,12 @@ def daftarkan(klien, email="mahasiswa@example.com", nama="Mahasiswa Uji", sandi=
 
 def kepala(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture(autouse=True)
+def _syarat_minimum_satu(request, monkeypatch):
+    """Uji lama menilai perilaku lain (normalisasi, toleransi) memakai satu syarat. Aturan minimum dua syarat terukur
+    (keputusan 17 November 2026) diuji di test_syarat_minimum.py dengan nilai bawaan."""
+    if request.module.__name__.endswith("test_syarat_minimum"):
+        return
+    monkeypatch.setattr("app.rekomendasi.kelayakan.SYARAT_KUAT_MINIMUM", 1)

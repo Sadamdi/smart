@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/format.dart';
 import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/cincin_skor.dart';
 import '../../../core/widgets/kartu_beasiswa.dart';
 import '../../../core/widgets/metrik_dan_progres.dart';
 import '../../../core/widgets/smart_app_bar.dart';
@@ -12,6 +13,7 @@ import '../../../core/widgets/state_widgets.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../kalender/domain/kalender.dart';
 import '../../beasiswa/presentation/simpan_aksi.dart';
+import '../../rekomendasi/presentation/rekomendasi_controller.dart';
 import '../../beasiswa/presentation/tersimpan_controller.dart';
 import 'beranda_controller.dart';
 
@@ -24,6 +26,7 @@ class BerandaPage extends StatefulWidget {
 
 class _BerandaPageState extends State<BerandaPage> {
   final _c = Get.find<BerandaController>();
+  final _rek = Get.find<RekomendasiController>();
   final _simpan = Get.find<TersimpanController>();
 
   @override
@@ -118,6 +121,13 @@ class _BerandaPageState extends State<BerandaPage> {
                 ),
               ),
             ),
+            const SizedBox(height: 16),
+            Obx(
+              () => TabWilayah(
+                nilai: _rek.wilayah.value,
+                onPilih: _rek.pilihWilayah,
+              ),
+            ),
             const SizedBox(height: 20),
             JudulBagian(
               'Pilihan Utama',
@@ -151,6 +161,7 @@ class _BerandaPageState extends State<BerandaPage> {
                 return KartuBeasiswa(
                   beasiswa: r.beasiswa,
                   kategori: r.kategori,
+                  kelayakan: r.kelayakan,
                   alasan: r.alasan,
                   catatan: r.catatanKekurangan,
                   tersimpan: _simpan.ids.contains(r.beasiswa.id),

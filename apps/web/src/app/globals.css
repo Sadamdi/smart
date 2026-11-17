@@ -12,6 +12,7 @@
   --fill-hover: #1b4d8f;
   --primary-soft: #6c9fef;
   --navy: #051b38;
+  --emas: #f5b73b;
   --ink: #424751;
   --muted: #576676;
   --surface: #f9f9ff;
@@ -213,3 +214,40 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Ilustrasi bergerak (components/Ilustrasi.tsx). Keadaan dasar = gambar yang bermakna bila animasi dimatikan. */
+.il-balik,.il-kertas,.il-depan{transform-box:view-box;transform-origin:60px 60px}
+.il-depan{transform-origin:60px 44px}
+.il-pasir-atas,.il-pasir-bawah,.il-bintang,.il-segel,.il-gulung-kiri,.il-gulung-kanan{transform-box:fill-box}
+.il-pasir-atas{transform-origin:50% 100%;transform:scaleY(.5)}
+.il-pasir-bawah{transform-origin:50% 100%;transform:scaleY(.5)}
+.il-bintang,.il-segel{transform-origin:center}
+.il-balik{animation:il-balik 6s cubic-bezier(.6,0,.3,1) infinite}
+.il-pasir-atas{animation:il-atas 6s linear infinite}
+.il-pasir-bawah{animation:il-bawah 6s linear infinite}
+.il-aliran{animation:il-aliran 6s linear infinite}
+.il-kertas{animation:il-buka 5s cubic-bezier(.3,.7,.2,1) infinite}
+.il-gulung-kiri{animation:il-kiri 5s cubic-bezier(.3,.7,.2,1) infinite}
+.il-gulung-kanan{animation:il-kanan 5s cubic-bezier(.3,.7,.2,1) infinite}
+.il-segel{animation:il-segel 5s cubic-bezier(.3,.7,.2,1) infinite}
+.il-depan{animation:il-lepas 5s cubic-bezier(.6,0,.3,1) infinite}
+.il-bintang{animation:il-pop 5s cubic-bezier(.3,.7,.2,1) infinite}
+@keyframes il-balik{0%,78%{transform:rotate(0)}96%,100%{transform:rotate(180deg)}}
+@keyframes il-atas{0%{transform:scaleY(1)}72%,100%{transform:scaleY(0)}}
+@keyframes il-bawah{0%{transform:scaleY(0)}72%,100%{transform:scaleY(1)}}
+@keyframes il-aliran{0%,3%{opacity:0}6%,70%{opacity:1}73%,100%{opacity:0}}
+@keyframes il-buka{0%,6%{transform:scaleX(0)}38%,88%{transform:scaleX(1)}100%{transform:scaleX(0)}}
+@keyframes il-kiri{0%,6%{transform:translateX(28px)}38%,88%{transform:none}100%{transform:translateX(28px)}}
+@keyframes il-kanan{0%,6%{transform:translateX(-28px)}38%,88%{transform:none}100%{transform:translateX(-28px)}}
+@keyframes il-segel{0%,40%{opacity:0;transform:translateY(-34px) scale(1.8)}52%{opacity:1;transform:translateY(2px) scale(.9)}58%,88%{opacity:1;transform:none}100%{opacity:0}}
+@keyframes il-lepas{0%,30%{transform:none}48%,92%{transform:scaleY(0)}100%{transform:none}}
+@keyframes il-pop{0%,40%{transform:scale(0)}56%{transform:scale(1.3)}64%,90%{transform:scale(1)}100%{transform:scale(0)}}
+@media (prefers-reduced-motion:reduce){
+  .il-balik,.il-pasir-atas,.il-pasir-bawah,.il-aliran,.il-kertas,.il-gulung-kiri,.il-gulung-kanan,.il-segel,.il-depan,.il-bintang{animation:none!important}
+  .il-kertas,.il-gulung-kiri,.il-gulung-kanan,.il-segel{transform:none;opacity:1}
+  .il-depan{transform:scaleY(0)}
+  .il-bintang{transform:scale(1)}
+}
+
+@keyframes geser{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
+@media (prefers-reduced-motion:reduce){.animate-\[geser_1\.2s_ease-in-out_infinite\]{animation:none}}

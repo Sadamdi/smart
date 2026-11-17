@@ -66,4 +66,62 @@ void main() {
       expect(s.terakhir('POST /beasiswa/1/interaksi').data, {'aksi': 'klik'});
     },
   );
+
+  testWidgets(
+    'detail menampilkan estimasi peluang dan data seleksi dengan sumber',
+    (t) async {
+      t.view.physicalSize = const Size(390 * 2, 2000 * 2);
+      t.view.devicePixelRatio = 2;
+      addTearDown(t.view.reset);
+      t.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(t.platformDispatcher.clearAccessibilityFeaturesTestValue);
+      final s = ServerPalsu({
+        'GET /beasiswa/1': (o) => Balasan.ok({
+          ...beasiswaJson(
+            '1',
+            'LPDP Reguler',
+            tenggat: tanggalApi(DateTime.now().add(const Duration(days: 9))),
+          ),
+          'kategori': 'memenuhi',
+          'skor_kelayakan': 100,
+          'estimasi_peluang': 22,
+          'syarat_terpenuhi': 3,
+          'syarat_total': 3,
+          'luar_negeri': false,
+          'alasan_peluang': ['Persaingan program ini umumnya sangat ketat.'],
+          'dasar_peluang': 'statistik',
+          'statistik_seleksi': [
+            {
+              'program': 'LPDP (beasiswa S2 dan S3)',
+              'periode': '2024',
+              'kuota': 10000,
+              'pendaftar': 51027,
+              'rasio': 0.19,
+              'keandalan': 'rendah',
+              'sumber': 'GoodStats, 19 Desember 2024',
+              'url': 'https://goodstats.id/contoh',
+            },
+          ],
+          'persyaratan': [],
+          'berkas_wajib': [],
+        }),
+        'GET /me/tersimpan': (o) => Balasan.ok([]),
+        'GET /me/checklist': (o) => Balasan.ok([]),
+      });
+      pasangGetUji(s);
+      await t.pumpWidget(
+        MaterialApp(
+          theme: buatTema(googleFonts: false),
+          home: const DetailPage(id: '1'),
+        ),
+      );
+      await t.pumpAndSettle();
+      expect(find.text('Estimasi peluang'), findsOneWidget);
+      expect(find.text('22%'), findsWidgets);
+      expect(find.text('Data seleksi sebelumnya'), findsOneWidget);
+      expect(find.textContaining('51.027 pendaftar'), findsOneWidget);
+      expect(find.textContaining('Sumber: GoodStats'), findsOneWidget);
+    },
+  );
 }

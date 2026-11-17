@@ -6,6 +6,7 @@ import '../../../core/format.dart';
 import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
+import '../../../core/widgets/cincin_skor.dart';
 import '../../../core/widgets/metrik_dan_progres.dart';
 import '../../../core/widgets/state_widgets.dart';
 import '../../../core/widgets/tombol_bulat.dart';
@@ -186,6 +187,20 @@ class _Isi extends StatelessWidget {
               Lencana.kategori(Kategori.dari(detail.kategori!)),
           ],
         ),
+        if (detail.ringkas.kelayakan != null) ...[
+          const SizedBox(height: 16),
+          _KartuSkor(
+            kelayakan: detail.ringkas.kelayakan!,
+            alasan: detail.alasanPeluang,
+          ),
+        ],
+        if (detail.ringkas.kelayakan != null) ...[
+          const SizedBox(height: 12),
+          _DataSeleksi(
+            statistik: detail.statistik,
+            tingkat: detail.tingkatPersaingan,
+          ),
+        ],
         const SizedBox(height: 16),
         _KotakInfo(
           warnaLatar: dekat ? Warna.errorSoft : Warna.container2,
@@ -481,6 +496,162 @@ class _RencanaDaftar extends StatelessWidget {
             },
           ),
       ],
+    );
+  }
+}
+
+/// Skor kelayakan besar di atas Detail: cincin, angka, dan jumlah syarat terpenuhi.
+class _KartuSkor extends StatelessWidget {
+  const _KartuSkor({required this.kelayakan, this.alasan = const []});
+
+  final Kelayakan kelayakan;
+  final List<String> alasan;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final warna = warnaKategoriSkor(kelayakan.kategori);
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Warna.kartu,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Warna.container4),
+        boxShadow: bayanganKartu,
+      ),
+      child: Row(
+        children: [
+          CincinSkor(
+            skor: kelayakan.peluang,
+            warna: warna,
+            ukuran: 92,
+            tebal: 11,
+          ),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Estimasi peluang', style: t.bodySmall),
+                const SizedBox(height: 2),
+                if (kelayakan.adaAngka) ...[
+                  Text(
+                    '${kelayakan.peluang}%',
+                    style: t.headlineMedium?.copyWith(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  if (kelayakan.adaSyarat)
+                    Text(
+                      'Syarat terpenuhi ${kelayakan.terpenuhi} dari ${kelayakan.total}',
+                      style: t.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  const SizedBox(height: 6),
+                  if (kelayakan.adaSyarat)
+                    TitikSyarat(
+                      terpenuhi: kelayakan.terpenuhi,
+                      total: kelayakan.total,
+                      warna: warna,
+                    ),
+                  for (final a in alasan) ...[
+                    const SizedBox(height: 4),
+                    Text('- $a', style: t.bodySmall),
+                  ],
+                ] else
+                  Text(
+                    'Belum tersedia. Syarat beasiswa ini belum tercatat, cek laman resmi.',
+                    style: t.bodyMedium,
+                  ),
+                const SizedBox(height: 8),
+                Text(
+                  'Perkiraan dari kecocokan syarat, kekuatan profil, dan persaingan umum. Bukan jaminan diterima.',
+                  style: t.bodySmall?.copyWith(fontSize: 11.5),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _ribuan(int n) =>
+    n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => '.');
+
+/// Data seleksi sebelumnya sebagai dasar estimasi peluang, lengkap dengan sumbernya. Tanpa data, dinyatakan terus terang.
+const _labelTingkat = {
+  'sangat_ketat': 'sangat ketat (program sejenis menerima sekitar 2% pelamar)',
+  'ketat': 'ketat (program sejenis menerima sekitar 15% pelamar)',
+  'sedang': 'sedang (perkiraan)',
+  'longgar': 'longgar (perkiraan)',
+};
+
+class _DataSeleksi extends StatelessWidget {
+  const _DataSeleksi({required this.statistik, this.tingkat});
+
+  final List<StatistikSeleksi> statistik;
+  final String? tingkat;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Warna.kartu,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Warna.container4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Data seleksi sebelumnya', style: t.titleSmall),
+          const SizedBox(height: 6),
+          if (statistik.isEmpty)
+            Text(
+              'Belum ada data resmi jumlah pendaftar dan penerima untuk program ini. Estimasi memakai tingkat persaingan program sejenis: ${_labelTingkat[tingkat] ?? 'perkiraan'}. Ini bukan data seleksi program ini.',
+              style: t.bodySmall,
+            )
+          else
+            for (final s in statistik) ...[
+              Text(
+                '${s.program}, ${s.periode}',
+                style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              Text(
+                [
+                  if (s.kuota != null) 'kuota ${_ribuan(s.kuota!)}',
+                  if (s.pendaftar != null) '${_ribuan(s.pendaftar!)} pendaftar',
+                  if (s.diterima != null) '${_ribuan(s.diterima!)} diterima',
+                  if (s.rasio != null)
+                    'rasio sekitar ${(s.rasio! * 100).round()}%',
+                ].join(', '),
+                style: t.bodySmall,
+              ),
+              if (s.catatan != null)
+                Text(s.catatan!, style: t.bodySmall?.copyWith(fontSize: 11.5)),
+              InkWell(
+                onTap: () => Get.find<PembukaTautan>().buka(Uri.parse(s.url)),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    'Sumber: ${s.sumber}',
+                    style: t.bodySmall?.copyWith(
+                      color: Warna.primary,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+        ],
+      ),
     );
   }
 }

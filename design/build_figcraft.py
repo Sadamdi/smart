@@ -9,6 +9,9 @@ import json
 import os
 import re
 import subprocess
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 FC = r"C:\Program Files\ArtCraft\FigCraft\figcraft-cli.exe"
 AQUA = os.path.dirname(os.path.abspath(__file__))
@@ -902,6 +905,26 @@ def layar_keadaan(x):
 
 
 # ---------- susun ----------
+def bagian_identitas():
+    """Logo, palet, ilustrasi, komponen skor, dan rancangan kartu: satu berkas desain bersama layar-layar di atas."""
+    import build_identitas as BI
+    import build_ilustrasi as BL
+    import build_kartu as BK
+    import svg_ke_figcraft as SK
+
+    bagian = [
+        ("Identitas: logo, palet, ilustrasi pendamping", BI.svg_identitas()[0], 1180, 900),
+        ("Komponen: cincin skor, tab wilayah, chip", BI.svg_komponen()[0], 1180, 760),
+        ("Ilustrasi gaya pastel", BL.svg_teks(), 1176, 792),
+        ("Kartu skor: Beranda, Detail, Jelajah web", BK.svg_teks(), 1480, 1380),
+    ]
+    x, y = 0, 2400
+    for nama, teks, w, h in bagian:
+        f = _add("frame.create", {"x": x, "y": y, "width": w, "height": h, "name": nama, "props": {"fill": "#F3F6FB", "clip": True}, "select": False})
+        SK.impor(teks, _add, f, 0, 0)
+        x += w + 120
+
+
 def main():
     ids = {}
     mobile = [layar_splash, layar_masuk, layar_beranda, layar_jelajah, layar_rekomendasi, layar_detail, layar_kalender, layar_profil, layar_dokumen, layar_chat, layar_pengaturan, layar_tersimpan, layar_keadaan]
@@ -915,6 +938,8 @@ def main():
         for i, fn in enumerate(web):
             ids[("G" if gelap else "T") + "W%d" % (i + 1)] = fn(2000 + baris * 12500 + i * 1000)
     tema(False)
+    _DY[0] = 0
+    bagian_identitas()
     script = os.path.join(AQUA, "out", "smart-ui.script.json")
     os.makedirs(os.path.dirname(script), exist_ok=True)
     json.dump(steps, open(script, "w", encoding="utf-8"))

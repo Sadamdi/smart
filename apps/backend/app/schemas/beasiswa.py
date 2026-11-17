@@ -16,6 +16,38 @@ class BeasiswaRingkas(BaseModel):
     tautan_resmi: str
 
 
+class StatistikSeleksi(BaseModel):
+    """Data seleksi yang dipublikasikan: kuota, pendaftar, penerima, rasio, dan sumbernya."""
+
+    program: str
+    periode: str
+    jenjang: list[str] = []
+    kuota: int | None = None
+    pendaftar: int | None = None
+    diterima: int | None = None
+    rasio: float | None = None
+    keandalan: str = "sedang"
+    catatan: str | None = None
+    sumber: str
+    url: str
+
+
+class KelayakanKartu(BaseModel):
+    """Penilaian terhadap profil pengguna untuk kartu. Skor adalah skor kelayakan, bukan peluang diterima."""
+
+    kategori: str | None = None  # memenuhi, hampir_memenuhi, belum_memenuhi
+    skor_kelayakan: int | None = None  # 0 sampai 100; None bila belum ada syarat terukur
+    syarat_terpenuhi: int = 0
+    syarat_total: int = 0
+    luar_negeri: bool = False
+    # Estimasi peluang diterima (2 sampai 90), perkiraan dari kecocokan syarat, kekuatan profil, dan persaingan umum.
+    estimasi_peluang: int | None = None
+
+
+class BeasiswaKartu(BeasiswaRingkas, KelayakanKartu):
+    pass
+
+
 class PersyaratanOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -34,11 +66,14 @@ class BerkasWajibOut(BaseModel):
     nama_berkas: str
 
 
-class BeasiswaDetail(BeasiswaRingkas):
+class BeasiswaDetail(BeasiswaRingkas, KelayakanKartu):
     manfaat: str | None = None
     tanggal_diperiksa: datetime | None = None
     persyaratan: list[PersyaratanOut] = []
     berkas_wajib: list[BerkasWajibOut] = []
-    kategori: str | None = None  # memenuhi, hampir_memenuhi, belum_memenuhi
     alasan: list[str] = []
     catatan_kekurangan: list[str] = []
+    alasan_peluang: list[str] = []
+    dasar_peluang: str | None = None  # statistik (ada rasio terdokumentasi) atau perkiraan
+    statistik_seleksi: list[StatistikSeleksi] = []
+    tingkat_persaingan: str | None = None  # sangat_ketat, ketat, sedang, longgar (bila tanpa rasio terdokumentasi)

@@ -23,9 +23,11 @@ class Pengguna {
     this.notifPush = true,
     this.profilLanjutan = const {},
     this.skorBahasa = const {},
+    this.peran = 'mahasiswa',
   });
 
   final String id;
+  final String peran;
   final String email;
   final String nama;
   final String? tanggalLahir;
@@ -63,6 +65,8 @@ class Pengguna {
     return (terisi: nilai.where((x) => x).length, total: nilai.length);
   }
 
+  bool get admin => peran == 'admin';
+
   bool get profilLengkap => kelengkapan.terisi == kelengkapan.total;
 
   String get namaDepan => nama.trim().split(RegExp(r'\s+')).first;
@@ -93,6 +97,7 @@ class Pengguna {
       j['profil_lanjutan'] as Map? ?? {},
     ),
     skorBahasa: Map<String, dynamic>.from(j['skor_bahasa'] as Map? ?? {}),
+    peran: (j['peran'] as String?) ?? 'mahasiswa',
   );
 }
 

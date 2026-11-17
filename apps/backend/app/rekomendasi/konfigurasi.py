@@ -18,4 +18,4 @@ class Bobot:
 
 TOLERANSI = Toleransi()
 BOBOT = Bobot()
-VERSI_MODEL = "aturan-1.1+hash-384"
+VERSI_MODEL = "aturan-1.3+hash-384"

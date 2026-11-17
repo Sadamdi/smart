@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="SMART">
+  <g transform="translate(60 60) scale(.66) translate(-60 -57)">
+    <path d="M36 62V84C45 92 75 92 84 84V62L60 74Z" fill="#7FA8E0"/>
+    <polygon points="60,52 60,22 14,52" fill="#BCD2F1"/>
+    <polygon points="60,52 60,22 106,52" fill="#FFFFFF"/>
+    <polygon points="60,52 106,52 60,82" fill="#3E83D6"/>
+    <polygon points="60,52 60,82 14,52" fill="#7FA8E0"/>
+    <line x1="106" y1="52" x2="106" y2="78" stroke="#F5B73B" stroke-width="3.5"/>
+    <rect x="101" y="78" width="10" height="13" fill="#F5B73B"/>
+  </g>
+</svg>

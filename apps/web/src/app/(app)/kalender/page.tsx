@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { DaftarChecklist } from "@/components/DaftarChecklist";
 import { KalenderBulan, isoTanggal } from "@/components/KalenderBulan";
+import { LembarTerakhir } from "@/components/Ilustrasi";
 import { KosongState, Tampil, pesanGalat } from "@/components/state";
 import { Kartu, JudulHalaman, Masukan, Tombol, TautanTombol } from "@/components/ui";
 import { kirim } from "@/lib/api";
@@ -110,7 +111,7 @@ export default function KalenderChecklist() {
             <Tampil
               kueri={checklist}
               baris={2}
-              kosong={<KosongState judul="Belum ada berkas yang dilacak" pesan="Simpan beasiswa untuk melihat daftar berkas wajibnya di sini." aksi={<TautanTombol href="/jelajah">Jelajah beasiswa</TautanTombol>} />}
+              kosong={<KosongState ilustrasi={<LembarTerakhir ukuran={88} />} judul="Belum ada berkas yang dilacak" pesan="Simpan beasiswa untuk melihat daftar berkas wajibnya di sini." aksi={<TautanTombol href="/jelajah">Jelajah beasiswa</TautanTombol>} />}
             >
               {(daftar) => (
                 <div className="space-y-5">

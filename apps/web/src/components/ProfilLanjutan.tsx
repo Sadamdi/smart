@@ -5,6 +5,7 @@ import { useState } from "react";
 import { pesanGalat } from "@/components/state";
 import { Kartu, Masukan, Medan, Pilihan, Tombol } from "@/components/ui";
 import { kirim } from "@/lib/api";
+import { usePerbaruiRekomendasi } from "@/lib/perbarui";
 import { kunci } from "@/lib/hooks";
 import type { Pengguna, ProfilLanjutan } from "@/lib/types";
 
@@ -13,6 +14,7 @@ type Kolom = { kunci: string; label: string; pilihan?: string[]; angka?: boolean
 
 const TINGKAT = ["sekolah", "kota", "provinsi", "nasional", "internasional"];
 const JENJANG = ["D3", "D4", "S1", "S2", "S3"];
+const JENIS_SERTIFIKAT = ["keahlian", "bahasa", "kepanitiaan", "pelatihan", "kompetensi", "lainnya"];
 
 const DAFTAR: { kunci: "organisasi" | "prestasi" | "sertifikat" | "pengalaman"; judul: string; kolom: Kolom[] }[] = [
   {
@@ -37,8 +39,9 @@ const DAFTAR: { kunci: "organisasi" | "prestasi" | "sertifikat" | "pengalaman"; 
     kunci: "sertifikat",
     judul: "Sertifikat",
     kolom: [
-      { kunci: "nama", label: "Nama sertifikat", lebar: "sm:col-span-5" },
-      { kunci: "penerbit", label: "Penerbit", lebar: "sm:col-span-4" },
+      { kunci: "nama", label: "Nama sertifikat", lebar: "sm:col-span-4" },
+      { kunci: "jenis", label: "Jenis", pilihan: JENIS_SERTIFIKAT, lebar: "sm:col-span-3" },
+      { kunci: "penerbit", label: "Penerbit", lebar: "sm:col-span-3" },
       { kunci: "tahun", label: "Tahun", angka: true, lebar: "sm:col-span-2" },
     ],
   },
@@ -73,6 +76,7 @@ const pisah = (t: string) => t.split(",").map((x) => x.trim()).filter(Boolean);
 
 export function ProfilLanjutanKartu({ saya }: { saya: Pengguna }) {
   const qc = useQueryClient();
+  const perbarui = usePerbaruiRekomendasi();
   const awal: ProfilLanjutan = saya.profil_lanjutan ?? {};
   const [skalar, setSkalar] = useState({
     provinsi_asal: awal.provinsi_asal ?? "",
@@ -122,8 +126,9 @@ export function ProfilLanjutanKartu({ saya }: { saya: Pengguna }) {
     };
     try {
       await kirim("/me/profil", "PUT", { profil_lanjutan: muatan });
-      await Promise.all([qc.invalidateQueries({ queryKey: kunci.saya }), qc.invalidateQueries({ queryKey: ["rekomendasi"] })]);
-      setInfo("Profil lanjutan tersimpan. Hitung ulang rekomendasi untuk memakainya.");
+      await qc.invalidateQueries({ queryKey: kunci.saya });
+      void perbarui();
+      setInfo("Profil lanjutan tersimpan. Rekomendasi sedang diperbarui otomatis.");
     } catch (e) {
       setGalat(e);
     } finally {

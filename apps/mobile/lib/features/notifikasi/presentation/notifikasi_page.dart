@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/ilustrasi_gerak.dart';
+
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
@@ -57,6 +60,7 @@ class _NotifikasiPageState extends State<NotifikasiPage> {
         bangun: (daftar) {
           if (daftar.isEmpty) {
             return const KosongState(
+              ilustrasi: Gulungan(),
               ikon: Icons.notifications_none,
               judul: 'Belum ada notifikasi',
               pesan: 'Pengingat tenggat beasiswa tersimpan dan beasiswa baru akan muncul di sini.',

@@ -9,6 +9,50 @@ String? teksJenjang(Object? v) {
   return v is String && v.isNotEmpty ? v : null;
 }
 
+/// Penilaian beasiswa terhadap profil pengguna untuk kartu. [skor] adalah skor kelayakan (0 sampai 100), yaitu
+/// seberapa banyak syarat terukur terpenuhi, bukan peluang diterima. Null bila belum ada syarat terukur.
+class Kelayakan {
+  const Kelayakan({
+    this.kategori,
+    this.skor,
+    this.peluang,
+    this.terpenuhi = 0,
+    this.total = 0,
+    this.luarNegeri = false,
+  });
+
+  final String? kategori;
+  final int? skor;
+
+  /// Estimasi peluang diterima (2 sampai 90): perkiraan dari kecocokan syarat, kekuatan profil, dan persaingan umum.
+  final int? peluang;
+  final int terpenuhi;
+  final int total;
+  final bool luarNegeri;
+
+  bool get adaAngka => peluang != null;
+  bool get adaSyarat => total > 0;
+
+  /// Null bila respons tidak memuat penilaian sama sekali (mis. daftar yang bukan milik pengguna).
+  static Kelayakan? dari(Map<String, dynamic> j) {
+    // Hanya bila server sudah mengirim kolom skor; 'kategori' saja (server lama) memakai tampilan alasan.
+    if (!j.containsKey('skor_kelayakan') &&
+        !j.containsKey('syarat_total') &&
+        !j.containsKey('estimasi_peluang') &&
+        !j.containsKey('luar_negeri')) {
+      return null;
+    }
+    return Kelayakan(
+      kategori: j['kategori'] as String?,
+      skor: (j['skor_kelayakan'] as num?)?.round(),
+      peluang: (j['estimasi_peluang'] as num?)?.round(),
+      terpenuhi: ((j['syarat_terpenuhi'] ?? 0) as num).toInt(),
+      total: ((j['syarat_total'] ?? 0) as num).toInt(),
+      luarNegeri: (j['luar_negeri'] ?? false) as bool,
+    );
+  }
+}
+
 class BeasiswaRingkas {
   const BeasiswaRingkas({
     required this.id,
@@ -18,6 +62,7 @@ class BeasiswaRingkas {
     this.jenjang,
     this.tenggat,
     required this.tautanResmi,
+    this.kelayakan,
   });
 
   final String id;
@@ -27,6 +72,7 @@ class BeasiswaRingkas {
   final String? jenjang;
   final DateTime? tenggat;
   final String tautanResmi;
+  final Kelayakan? kelayakan;
 
   factory BeasiswaRingkas.fromJson(Map<String, dynamic> j) => BeasiswaRingkas(
     id: j['id'] as String,
@@ -36,6 +82,7 @@ class BeasiswaRingkas {
     jenjang: teksJenjang(j['jenjang']),
     tenggat: urai(j['tenggat'] as String?),
     tautanResmi: (j['tautan_resmi'] ?? '') as String,
+    kelayakan: Kelayakan.dari(j),
   );
 
   Map<String, dynamic> toJson() => {
@@ -126,6 +173,46 @@ class BerkasWajib {
   Map<String, dynamic> toJson() => {'id': id, 'nama_berkas': namaBerkas};
 }
 
+/// Data seleksi yang dipublikasikan (kuota, pendaftar, penerima) beserta sumbernya.
+class StatistikSeleksi {
+  const StatistikSeleksi({
+    required this.program,
+    required this.periode,
+    this.kuota,
+    this.pendaftar,
+    this.diterima,
+    this.rasio,
+    this.keandalan = 'sedang',
+    this.catatan,
+    required this.sumber,
+    required this.url,
+  });
+
+  final String program;
+  final String periode;
+  final int? kuota;
+  final int? pendaftar;
+  final int? diterima;
+  final double? rasio;
+  final String keandalan;
+  final String? catatan;
+  final String sumber;
+  final String url;
+
+  factory StatistikSeleksi.fromJson(Map<String, dynamic> j) => StatistikSeleksi(
+    program: (j['program'] ?? '') as String,
+    periode: (j['periode'] ?? '') as String,
+    kuota: (j['kuota'] as num?)?.toInt(),
+    pendaftar: (j['pendaftar'] as num?)?.toInt(),
+    diterima: (j['diterima'] as num?)?.toInt(),
+    rasio: (j['rasio'] as num?)?.toDouble(),
+    keandalan: (j['keandalan'] ?? 'sedang') as String,
+    catatan: j['catatan'] as String?,
+    sumber: (j['sumber'] ?? '') as String,
+    url: (j['url'] ?? '') as String,
+  );
+}
+
 class BeasiswaDetail {
   const BeasiswaDetail({
     required this.ringkas,
@@ -136,8 +223,18 @@ class BeasiswaDetail {
     this.kategori,
     this.alasan = const [],
     this.catatanKekurangan = const [],
+    this.alasanPeluang = const [],
+    this.dasarPeluang,
+    this.tingkatPersaingan,
+    this.statistik = const [],
   });
 
+  final List<String> alasanPeluang;
+  final String? dasarPeluang;
+
+  /// sangat_ketat, ketat, sedang, atau longgar; hanya bila program tidak punya rasio penerimaan terdokumentasi.
+  final String? tingkatPersaingan;
+  final List<StatistikSeleksi> statistik;
   final String? kategori;
   final List<String> alasan;
   final List<String> catatanKekurangan;
@@ -163,6 +260,13 @@ class BeasiswaDetail {
     alasan: [for (final x in (j['alasan'] as List? ?? [])) '$x'],
     catatanKekurangan: [
       for (final x in (j['catatan_kekurangan'] as List? ?? [])) '$x',
+    ],
+    alasanPeluang: [for (final x in (j['alasan_peluang'] as List? ?? [])) '$x'],
+    dasarPeluang: j['dasar_peluang'] as String?,
+    tingkatPersaingan: j['tingkat_persaingan'] as String?,
+    statistik: [
+      for (final x in (j['statistik_seleksi'] as List? ?? []))
+        StatistikSeleksi.fromJson(x as Map<String, dynamic>),
     ],
   );
 

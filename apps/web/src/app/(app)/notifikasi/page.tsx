@@ -1,6 +1,7 @@
 "use client";
 import { Bell, BellOff, Check } from "lucide-react";
 import Link from "next/link";
+import { Gulungan } from "@/components/Ilustrasi";
 import { KosongState, Tampil } from "@/components/state";
 import { JudulHalaman, Lencana, TautanTombol, Tombol, cx } from "@/components/ui";
 import { kirim } from "@/lib/api";
@@ -26,7 +27,7 @@ export default function Notifikasi() {
           </Tombol>
         }
       />
-      <Tampil kueri={kueri} kosong={<KosongState ikon={BellOff} judul="Belum ada notifikasi" pesan="Pengingat muncul di sini saat tenggat beasiswa tersimpan mendekat. Simpan beasiswa agar kamu mendapat pengingatnya." aksi={<TautanTombol href="/jelajah">Jelajah beasiswa</TautanTombol>} />}>
+      <Tampil kueri={kueri} kosong={<KosongState ilustrasi={<Gulungan />} ikon={BellOff} judul="Belum ada notifikasi" pesan="Pengingat muncul di sini saat tenggat beasiswa tersimpan mendekat. Simpan beasiswa agar kamu mendapat pengingatnya." aksi={<TautanTombol href="/jelajah">Jelajah beasiswa</TautanTombol>} />}>
         {(daftar) => (
           <ul className="space-y-3">
             {[...daftar]
