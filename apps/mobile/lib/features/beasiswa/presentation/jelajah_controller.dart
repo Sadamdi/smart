@@ -14,6 +14,7 @@ class JelajahState {
     this.galatLagi,
     this.q = '',
     this.jenjang,
+    this.wilayah = 'dalam',
   });
 
   final List<BeasiswaRingkas> items;
@@ -24,6 +25,7 @@ class JelajahState {
   final String? galatLagi;
   final String q;
   final String? jenjang;
+  final String wilayah;
 
   bool get adaLagi => kursor != null;
 
@@ -36,6 +38,7 @@ class JelajahState {
     Object? galatLagi = _tak,
     String? q,
     Object? jenjang = _tak,
+    String? wilayah,
   }) => JelajahState(
     items: items ?? this.items,
     kursor: identical(kursor, _tak) ? this.kursor : kursor as String?,
@@ -47,6 +50,7 @@ class JelajahState {
         : galatLagi as String?,
     q: q ?? this.q,
     jenjang: identical(jenjang, _tak) ? this.jenjang : jenjang as String?,
+    wilayah: wilayah ?? this.wilayah,
   );
 }
 
@@ -72,9 +76,12 @@ class JelajahController extends GetxController {
     state.value = state.value.salin(memuat: true, galat: null, galatLagi: null);
     final q = state.value.q;
     final jenjang = state.value.jenjang;
+    final wilayah = state.value.wilayah;
     try {
-      final h = await _repo.daftar(q: q, jenjang: jenjang);
-      if (q != state.value.q || jenjang != state.value.jenjang) {
+      final h = await _repo.daftar(q: q, jenjang: jenjang, wilayah: wilayah);
+      if (q != state.value.q ||
+          jenjang != state.value.jenjang ||
+          wilayah != state.value.wilayah) {
         return; // sudah kedaluwarsa
       }
       state.value = state.value.salin(
@@ -95,6 +102,7 @@ class JelajahController extends GetxController {
       final h = await _repo.daftar(
         q: s.q,
         jenjang: s.jenjang,
+        wilayah: s.wilayah,
         kursor: s.kursor,
       );
       state.value = state.value.salin(
@@ -112,6 +120,12 @@ class JelajahController extends GetxController {
 
   Future<void> cari(String q) {
     state.value = state.value.salin(q: q.trim());
+    return muat();
+  }
+
+  Future<void> pilihWilayah(String wilayah) {
+    if (state.value.wilayah == wilayah) return Future.value();
+    state.value = state.value.salin(wilayah: wilayah);
     return muat();
   }
 

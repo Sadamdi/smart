@@ -9,6 +9,43 @@ String? teksJenjang(Object? v) {
   return v is String && v.isNotEmpty ? v : null;
 }
 
+/// Penilaian beasiswa terhadap profil pengguna untuk kartu. [skor] adalah skor kelayakan (0 sampai 100), yaitu
+/// seberapa banyak syarat terukur terpenuhi, bukan peluang diterima. Null bila belum ada syarat terukur.
+class Kelayakan {
+  const Kelayakan({
+    this.kategori,
+    this.skor,
+    this.terpenuhi = 0,
+    this.total = 0,
+    this.luarNegeri = false,
+  });
+
+  final String? kategori;
+  final int? skor;
+  final int terpenuhi;
+  final int total;
+  final bool luarNegeri;
+
+  bool get adaAngka => skor != null && total > 0;
+
+  /// Null bila respons tidak memuat penilaian sama sekali (mis. daftar yang bukan milik pengguna).
+  static Kelayakan? dari(Map<String, dynamic> j) {
+    // Hanya bila server sudah mengirim kolom skor; 'kategori' saja (server lama) memakai tampilan alasan.
+    if (!j.containsKey('skor_kelayakan') &&
+        !j.containsKey('syarat_total') &&
+        !j.containsKey('luar_negeri')) {
+      return null;
+    }
+    return Kelayakan(
+      kategori: j['kategori'] as String?,
+      skor: (j['skor_kelayakan'] as num?)?.round(),
+      terpenuhi: ((j['syarat_terpenuhi'] ?? 0) as num).toInt(),
+      total: ((j['syarat_total'] ?? 0) as num).toInt(),
+      luarNegeri: (j['luar_negeri'] ?? false) as bool,
+    );
+  }
+}
+
 class BeasiswaRingkas {
   const BeasiswaRingkas({
     required this.id,
@@ -18,6 +55,7 @@ class BeasiswaRingkas {
     this.jenjang,
     this.tenggat,
     required this.tautanResmi,
+    this.kelayakan,
   });
 
   final String id;
@@ -27,6 +65,7 @@ class BeasiswaRingkas {
   final String? jenjang;
   final DateTime? tenggat;
   final String tautanResmi;
+  final Kelayakan? kelayakan;
 
   factory BeasiswaRingkas.fromJson(Map<String, dynamic> j) => BeasiswaRingkas(
     id: j['id'] as String,
@@ -36,6 +75,7 @@ class BeasiswaRingkas {
     jenjang: teksJenjang(j['jenjang']),
     tenggat: urai(j['tenggat'] as String?),
     tautanResmi: (j['tautan_resmi'] ?? '') as String,
+    kelayakan: Kelayakan.dari(j),
   );
 
   Map<String, dynamic> toJson() => {

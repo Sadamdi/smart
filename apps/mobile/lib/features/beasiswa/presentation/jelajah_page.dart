@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
+import '../../../core/widgets/cincin_skor.dart';
 import '../../../core/widgets/kartu_beasiswa.dart';
 import '../../../core/widgets/smart_app_bar.dart';
 import '../../../core/widgets/state_widgets.dart';
@@ -87,6 +88,8 @@ class _JelajahPageState extends State<JelajahPage> {
                 focusedBorder: _bulat(Warna.primary, 2),
               ),
             ),
+            const SizedBox(height: 12),
+            TabWilayah(nilai: s.wilayah, onPilih: c.pilihWilayah),
             const SizedBox(height: 12),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,

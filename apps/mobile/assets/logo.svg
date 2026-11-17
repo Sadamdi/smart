@@ -1,17 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SMART">
-  <defs>
-    <linearGradient id="bg" x1="8" y1="4" x2="58" y2="62" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#2F6FC0"/>
-      <stop offset="1" stop-color="#143F7C"/>
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="15" fill="url(#bg)"/>
-  <g transform="translate(1 1.4)">
-    <path d="M17 29.5L30 36L43 29.5V38.5C43 42.5 37 45.5 30 45.5C23 45.5 17 42.5 17 38.5Z" fill="#fff" fill-opacity=".85"/>
-    <path d="M30 13L54 24L30 35L6 24Z" fill="#fff"/>
-    <path d="M47 27.4V40" stroke="#F5B73B" stroke-width="2.4" stroke-linecap="round" fill="none"/>
-    <path d="M47 39.8L48.4 42.6L51.2 44L48.4 45.4L47 48.2L45.6 45.4L42.8 44L45.6 42.6Z" fill="#F5B73B"/>
-    <path d="M50.59 36.3A8.5 8.5 0 0 1 55.21 41.8" stroke="#F5B73B" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-    <path d="M52.07 33.12A12 12 0 0 1 58.59 40.89" stroke="#F5B73B" stroke-opacity=".6" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="SMART">
+  <rect width="120" height="120" rx="26" fill="#143F7C"/>
+  <g transform="translate(60 60) scale(.9) translate(-60 -57)">
+    <path d="M36 62V84C45 92 75 92 84 84V62L60 74Z" fill="#7FA8E0"/>
+    <polygon points="60,52 60,22 14,52" fill="#BCD2F1"/>
+    <polygon points="60,52 60,22 106,52" fill="#FFFFFF"/>
+    <polygon points="60,52 106,52 60,82" fill="#3E83D6"/>
+    <polygon points="60,52 60,82 14,52" fill="#7FA8E0"/>
+    <line x1="106" y1="52" x2="106" y2="78" stroke="#F5B73B" stroke-width="3.5"/>
+    <rect x="101" y="78" width="10" height="13" fill="#F5B73B"/>
   </g>
 </svg>

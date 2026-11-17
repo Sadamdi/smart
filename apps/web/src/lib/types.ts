@@ -54,6 +54,12 @@ export type BeasiswaRingkas = {
   jenjang?: string[] | null;
   tenggat?: string | null;
   tautan_resmi: string;
+  /** Penilaian untuk pengguna; ada di daftar Jelajah dan Detail. */
+  kategori?: string | null;
+  skor_kelayakan?: number | null;
+  syarat_terpenuhi?: number;
+  syarat_total?: number;
+  luar_negeri?: boolean;
 };
 /** Hasil pemeriksaan satu syarat terhadap profil; hanya ada bila API mengirimnya. */
 export type StatusSyarat = "terpenuhi" | "dalam_toleransi" | "gagal" | "tidak_diketahui";
@@ -84,6 +90,10 @@ export type Rekomendasi = {
   alasan: string[];
   catatan_kekurangan: string[];
   tenggat?: string | null;
+  skor_kelayakan?: number | null;
+  syarat_terpenuhi?: number;
+  syarat_total?: number;
+  luar_negeri?: boolean;
 };
 export type Ringkasan = { memenuhi: number; hampir_memenuhi: number; belum_memenuhi: number };
 

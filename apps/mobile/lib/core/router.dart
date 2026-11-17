@@ -22,7 +22,7 @@ import '../features/profil/presentation/profil_controller.dart';
 import '../features/profil/presentation/profil_page.dart';
 import '../features/rekomendasi/presentation/rekomendasi_page.dart';
 import 'widgets/item_menu_bawah.dart';
-import 'widgets/state_widgets.dart';
+import 'widgets/ilustrasi_gerak.dart';
 
 /// Penyegar router: dipicu setiap status auth berubah agar redirect dievaluasi ulang.
 class SegarkanRouter extends ChangeNotifier {
@@ -50,7 +50,7 @@ GoRouter buatRouter(SegarkanRouter segarkan) {
     routes: [
       GoRoute(
         path: '/memuat',
-        builder: (_, _) => const Scaffold(body: MemuatState()),
+        builder: (_, _) => const Scaffold(body: MemuatHalaman()),
       ),
       GoRoute(path: '/masuk', builder: (_, _) => const LoginPage()),
       GoRoute(path: '/daftar', builder: (_, _) => const DaftarPage()),

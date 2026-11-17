@@ -45,6 +45,10 @@ Future<void> _pasang(WidgetTester t, ServerPalsu s, {bool masuk = true}) async {
   t.view.physicalSize = const Size(390 * 2, 1400 * 2);
   t.view.devicePixelRatio = 2;
   addTearDown(t.view.reset);
+  // Ilustrasi keadaan kosong berulang tanpa henti; dimatikan agar pumpAndSettle bisa selesai.
+  t.platformDispatcher.accessibilityFeaturesTestValue =
+      const FakeAccessibilityFeatures(disableAnimations: true);
+  addTearDown(t.platformDispatcher.clearAccessibilityFeaturesTestValue);
   await t.pumpWidget(aplikasi(s, sudahMasuk: masuk));
   await t.pumpAndSettle();
 }
@@ -361,6 +365,101 @@ void main() {
         s.terakhir('GET /rekomendasi').queryParameters['kategori'],
         'hampir_memenuhi',
       );
+    });
+  });
+
+  group('Skor kelayakan dan wilayah', () {
+    Map<String, dynamic> item(
+      String id,
+      String nama, {
+      required Map<String, dynamic> kelayakan,
+    }) => {
+      'beasiswa': beasiswaJson(id, nama, tenggat: _hariKe(12)),
+      'kategori': 'memenuhi',
+      'alasan': ['Jenjang S1 sesuai'],
+      'catatan_kekurangan': <String>[],
+      'tenggat': _hariKe(12),
+      ...kelayakan,
+    };
+
+    testWidgets('kartu menampilkan syarat terpenuhi X dari Y', (t) async {
+      final s = ServerPalsu(
+        _rutePokok(
+          tambahan: {
+            'GET /rekomendasi': (o) => Balasan.ok([
+              item(
+                '2',
+                'Beasiswa Skor',
+                kelayakan: {
+                  'skor_kelayakan': 82,
+                  'syarat_terpenuhi': 5,
+                  'syarat_total': 6,
+                  'luar_negeri': false,
+                },
+              ),
+            ]),
+          },
+        ),
+      );
+      await _pasang(t, s);
+      await _tab(t, 'Rekomendasi');
+      expect(find.text('Beasiswa Skor'), findsOneWidget);
+      expect(find.text('Syarat terpenuhi 5 dari 6'), findsOneWidget);
+    });
+
+    testWidgets('tanpa syarat terukur tidak diberi angka', (t) async {
+      final s = ServerPalsu(
+        _rutePokok(
+          tambahan: {
+            'GET /rekomendasi': (o) => Balasan.ok([
+              item(
+                '3',
+                'Beasiswa Tanpa Angka',
+                kelayakan: {
+                  'skor_kelayakan': null,
+                  'syarat_terpenuhi': 0,
+                  'syarat_total': 0,
+                  'luar_negeri': false,
+                },
+              ),
+            ]),
+          },
+        ),
+      );
+      await _pasang(t, s);
+      await _tab(t, 'Rekomendasi');
+      expect(
+        find.text('Syarat belum tercatat, cek laman resmi'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Syarat terpenuhi'), findsNothing);
+    });
+
+    testWidgets('tab Luar negeri meminta wilayah luar ke server', (t) async {
+      final s = ServerPalsu(_rutePokok());
+      await _pasang(t, s);
+      await _tab(t, 'Rekomendasi');
+      expect(
+        s.terakhir('GET /rekomendasi').queryParameters['wilayah'],
+        'dalam',
+      );
+      await t.tap(find.text('Luar negeri'));
+      await t.pumpAndSettle();
+      expect(s.terakhir('GET /rekomendasi').queryParameters['wilayah'], 'luar');
+      expect(
+        s.terakhir('GET /rekomendasi/ringkasan').queryParameters['wilayah'],
+        'luar',
+      );
+    });
+
+    testWidgets('Jelajah memakai tab wilayah dan meneruskannya', (t) async {
+      final s = ServerPalsu(_rutePokok());
+      await _pasang(t, s);
+      await _tab(t, 'Jelajah');
+      expect(s.terakhir('GET /beasiswa').queryParameters['wilayah'], 'dalam');
+      await t.tap(find.text('Luar negeri'));
+      await t.pumpAndSettle();
+      expect(s.terakhir('GET /beasiswa').queryParameters['wilayah'], 'luar');
     });
   });
 
