@@ -179,6 +179,14 @@ def test_rekomendasi_per_kategori_dengan_alasan_dan_catatan(klien_db, sesi):
     assert kategori[str(hampir.id)]["kategori"] == "hampir_memenuhi"
     assert any("IPK kurang" in c for c in kategori[str(hampir.id)]["catatan_kekurangan"])
     assert kategori[str(belum.id)]["kategori"] == "belum_memenuhi"
+    # Kalender memuat tenggat beasiswa yang direkomendasikan (memenuhi dan hampir), bukan yang belum memenuhi.
+    kal = {
+        x["ref_id"]: x
+        for x in klien_db.get(f"{B}/me/kalender?dari={HARI}&sampai={HARI + timedelta(days=60)}", headers=h).json()["data"]
+    }
+    assert kal[str(ok.id)]["jenis"] == "rekomendasi" and kal[str(ok.id)]["kategori"] == "memenuhi"
+    assert kal[str(hampir.id)]["kategori"] == "hampir_memenuhi"
+    assert str(belum.id) not in kal
     urutan = [x["kategori"] for x in data]
     assert urutan == sorted(urutan, key=["memenuhi", "hampir_memenuhi", "belum_memenuhi"].index)
     # Urutan bawaan: estimasi peluang tertinggi dulu, yang belum punya estimasi di akhir.

@@ -10,12 +10,14 @@ import { Kartu, JudulHalaman, Masukan, Tombol, TautanTombol } from "@/components
 import { kirim } from "@/lib/api";
 import { aksiTugas, kunci, useAksi, useChecklist, useKalender } from "@/lib/hooks";
 import { tanggalIndo } from "@/lib/format";
+import type { Acara } from "@/lib/types";
 
 export default function KalenderChecklist() {
   const sekarang = new Date();
   const [tahun, setTahun] = useState(sekarang.getFullYear());
   const [bulan, setBulan] = useState(sekarang.getMonth());
   const [dipilih, setDipilih] = useState<string | null>(null);
+  const [popup, setPopup] = useState<Acara | null>(null);
   const [judul, setJudul] = useState("");
   const [tanggal, setTanggal] = useState("");
 
@@ -44,6 +46,21 @@ export default function KalenderChecklist() {
 
   return (
     <div className="halaman-masuk">
+      {popup && (
+        <div role="dialog" aria-modal="true" aria-label={popup.judul} className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center" onClick={() => setPopup(null)}>
+          <div className="w-full max-w-sm rounded-kartu bg-white p-5" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-bold text-navy">{popup.judul}</h3>
+            <p className="mt-1 text-sm text-ink">
+              {popup.jenis === "rekomendasi" ? (popup.kategori === "memenuhi" ? "Direkomendasikan: memenuhi syarat" : "Direkomendasikan: hampir memenuhi") : "Tersimpan: tenggat pendaftaran"}
+            </p>
+            <p className="text-xs text-muted">Tenggat {tanggalIndo(popup.tanggal)}</p>
+            <div className="mt-4 flex gap-2">
+              <Link href={`/beasiswa/${popup.ref_id}`} className="flex h-11 flex-1 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">Lihat detail</Link>
+              <button type="button" onClick={() => setPopup(null)} className="h-11 rounded-full px-4 text-sm font-semibold text-navy hover:bg-c2">Tutup</button>
+            </div>
+          </div>
+        </div>
+      )}
       <JudulHalaman judul="Kalender dan Checklist" deskripsi="Tenggat beasiswa tersimpan, berkas yang harus siap, dan tugas pribadi Anda." />
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="space-y-6 lg:col-span-2">
@@ -77,18 +94,18 @@ export default function KalenderChecklist() {
                             className="h-5 w-5 accent-primary"
                           />
                         ) : (
-                          <span className="h-2.5 w-2.5 rounded-full bg-danger" aria-hidden />
+                          <span className={`h-2.5 w-2.5 rounded-full ${a.jenis === "rekomendasi" ? "bg-[var(--emas)]" : "bg-danger"}`} aria-hidden />
                         )}
                         <span className="min-w-0 flex-1">
-                          {a.jenis === "tenggat" ? (
-                            <Link href={`/beasiswa/${a.ref_id}`} className="font-semibold text-navy hover:underline">
+                          {a.jenis !== "tugas" ? (
+                            <button type="button" onClick={() => setPopup(a)} className="text-left font-semibold text-navy hover:underline">
                               {a.judul}
-                            </Link>
+                            </button>
                           ) : (
                             <span className={a.selesai ? "text-muted line-through" : "font-semibold text-navy"}>{a.judul}</span>
                           )}
                           <span className="block text-xs text-muted">
-                            {a.jenis === "tenggat" ? "Tenggat" : "Tugas"} | {tanggalIndo(a.tanggal)}
+                            {a.jenis === "rekomendasi" ? "Rekomendasi" : a.jenis === "tenggat" ? "Tenggat" : "Tugas"} | {tanggalIndo(a.tanggal)}
                           </span>
                         </span>
                         {a.jenis === "tugas" && (
