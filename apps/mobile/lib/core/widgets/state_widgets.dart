@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../async_state.dart';
 import '../dependensi.dart';
 import '../theme/app_theme.dart';
+import 'ilustrasi_gerak.dart';
 
 class KosongState extends StatelessWidget {
   const KosongState({
@@ -60,10 +61,18 @@ class KosongState extends StatelessWidget {
 
 /// Skeleton berbentuk kartu, sama dengan versi web: bentuknya menahan tata letak agar tidak melompat.
 class MemuatState extends StatelessWidget {
-  const MemuatState({super.key, this.pesan = 'Memuat data', this.baris = 4});
+  const MemuatState({
+    super.key,
+    this.pesan = 'Memuat data',
+    this.baris = 4,
+    this.jam = false,
+  });
 
   final String pesan;
   final int baris;
+
+  /// Menampilkan jam pasir kecil di atas skeleton; untuk daftar penuh (Jelajah, Rekomendasi, Dokumen).
+  final bool jam;
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +88,19 @@ class MemuatState extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [for (var i = 0; i < baris; i++) const _KartuSkeleton()],
+            children: [
+              if (jam) ...[
+                const JamPasir(ukuran: 52),
+                const SizedBox(height: 4),
+                Text(
+                  pesan,
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(decoration: TextDecoration.none),
+                ),
+                const SizedBox(height: 14),
+              ],
+              for (var i = 0; i < baris; i++) const _KartuSkeleton(),
+            ],
           ),
         ),
       ),

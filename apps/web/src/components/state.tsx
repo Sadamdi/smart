@@ -3,6 +3,7 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { CloudOff, Inbox, RefreshCw, Sparkles, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { ApiError } from "@/lib/api";
+import { JamPasir } from "./Ilustrasi";
 import { Tombol } from "./ui";
 
 /** Skeleton berbentuk kartu: status dibacakan sekali, bentuknya menahan tata letak agar tidak melompat. */
@@ -32,6 +33,9 @@ export function MemuatKisi({ jumlah = 6 }: { jumlah?: number }) {
   return (
     <div role="status" aria-live="polite" aria-busy="true" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       <span className="sr-only">Memuat</span>
+      <div aria-hidden className="col-span-full flex justify-center pb-1">
+        <JamPasir ukuran={52} />
+      </div>
       {Array.from({ length: jumlah }, (_, i) => (
         <div key={i} aria-hidden className="rounded-kartu border border-c4/60 bg-card p-5">
           <div className="skeleton h-5 w-4/5" />

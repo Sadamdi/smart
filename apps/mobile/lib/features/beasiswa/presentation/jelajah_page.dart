@@ -120,7 +120,7 @@ class _JelajahPageState extends State<JelajahPage> {
             if (s.memuat)
               const Padding(
                 padding: EdgeInsets.only(top: 80),
-                child: MemuatState(),
+                child: MemuatState(jam: true),
               )
             else if (s.galat != null)
               Padding(
