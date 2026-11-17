@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +9,7 @@ import 'core/dependensi.dart';
 import 'core/router.dart';
 import 'core/tema_controller.dart';
 import 'core/theme/app_theme.dart';
+import 'core/lokal/mesin_lokal.dart';
 import 'core/update/pemeriksa_pembaruan.dart';
 import 'core/widgets/layar_pembuka.dart';
 import 'features/auth/presentation/auth_controller.dart';
@@ -17,6 +20,7 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   // Semua controller dan repository didaftarkan ke GetX sebelum aplikasi digambar.
   pasangDependensi();
+  unawaited(Get.find<MesinLokal>().muat());
   runApp(const SmartApp());
 }
 

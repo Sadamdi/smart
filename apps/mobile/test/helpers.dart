@@ -10,6 +10,7 @@ import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:smart_mobile/core/api_client.dart';
 import 'package:smart_mobile/core/cache_lokal.dart';
 import 'package:smart_mobile/core/dependensi.dart';
+import 'package:smart_mobile/core/lokal/mesin_lokal.dart';
 import 'package:smart_mobile/core/token_storage.dart';
 import 'package:smart_mobile/main.dart';
 
@@ -163,6 +164,7 @@ void pasangGetUji(
   Get.testMode = true;
   Get.reset();
   pasangDependensi(
+    mesin: MesinLokal(null, false),
     cache: CacheLokal(Directory.systemTemp.createTempSync('cache_uji')),
     dio: dioPalsu(s),
     storage: storage ?? MemoryTokenStorage(),
