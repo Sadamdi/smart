@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 import 'dependensi.dart';
+import '../features/admin/presentation/admin_page.dart';
 import '../features/auth/presentation/auth_controller.dart';
 import '../features/auth/presentation/auth_pages.dart';
 import '../features/beasiswa/presentation/detail_page.dart';
@@ -63,6 +64,7 @@ GoRouter buatRouter(SegarkanRouter segarkan) {
         builder: (_, _) => const ProfilLanjutanPage(),
       ),
       GoRoute(path: '/pengaturan', builder: (_, _) => const PengaturanPage()),
+      GoRoute(path: '/admin', builder: (_, _) => const AdminPage()),
       GoRoute(
         path: '/beasiswa/:id',
         builder: (_, s) => DetailPage(id: s.pathParameters['id']!),
