@@ -26,6 +26,12 @@ def cari(nama: str, penyelenggara: str | None, jenjang: list[str] | None = None)
     for e in _muat():
         if not any(k in teks for k in e["kunci"]):
             continue
+        # Pembatas: beberapa nama umum (Beasiswa Unggulan, BPI) dipakai banyak penyelenggara; hanya yang tepat yang cocok.
+        wajib = e.get("wajib_penyelenggara")
+        if wajib and not any(k in (penyelenggara or "").lower() for k in wajib):
+            continue
+        if any(k in teks for k in e.get("kecuali", [])):
+            continue
         if jenjang and e.get("jenjang") and not set(jenjang) & set(e["jenjang"]):
             continue
         cocok.append(e)

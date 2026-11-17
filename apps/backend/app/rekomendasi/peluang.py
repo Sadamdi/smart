@@ -44,6 +44,8 @@ _LONGGAR = (
 DASAR_KETAT = TINGKAT["ketat"]
 DASAR_LONGGAR = TINGKAT["longgar"]
 
+SYARAT_CUKUP = 3  # jumlah syarat tercatat (termasuk jenjang) yang dianggap cukup lengkap
+FAKTOR_DATA_TIPIS = 0.8
 FAKTOR_KATEGORI = {"memenuhi": 1.0, "hampir_memenuhi": 0.55, "belum_memenuhi": 0.15}
 
 
@@ -103,6 +105,7 @@ def estimasi_peluang(
     luar_negeri: bool,
     kekuatan: float,
     dasar_statistik: float | None = None,
+    jumlah_syarat: int = 3,
 ) -> int | None:
     """Persen 1 sampai 90, atau None bila beasiswa belum punya syarat terukur (tidak ada dasar untuk menghitung)."""
     if kategori is None or not ada_syarat_terukur:
@@ -111,10 +114,14 @@ def estimasi_peluang(
     dasar = dasar_statistik if dasar_statistik is not None else persaingan_dasar(nama, penyelenggara, luar_negeri)
     faktor_profil = 0.6 + 0.8 * max(0.0, min(1.0, kekuatan))  # 0,6 untuk profil kosong sampai 1,4 untuk profil kuat
     nilai = dasar * FAKTOR_KATEGORI.get(kategori, 0.15) * faktor_profil * 100
+    if jumlah_syarat < SYARAT_CUKUP:
+        nilai *= FAKTOR_DATA_TIPIS  # syarat tercatat sedikit: yang belum tercatat bisa saja tidak terpenuhi
     return int(round(max(1.0, min(90.0, nilai))))
 
 
-def alasan_peluang(kategori: str | None, tingkat: str | None, kekuatan: float, dari_statistik: bool) -> list[str]:
+def alasan_peluang(
+    kategori: str | None, tingkat: str | None, kekuatan: float, dari_statistik: bool, data_tipis: bool = False
+) -> list[str]:
     """Kalimat singkat yang menjelaskan dari mana angka estimasi berasal, untuk halaman Detail."""
     kalimat = [
         {
@@ -127,6 +134,8 @@ def alasan_peluang(kategori: str | None, tingkat: str | None, kekuatan: float, d
         kalimat.append("Persaingan memakai rasio penerimaan yang dipublikasikan (lihat sumber data).")
     elif tingkat:
         kalimat.append(f"Persaingan program ini diperkirakan {LABEL_TINGKAT[tingkat]}.")
+    if data_tipis:
+        kalimat.append("Syarat yang tercatat masih sedikit, jadi estimasi diredam. Cek laman resmi untuk syarat lengkap.")
     kalimat.append(
         "Profilmu kuat (IPK, prestasi, organisasi, atau sertifikat banyak)."
         if kekuatan >= 0.65

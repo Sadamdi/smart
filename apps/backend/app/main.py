@@ -31,6 +31,12 @@ def _tugas_pantau() -> None:
 @asynccontextmanager
 async def _siklus(_: FastAPI):
     penjadwal = None
+    if get_settings().database_url:
+        import threading
+
+        from app.db import hangatkan
+
+        threading.Thread(target=lambda: hangatkan(4), daemon=True).start()
     if get_settings().penjadwal_aktif:
         from apscheduler.schedulers.background import BackgroundScheduler
 
