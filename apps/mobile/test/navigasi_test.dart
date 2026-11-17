@@ -20,7 +20,12 @@ Map<String, Penangan> _rute() => {
 
 Future<void> _bukaTab(WidgetTester t, String nama) async {
   await t.tap(
-    find.descendant(of: find.byType(NavigationBar), matching: find.text(nama)),
+    nama == 'Profil'
+        ? find.byTooltip('Profil')
+        : find.descendant(
+            of: find.byType(NavigationBar),
+            matching: find.text(nama),
+          ),
   );
   await t.pumpAndSettle();
 }

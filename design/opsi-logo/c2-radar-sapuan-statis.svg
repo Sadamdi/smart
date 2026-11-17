@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="SMART">
+  
+  <g fill="none" stroke="#143F7C" stroke-width="2.6">
+    <circle cx="50" cy="50" r="42" stroke-opacity=".28"/>
+    <circle cx="50" cy="50" r="29" stroke-opacity=".45"/>
+  </g>
+  <g class="sapu"><path d="M50 50L50 8A42 42 0 0 1 79.7 20.3Z" fill="#3E83D6" fill-opacity=".28"/><path d="M50 50V8" stroke="#3E83D6" stroke-width="2.4" stroke-linecap="round"/></g>
+  <circle class="b b1" cx="73" cy="30" r="3.4" fill="#3E83D6"/>
+  <circle class="b b2" cx="27" cy="68" r="3.4" fill="#3E83D6"/>
+  <circle class="cincin" cx="70" cy="70" r="5" fill="none" stroke="#F5B73B" stroke-width="2"/>
+  <circle class="b b3" cx="70" cy="70" r="5" fill="#F5B73B"/>
+  <path d="M33 47L50 39L67 47L50 55Z" fill="#143F7C"/>
+  <path d="M39 51V58C39 62 61 62 61 58V51L50 55Z" fill="#0E2D5A"/>
+</svg>

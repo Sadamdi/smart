@@ -17,7 +17,9 @@ export default function Rekomendasi() {
   const [kategori, setKategori] = useState<string>("");
   const [wilayah, setWilayah] = useState<Wilayah>("dalam");
   const saya = useSaya().data;
-  const kueri = useRekomendasi(kategori || undefined, wilayah);
+  const [urut, setUrut] = useState<string>("peluang");
+  const [minPeluang, setMinPeluang] = useState(0);
+  const kueri = useRekomendasi(kategori || undefined, wilayah, urut, minPeluang);
   const ringkasan = useRingkasan(wilayah);
   const hitung = useAksi(() => kirim("/rekomendasi/hitung-ulang", "POST"), ["rekomendasi"]);
   const kel = saya ? kelengkapanProfil(saya) : null;
@@ -59,6 +61,20 @@ export default function Rekomendasi() {
         </Kartu>
       )}
       <TabWilayah nilai={wilayah} onPilih={setWilayah} className="mb-4" />
+      <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Urutan dan filter peluang">
+        <span className="text-sm font-semibold text-muted">Urutkan</span>
+        {([["peluang", "Peluang tertinggi"], ["tenggat", "Tenggat terdekat"], ["kecocokan", "Kecocokan syarat"]] as const).map(([k, l]) => (
+          <ChipFilter key={k} aktif={urut === k} onClick={() => setUrut(k)}>
+            {l}
+          </ChipFilter>
+        ))}
+        <span aria-hidden className="mx-1 h-5 w-px bg-c4" />
+        {[0, 10, 30].map((m) => (
+          <ChipFilter key={m} aktif={minPeluang === m} onClick={() => setMinPeluang(m)}>
+            {m === 0 ? "Semua peluang" : `Peluang ${m}%+`}
+          </ChipFilter>
+        ))}
+      </div>
       <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="Kategori">
         {KATEGORI.map((k) => (
           <ChipFilter key={k} aktif={kategori === k} onClick={() => setKategori(k)}>

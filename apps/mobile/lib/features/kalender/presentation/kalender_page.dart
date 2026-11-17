@@ -32,6 +32,52 @@ class _KalenderPageState extends State<KalenderPage> {
   late DateTime _bulan = DateTime(DateTime.now().year, DateTime.now().month);
   DateTime? _pilih;
 
+  /// Pop up ringkas saat acara ditekan, dengan jalan ke halaman detail.
+  void _popup(Acara a) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) {
+        final t = Theme.of(ctx).textTheme;
+        final label = a.rekomendasi
+            ? (a.kategori == 'memenuhi'
+                  ? 'Direkomendasikan: memenuhi syarat'
+                  : 'Direkomendasikan: hampir memenuhi')
+            : 'Tersimpan: tenggat pendaftaran';
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(a.judul, style: t.titleMedium),
+                const SizedBox(height: 6),
+                Text(label, style: t.bodyMedium),
+                const SizedBox(height: 4),
+                Text(
+                  'Tenggat ${a.tanggal.day}/${a.tanggal.month}/${a.tanggal.year}',
+                  style: t.bodySmall,
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      context.push('/beasiswa/${a.refId}');
+                    },
+                    child: const Text('Lihat detail'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   /// Tanggal terpilih: pilihan pengguna bila masih di bulan tampil, bila tidak tenggat
   /// terdekat pada bulan itu (atau hari ini), sehingga bagian agenda tidak pernah kosong tanpa alasan.
   DateTime _tanggalAgenda(List<Acara> bulanIni) {
@@ -203,9 +249,7 @@ class _KalenderPageState extends State<KalenderPage> {
                     for (final a in hariIni)
                       _BarisAcara(
                         acara: a,
-                        onBuka: a.tenggat
-                            ? () => context.push('/beasiswa/${a.refId}')
-                            : null,
+                        onBuka: a.tenggat ? () => _popup(a) : null,
                         onSelesai: a.tenggat
                             ? null
                             : (v) => _jalankan(
@@ -518,7 +562,9 @@ class _BarisAcara extends StatelessWidget {
             ),
           ),
           subtitle: Text(
-            acara.tenggat ? 'Tenggat pendaftaran' : 'Tugas pribadi',
+            acara.rekomendasi
+                ? 'Rekomendasi untukmu'
+                : (acara.tenggat ? 'Tenggat pendaftaran' : 'Tugas pribadi'),
             style: t.bodySmall?.copyWith(
               fontWeight: FontWeight.w600,
               color: acara.tenggat ? Warna.error : Warna.muted,

@@ -440,29 +440,63 @@ class _ProfilPageState extends State<ProfilPage> {
               ),
             ],
           ),
-          if (_ctrl.galat.value != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                _ctrl.galat.value!,
-                style: TextStyle(color: Warna.error),
-              ),
-            ),
-          FilledButton(
-            onPressed: _kirim ? null : _simpan,
-            child: _kirim
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Simpan perubahan'),
-          ),
-          TextButton(
-            onPressed: _kirim ? null : _tutupFormulir,
-            child: const Text('Batal'),
-          ),
+          // Tombol Simpan dan Batal ada di bilah bawah yang menempel (lihat _barisSimpan), bukan di ujung daftar.
+          const SizedBox(height: 88),
         ],
+      ),
+    );
+  }
+
+  /// Bilah bawah yang menempel saat formulir terbuka: Simpan dan Batal selalu terjangkau, di atas menu bawah dan area aman.
+  Widget _barisSimpan() {
+    return Material(
+      elevation: 8,
+      color: Warna.surface,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_ctrl.galat.value != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  _ctrl.galat.value!,
+                  style: TextStyle(color: Warna.error),
+                ),
+              ),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _kirim ? null : _tutupFormulir,
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                    ),
+                    child: const Text('Batal'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: FilledButton(
+                    onPressed: _kirim ? null : _simpan,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                    ),
+                    child: _kirim
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Simpan perubahan'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -483,6 +517,7 @@ class _ProfilPageState extends State<ProfilPage> {
       },
       child: Scaffold(
         appBar: const SmartAppBar(),
+        bottomSheet: _ubah ? _barisSimpan() : null,
         body: ListView(
           // Semua kolom form tetap terpasang agar validasi mencakup kolom yang di luar layar.
           // ignore: deprecated_member_use

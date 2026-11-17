@@ -111,7 +111,7 @@ describe("KolomUnggah", () => {
   it("memeriksa tipe dan ukuran berkas", () => {
     expect(periksaBerkas({ name: "cv.pdf", size: 1000 })).toBeNull();
     expect(periksaBerkas({ name: "cv.exe", size: 1000 })).toMatch(/Tipe/);
-    expect(periksaBerkas({ name: "cv.pdf", size: 6 * 1024 * 1024 })).toMatch(/5 MB/);
+    expect(periksaBerkas({ name: "cv.pdf", size: 11 * 1024 * 1024 })).toMatch(/10 MB/);
   });
   it("meneruskan berkas valid dan menolak yang tidak valid", () => {
     const onPilih = vi.fn();

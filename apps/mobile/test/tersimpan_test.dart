@@ -31,12 +31,7 @@ Future<void> _bukaDariProfil(WidgetTester t, ServerPalsu s) async {
   addTearDown(t.view.reset);
   await t.pumpWidget(aplikasi(s));
   await t.pumpAndSettle();
-  await t.tap(
-    find.descendant(
-      of: find.byType(NavigationBar),
-      matching: find.text('Profil'),
-    ),
-  );
+  await t.tap(find.byTooltip('Profil'));
   await t.pumpAndSettle();
   final menu = find.text('Beasiswa Tersimpan');
   await t.scrollUntilVisible(menu, 200);
