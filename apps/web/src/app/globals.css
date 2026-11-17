@@ -248,3 +248,6 @@ body {
   .il-depan{transform:scaleY(0)}
   .il-bintang{transform:scale(1)}
 }
+
+@keyframes geser{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
+@media (prefers-reduced-motion:reduce){.animate-\[geser_1\.2s_ease-in-out_infinite\]{animation:none}}

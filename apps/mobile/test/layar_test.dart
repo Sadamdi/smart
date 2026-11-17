@@ -27,6 +27,7 @@ Map<String, Penangan> _rutePokok({
   'GET /rekomendasi/ringkasan': (o) =>
       Balasan.ok({'memenuhi': 2, 'hampir_memenuhi': 1, 'belum_memenuhi': 4}),
   'GET /rekomendasi': (o) => Balasan.ok([]),
+  'POST /rekomendasi/hitung-ulang': (o) => Balasan.ok([]),
   'GET /beasiswa': (o) => Balasan.ok([]),
   ...tambahan,
 };
@@ -546,6 +547,8 @@ void main() {
         greaterThan(ringkasanSebelum),
       );
       expect(find.text('Kampus Baru'), findsOneWidget);
+      // Menyimpan profil memicu hitung ulang rekomendasi di latar belakang (spanduk Memperbarui rekomendasi).
+      expect(s.hitung('POST /rekomendasi/hitung-ulang'), 1);
     });
 
     testWidgets(

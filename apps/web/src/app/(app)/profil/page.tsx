@@ -7,6 +7,7 @@ import { ProfilLanjutanKartu } from "@/components/ProfilLanjutan";
 import { pesanGalat } from "@/components/state";
 import { BarProgres, JudulHalaman, Kartu, Masukan, Medan, Pilihan, Tombol } from "@/components/ui";
 import { kirim } from "@/lib/api";
+import { usePerbaruiRekomendasi } from "@/lib/perbarui";
 import { kunci, useSaya, useWilayah } from "@/lib/hooks";
 import {
   NEGARA_ASAL,
@@ -49,11 +50,14 @@ function Formulir({ saya }: { saya: Pengguna }) {
     f.reset(isianDariPengguna(saya));
   }, [saya, f]);
 
+  const perbarui = usePerbaruiRekomendasi();
+
   async function simpan(v: IsianProfil) {
     setGalat(null);
     try {
       await kirim("/me/profil", "PUT", muatanProfil(v));
-      await Promise.all([qc.invalidateQueries({ queryKey: kunci.saya }), qc.invalidateQueries({ queryKey: ["rekomendasi"] })]);
+      await qc.invalidateQueries({ queryKey: kunci.saya });
+      void perbarui();
       setTersimpanPada(new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }));
     } catch (e) {
       setGalat(e);
