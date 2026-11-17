@@ -1,8 +1,10 @@
+import logging
 import uuid
 from datetime import date
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_beasiswa_repo, pengguna_saat_ini
@@ -10,10 +12,14 @@ from app.db import get_session
 from app.models import Pengguna
 from app.rekomendasi.kelayakan import ProfilKelayakan
 from app.repositories.beasiswa import BeasiswaRepo, FilterBeasiswa
-from app.schemas.beasiswa import BeasiswaDetail, BeasiswaRingkas, BerkasWajibOut, PersyaratanOut
+from app.schemas.beasiswa import BeasiswaDetail, BeasiswaKartu, BeasiswaRingkas, BerkasWajibOut, PersyaratanOut
 from app.schemas.common import Amplop, Meta
 from app.services import beasiswa as layanan
+from app.services import rekomendasi as layanan_rek
+from app.services.kartu import luar_negeri, metrik, sesuai_wilayah
 from app.services.rekomendasi import profil_dari
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/beasiswa", tags=["beasiswa"])
 
@@ -31,22 +37,39 @@ ProfilDep = Annotated[ProfilKelayakan, Depends(profil_kelayakan)]
 @router.get(
     "",
     summary="Daftar beasiswa terbit yang tenggatnya belum lewat",
-    response_model=Amplop[list[BeasiswaRingkas]],
+    response_model=Amplop[list[BeasiswaKartu]],
 )
 def daftar(
-    _: SaatIni,
+    sesi: Annotated[Session, Depends(get_session)],
+    pengguna: SaatIni,
     repo: RepoDep,
     q: Annotated[str | None, Query(max_length=100, description="Cari pada nama atau penyelenggara")] = None,
     jenjang: Annotated[str | None, Query(pattern="^(D3|D4|S1|S2|S3)$")] = None,
     negara: Annotated[str | None, Query(max_length=80)] = None,
+    wilayah: Annotated[Literal["dalam", "luar"] | None, Query(description="dalam atau luar negeri")] = None,
     kursor: Annotated[str | None, Query(max_length=200)] = None,
     batas: Annotated[int, Query(ge=1, le=50)] = 20,
 ) -> Amplop[list[BeasiswaRingkas]]:
     halaman = layanan.daftar(repo, FilterBeasiswa(q=q, jenjang=jenjang, negara=negara), kursor, batas, date.today())
-    return Amplop(
-        data=[BeasiswaRingkas.model_validate(b) for b in halaman.item],
-        meta=Meta(kursor_berikut=halaman.kursor_berikut),
-    )
+    item = [b for b in halaman.item if sesuai_wilayah(b.negara, wilayah)]
+    try:
+        nilai = layanan_rek.peta(sesi, pengguna, [b.id for b in item], date.today())
+        sesi.commit()
+    except SQLAlchemyError:
+        # Skor kartu hanya pelengkap: kegagalan menghitungnya tidak boleh menggagalkan daftar beasiswa.
+        logger.warning("Skor kelayakan kartu tidak dapat dihitung", exc_info=True)
+        sesi.rollback()
+        nilai = {}
+    data = []
+    for b in item:
+        r = nilai.get(b.id)
+        ekstra = (
+            {"kategori": r.kategori, **metrik(r.skor_kelayakan, r.alasan, r.catatan_kekurangan)} if r is not None else {}
+        )
+        data.append(
+            BeasiswaKartu(**BeasiswaRingkas.model_validate(b).model_dump(), luar_negeri=luar_negeri(b.negara), **ekstra)
+        )
+    return Amplop(data=data, meta=Meta(kursor_berikut=halaman.kursor_berikut))
 
 
 @router.get(
@@ -75,6 +98,8 @@ def detail(beasiswa_id: uuid.UUID, _: SaatIni, repo: RepoDep, profil: ProfilDep)
             ],
             berkas_wajib=[BerkasWajibOut.model_validate(b) for b in hasil.berkas_wajib],
             kategori=nilai.kelayakan.kategori,
+            luar_negeri=luar_negeri(hasil.beasiswa.negara),
+            **metrik(nilai.kelayakan.skor, nilai.kelayakan.alasan, nilai.kelayakan.catatan_kekurangan),
             alasan=nilai.kelayakan.alasan,
             catatan_kekurangan=nilai.kelayakan.catatan_kekurangan,
         )

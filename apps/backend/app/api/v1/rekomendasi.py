@@ -8,19 +8,22 @@ from sqlalchemy.orm import Session
 from app.api.deps import pengguna_saat_ini
 from app.db import get_session
 from app.models import Pengguna
-from app.schemas.beasiswa import BeasiswaRingkas
+from app.schemas.beasiswa import BeasiswaRingkas, KelayakanKartu
 from app.schemas.common import Amplop
 from app.services import rekomendasi as layanan
+from app.services.kartu import luar_negeri, metrik
 
 router = APIRouter(prefix="/rekomendasi", tags=["rekomendasi"])
 
 SesiDep = Annotated[Session, Depends(get_session)]
 SaatIni = Annotated[Pengguna, Depends(pengguna_saat_ini)]
 Kategori = Literal["memenuhi", "hampir_memenuhi", "belum_memenuhi"]
+Wilayah = Literal["dalam", "luar"]
 
 
-class RekomendasiOut(BaseModel):
-    """Skor numerik sengaja tidak dikembalikan: sistem tidak menampilkan persen peluang."""
+class RekomendasiOut(KelayakanKartu):
+    """Skor kelayakan (0 sampai 100) adalah seberapa banyak syarat terukur terpenuhi, bukan peluang diterima.
+    Bernilai None bila beasiswa belum punya syarat terukur."""
 
     beasiswa: BeasiswaRingkas
     kategori: Kategori
@@ -42,19 +45,26 @@ def _item(r, b) -> RekomendasiOut:
         alasan=r.alasan or [],
         catatan_kekurangan=r.catatan_kekurangan or [],
         tenggat=b.tenggat,
+        luar_negeri=luar_negeri(b.negara),
+        **metrik(r.skor_kelayakan, r.alasan, r.catatan_kekurangan),
     )
 
 
 @router.get("", summary="Rekomendasi beasiswa per kategori", response_model=Amplop[list[RekomendasiOut]])
-def daftar(sesi: SesiDep, p: SaatIni, kategori: Annotated[Kategori | None, Query()] = None) -> Amplop[list[RekomendasiOut]]:
-    baris = layanan.daftar(sesi, p, date.today(), kategori)
+def daftar(
+    sesi: SesiDep,
+    p: SaatIni,
+    kategori: Annotated[Kategori | None, Query()] = None,
+    wilayah: Annotated[Wilayah | None, Query(description="dalam atau luar negeri")] = None,
+) -> Amplop[list[RekomendasiOut]]:
+    baris = layanan.daftar(sesi, p, date.today(), kategori, wilayah=wilayah)
     sesi.commit()
     return Amplop(data=[_item(r, b) for r, b in baris])
 
 
 @router.get("/ringkasan", summary="Jumlah rekomendasi per kategori", response_model=Amplop[RingkasanOut])
-def ringkasan(sesi: SesiDep, p: SaatIni) -> Amplop[RingkasanOut]:
-    hasil = layanan.ringkasan(sesi, p, date.today())
+def ringkasan(sesi: SesiDep, p: SaatIni, wilayah: Annotated[Wilayah | None, Query()] = None) -> Amplop[RingkasanOut]:
+    hasil = layanan.ringkasan(sesi, p, date.today(), wilayah)
     sesi.commit()
     return Amplop(data=RingkasanOut(**hasil))
 

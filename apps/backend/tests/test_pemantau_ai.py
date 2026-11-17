@@ -231,9 +231,9 @@ class _SesiPalsu:
         pass
 
 
-def test_sumber_403_dinonaktifkan(monkeypatch):
+def test_sumber_403_tidak_dimatikan(monkeypatch):
     monkeypatch.setattr(laman, "ambil_teks", _tolak_403)
     s = _Dummy(url="https://a.id/daftar", aktif=True, status_terakhir="belum_pernah")
     with pytest.raises(laman.LamanGagal):
         pemantau_ai.pantau_sumber(_SesiPalsu(), S, s, HARI)
-    assert s.aktif is False and s.status_terakhir == "gagal"
+    assert s.aktif is True

@@ -387,14 +387,9 @@ def validasi_antrean(sesi: Session, settings: Settings, hari_ini: date, batas: i
 
 def pantau_sumber(sesi: Session, settings: Settings, sumber: Sumber, hari_ini: date) -> dict[str, int]:
     """Membaca laman sumber dengan AI dan menyimpan program yang ditemukan sebagai beasiswa menunggu validasi."""
-    try:
-        return _pantau_sumber(sesi, settings, sumber, hari_ini)
-    except laman.LamanGagal as exc:
-        if exc.permanen:  # sumber menolak robot: nonaktif, tidak dijadwalkan lagi; admin dapat mengaktifkan kembali
-            sumber.aktif = False
-            sumber.status_terakhir = "gagal"
-            sesi.flush()
-        raise
+    # Sumber daftar yang menjawab 403 hanya ditandai gagal oleh pemanggil, tidak dimatikan: IP server
+    # bisa diblokir sementara, sedangkan penolakan permanen hanya berlaku untuk laman detail beasiswa.
+    return _pantau_sumber(sesi, settings, sumber, hari_ini)
 
 
 def _pantau_sumber(sesi: Session, settings: Settings, sumber: Sumber, hari_ini: date) -> dict[str, int]:
