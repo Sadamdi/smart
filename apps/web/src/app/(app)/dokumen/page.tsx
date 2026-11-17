@@ -1,11 +1,11 @@
 "use client";
-import { FileText, Trash2 } from "lucide-react";
+import { Eye, FileText, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { KoreksiHasilBaca } from "@/components/KoreksiHasilBaca";
 import { KolomUnggah } from "@/components/KolomUnggah";
 import { KosongState, Tampil, pesanGalat } from "@/components/state";
 import { JudulHalaman, Kartu, Lencana, Medan, Metrik, Pilihan, Tombol } from "@/components/ui";
-import { api, kirim } from "@/lib/api";
+import { api, kirim, unduhBerkas } from "@/lib/api";
 import { kunci, useAksi, useDokumen } from "@/lib/hooks";
 import { tanggalIndo } from "@/lib/format";
 import type { Dokumen } from "@/lib/types";
@@ -36,6 +36,21 @@ function ringkasHasil(h?: Record<string, unknown> | null) {
 function BarisDokumen({ d }: { d: Dokumen }) {
   const [koreksi, setKoreksi] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
+  const [membuka, setMembuka] = useState(false);
+  const [galatBuka, setGalatBuka] = useState<string | null>(null);
+  const lihatAsli = async () => {
+    setMembuka(true);
+    setGalatBuka(null);
+    try {
+      const url = URL.createObjectURL(await unduhBerkas(`/me/dokumen/${d.id}/berkas`));
+      window.open(url, "_blank", "noopener");
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (e) {
+      setGalatBuka(e instanceof Error ? e.message : "Gagal membuka berkas.");
+    } finally {
+      setMembuka(false);
+    }
+  };
   const hapus = useAksi(() => kirim(`/me/dokumen/${d.id}`, "DELETE"), kunci.dokumen);
   const simpan = useAksi((hasil: Record<string, unknown>) => kirim(`/me/dokumen/${d.id}/hasil-baca`, "PUT", { hasil_baca: hasil }), kunci.dokumen);
   const terapkan = useAksi(() => kirim<{ kolom_terisi: string[] }>(`/me/dokumen/${d.id}/terapkan-ke-profil`, "POST"), kunci.saya, ["rekomendasi"]);
@@ -70,7 +85,12 @@ function BarisDokumen({ d }: { d: Dokumen }) {
         </dl>
       )}
       {d.status_baca === "gagal" && <p className="mt-2 text-sm text-ink">Isi berkas tidak dapat dibaca otomatis. Anda dapat mengisi hasilnya secara manual.</p>}
+      {galatBuka && <p role="alert" className="mt-2 text-sm text-danger">{galatBuka}</p>}
       <div className="mt-3 flex flex-wrap gap-2">
+        <Tombol varian="sekunder" onClick={lihatAsli} disabled={membuka || !d.ada_berkas}>
+          <Eye className="mr-1 h-4 w-4" aria-hidden />
+          {d.ada_berkas ? (membuka ? "Membuka" : "Lihat berkas") : "Berkas tidak tersimpan"}
+        </Tombol>
         <Tombol varian="sekunder" onClick={() => setKoreksi(!koreksi)}>
           {koreksi ? "Tutup koreksi" : "Koreksi hasil baca"}
         </Tombol>

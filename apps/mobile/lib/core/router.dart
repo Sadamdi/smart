@@ -115,7 +115,7 @@ const _menu = [
   (Icons.star_border_rounded, Icons.star_rounded, 'Rekomendasi'),
   (Icons.search_rounded, Icons.search_rounded, 'Jelajah'),
   (Icons.calendar_today_outlined, Icons.calendar_today, 'Kalender'),
-  (Icons.person_outline, Icons.person, 'Profil'),
+  (Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded, 'Asisten AI'),
 ];
 
 class _Cangkang extends StatelessWidget {
@@ -173,11 +173,13 @@ class _Cangkang extends StatelessWidget {
                       ikon: m.$1,
                       ikonAktif: m.$2,
                       label: m.$3,
-                      aktif: shell.currentIndex == i,
-                      onTap: () => shell.goBranch(
-                        i,
-                        initialLocation: i == shell.currentIndex,
-                      ),
+                      aktif: i != 4 && shell.currentIndex == i,
+                      onTap: () => i == 4
+                          ? context.push('/chat')
+                          : shell.goBranch(
+                              i,
+                              initialLocation: i == shell.currentIndex,
+                            ),
                     ),
                 ],
               ),

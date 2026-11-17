@@ -56,7 +56,12 @@ Future<void> _pasang(WidgetTester t, ServerPalsu s, {bool masuk = true}) async {
 
 Future<void> _tab(WidgetTester t, String label) async {
   await t.tap(
-    find.descendant(of: find.byType(NavigationBar), matching: find.text(label)),
+    label == 'Profil'
+        ? find.byTooltip('Profil')
+        : find.descendant(
+            of: find.byType(NavigationBar),
+            matching: find.text(label),
+          ),
   );
   await t.pumpAndSettle();
 }

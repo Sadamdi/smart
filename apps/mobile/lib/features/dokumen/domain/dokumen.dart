@@ -5,6 +5,7 @@ class Dokumen {
     required this.namaBerkas,
     required this.statusBaca,
     this.hasilBaca,
+    this.adaBerkas = false,
   });
 
   final String id;
@@ -12,6 +13,7 @@ class Dokumen {
   final String namaBerkas;
   final String statusBaca;
   final Map<String, dynamic>? hasilBaca;
+  final bool adaBerkas;
 
   /// Ringkasan nilai yang terbaca (IPK, semester, skor bahasa) untuk ditampilkan.
   List<String> get ringkasan {
@@ -31,5 +33,6 @@ class Dokumen {
     namaBerkas: j['nama_berkas'] as String,
     statusBaca: j['status_baca'] as String,
     hasilBaca: j['hasil_baca'] as Map<String, dynamic>?,
+    adaBerkas: (j['ada_berkas'] ?? false) as bool,
   );
 }

@@ -84,7 +84,7 @@ void main() {
         'Rekomendasi',
         'Jelajah',
         'Kalender',
-        'Profil',
+        'Asisten AI',
       ]) {
         final f = find.descendant(
           of: find.byType(NavigationBar),
@@ -131,10 +131,12 @@ void main() {
         await t.pumpAndSettle();
         if (layar != 'masuk' && layar != 'Beranda') {
           await t.tap(
-            find.descendant(
-              of: find.byType(NavigationBar),
-              matching: find.text(layar),
-            ),
+            layar == 'Profil'
+                ? find.byTooltip('Profil')
+                : find.descendant(
+                    of: find.byType(NavigationBar),
+                    matching: find.text(layar),
+                  ),
           );
           await t.pumpAndSettle();
         }
@@ -154,12 +156,7 @@ void main() {
         addTearDown(t.platformDispatcher.clearAllTestValues);
         await t.pumpWidget(aplikasi(ServerPalsu(_rute())));
         await t.pumpAndSettle();
-        await t.tap(
-          find.descendant(
-            of: find.byType(NavigationBar),
-            matching: find.text('Profil'),
-          ),
-        );
+        await t.tap(find.byTooltip('Profil'));
         await t.pumpAndSettle();
         await t.scrollUntilVisible(
           find.text('Ubah profil'),
@@ -209,12 +206,7 @@ void main() {
           );
           await t.pumpWidget(aplikasi(ServerPalsu(rute)));
           await t.pumpAndSettle();
-          await t.tap(
-            find.descendant(
-              of: find.byType(NavigationBar),
-              matching: find.text('Profil'),
-            ),
-          );
+          await t.tap(find.byTooltip('Profil'));
           await t.pumpAndSettle();
           final menu = find.text('Beasiswa Tersimpan');
           await t.scrollUntilVisible(menu, 200);
