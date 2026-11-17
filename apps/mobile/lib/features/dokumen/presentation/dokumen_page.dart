@@ -116,7 +116,7 @@ class _DokumenPageState extends State<DokumenPage> {
           ),
           const SizedBox(height: 20),
           nilai.when(
-            loading: () => const MemuatState(),
+            loading: () => const MemuatState(jam: true),
             error: (e, _) => Text(pesanGalat(e)),
             data: (daftar) => daftar.isEmpty
                 ? const KosongState(

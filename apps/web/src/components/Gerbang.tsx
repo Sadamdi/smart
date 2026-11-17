@@ -2,7 +2,8 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { AppShell } from "./AppShell";
-import { GalatState, MemuatState } from "./state";
+import { MemuatHalaman } from "./Ilustrasi";
+import { GalatState } from "./state";
 import { TautanTombol } from "./ui";
 import { ApiError } from "@/lib/api";
 import { useSaya } from "@/lib/hooks";
@@ -28,7 +29,7 @@ export function Gerbang({ children }: { children: React.ReactNode }) {
   if (!saya.data) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16">
-        <MemuatState baris={2} />
+        <MemuatHalaman />
       </div>
     );
   }

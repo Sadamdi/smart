@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/tema_controller.dart';
@@ -94,6 +95,24 @@ class _PengaturanPageState extends State<PengaturanPage> {
                     ],
                   ),
                 ),
+                if (p.admin)
+                  _Grup(
+                    judul: 'Admin',
+                    anak: _Kartu(
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                        ),
+                        title: Text('Panel admin', style: _judulBaris(t)),
+                        subtitle: Text(
+                          'Antrean validasi, sumber, dan ringkasan',
+                          style: t.bodySmall?.copyWith(fontSize: 11),
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => context.push('/admin'),
+                      ),
+                    ),
+                  ),
                 _Grup(
                   judul: 'Aplikasi',
                   anak: Column(

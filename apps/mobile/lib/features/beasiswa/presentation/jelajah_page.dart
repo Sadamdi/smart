@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
+import '../../../core/widgets/cincin_skor.dart';
 import '../../../core/widgets/kartu_beasiswa.dart';
 import '../../../core/widgets/smart_app_bar.dart';
 import '../../../core/widgets/state_widgets.dart';
@@ -88,6 +89,8 @@ class _JelajahPageState extends State<JelajahPage> {
               ),
             ),
             const SizedBox(height: 12),
+            TabWilayah(nilai: s.wilayah, onPilih: c.pilihWilayah),
+            const SizedBox(height: 12),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -117,7 +120,7 @@ class _JelajahPageState extends State<JelajahPage> {
             if (s.memuat)
               const Padding(
                 padding: EdgeInsets.only(top: 80),
-                child: MemuatState(),
+                child: MemuatState(jam: true),
               )
             else if (s.galat != null)
               Padding(

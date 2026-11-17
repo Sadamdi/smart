@@ -16,6 +16,7 @@ from app.rekomendasi.konfigurasi import VERSI_MODEL
 from app.rekomendasi.mesin import HasilRekomendasi, MasukanBeasiswa, susun
 from app.rekomendasi.peringkat import muat, urut_ulang
 from app.rekomendasi.wilayah import provinsi_kanonik
+from app.services.kartu import sesuai_wilayah
 
 
 def lanjutan(p: Pengguna) -> dict:
@@ -179,13 +180,28 @@ def _usang(sesi: Session, p: Pengguna) -> bool:
     return lama is not None
 
 
-def daftar(
-    sesi: Session, p: Pengguna, hari_ini: date, kategori: str | None, paksa: bool = False
-) -> list[tuple[Rekomendasi, Beasiswa]]:
+def pastikan(sesi: Session, p: Pengguna, hari_ini: date, paksa: bool = False) -> None:
     if paksa or _usang(sesi, p):
         _kunci_hitung(sesi, p)
         if paksa or _usang(sesi, p):  # periksa lagi: permintaan lain mungkin sudah menghitung saat menunggu kunci
             hitung(sesi, p, hari_ini)
+
+
+def peta(sesi: Session, p: Pengguna, beasiswa_ids: list, hari_ini: date) -> dict:
+    """Hasil rekomendasi pengguna untuk sekumpulan beasiswa (dipakai kartu di Jelajah), id beasiswa menjadi kunci."""
+    if not beasiswa_ids:
+        return {}
+    pastikan(sesi, p, hari_ini)
+    baris = sesi.scalars(
+        select(Rekomendasi).where(Rekomendasi.pengguna_id == p.id, Rekomendasi.beasiswa_id.in_(beasiswa_ids))
+    ).all()
+    return {r.beasiswa_id: r for r in baris}
+
+
+def daftar(
+    sesi: Session, p: Pengguna, hari_ini: date, kategori: str | None, paksa: bool = False, wilayah: str | None = None
+) -> list[tuple[Rekomendasi, Beasiswa]]:
+    pastikan(sesi, p, hari_ini, paksa)
     stmt = (
         select(Rekomendasi, Beasiswa)
         .join(Beasiswa, Beasiswa.id == Rekomendasi.beasiswa_id)
@@ -198,13 +214,13 @@ def daftar(
     if kategori:
         stmt = stmt.where(Rekomendasi.kategori == kategori)
     urutan = {"memenuhi": 0, "hampir_memenuhi": 1, "belum_memenuhi": 2}
-    baris = [(r, b) for r, b in sesi.execute(stmt).all()]
+    baris = [(r, b) for r, b in sesi.execute(stmt).all() if sesuai_wilayah(b.negara, wilayah)]
     baris.sort(key=lambda x: (urutan[x[0].kategori], -float(x[0].skor), x[1].tenggat or date.max))
     return baris
 
 
-def ringkasan(sesi: Session, p: Pengguna, hari_ini: date) -> dict[str, int]:
+def ringkasan(sesi: Session, p: Pengguna, hari_ini: date, wilayah: str | None = None) -> dict[str, int]:
     hasil = {"memenuhi": 0, "hampir_memenuhi": 0, "belum_memenuhi": 0}
-    for r, _ in daftar(sesi, p, hari_ini, None):
+    for r, _ in daftar(sesi, p, hari_ini, None, wilayah=wilayah):
         hasil[r.kategori] += 1
     return hasil

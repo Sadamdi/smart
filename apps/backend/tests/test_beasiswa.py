@@ -92,3 +92,21 @@ def test_detail_menilai_syarat_terhadap_profil(klien, beasiswa_repo):
     assert [s["status"] for s in d["persyaratan"]] == ["terpenuhi", "terpenuhi"]
     assert d["kategori"] == "memenuhi" and d["alasan"] and d["catatan_kekurangan"] == []
     assert all(s["catatan"] for s in d["persyaratan"])
+
+
+def test_kartu_memuat_wilayah_dan_filter_dalam_luar(klien, beasiswa_repo):
+    beasiswa_repo.semua += [
+        buat_beasiswa("Dalam Negeri", HARI_INI + timedelta(days=3), negara="Indonesia"),
+        buat_beasiswa("Tanpa Negara", HARI_INI + timedelta(days=4)),
+        buat_beasiswa("Luar Negeri", HARI_INI + timedelta(days=5), negara="Jepang"),
+    ]
+    h = _masuk(klien)
+    semua = {b["nama"]: b for b in klien.get(f"{B}/beasiswa", headers=h).json()["data"]}
+    assert semua["Dalam Negeri"]["luar_negeri"] is False
+    assert semua["Tanpa Negara"]["luar_negeri"] is False
+    assert semua["Luar Negeri"]["luar_negeri"] is True
+    luar = klien.get(f"{B}/beasiswa?wilayah=luar", headers=h).json()["data"]
+    assert [b["nama"] for b in luar] == ["Luar Negeri"]
+    dalam = klien.get(f"{B}/beasiswa?wilayah=dalam", headers=h).json()["data"]
+    assert [b["nama"] for b in dalam] == ["Dalam Negeri", "Tanpa Negara"]
+    assert klien.get(f"{B}/beasiswa?wilayah=bulan", headers=h).status_code == 422
