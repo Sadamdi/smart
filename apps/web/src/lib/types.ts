@@ -130,7 +130,7 @@ export type ChecklistBeasiswa = {
   beasiswa: BeasiswaRingkas;
   berkas: { id: string; nama_berkas: string; selesai: boolean }[];
 };
-export type Acara = { jenis: "tenggat" | "tugas"; tanggal: string; judul: string; ref_id: string; selesai: boolean };
+export type Acara = { jenis: "tenggat" | "tugas" | "rekomendasi"; kategori?: string | null; tanggal: string; judul: string; ref_id: string; selesai: boolean };
 export type Tugas = { id: string; judul: string; tanggal: string; selesai: boolean };
 export type Notifikasi = {
   id: string;

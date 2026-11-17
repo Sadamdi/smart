@@ -60,6 +60,7 @@ export function KalenderBulan({
           const iso = isoTanggal(tahun, bulan, h);
           const ada = per.get(iso) ?? [];
           const tenggat = ada.some((a) => a.jenis === "tenggat");
+          const rekom = ada.some((a) => a.jenis === "rekomendasi");
           return (
             <button
               key={i}
@@ -76,7 +77,7 @@ export function KalenderBulan({
               {ada.length > 0 && (
                 <span
                   aria-hidden
-                  className={cx("absolute bottom-1.5 h-1.5 w-1.5 rounded-full", dipilih === iso ? "bg-white" : tenggat ? "bg-danger" : "bg-primary-soft")}
+                  className={cx("absolute bottom-1.5 h-1.5 w-1.5 rounded-full", dipilih === iso ? "bg-white" : tenggat ? "bg-danger" : rekom ? "bg-[var(--emas)]" : "bg-primary-soft")}
                 />
               )}
             </button>

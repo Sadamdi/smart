@@ -15,6 +15,7 @@ from app.models import (
     Interaksi,
     Notifikasi,
     Pengguna,
+    Rekomendasi,
     TugasPribadi,
 )
 from app.repositories.beasiswa import _terlihat, _urut_tenggat
@@ -120,6 +121,32 @@ def kalender(sesi: Session, p: Pengguna, dari: date, sampai: date, hari_ini: dat
     for b, _ in tersimpan(sesi, p, hari_ini):
         if b.tenggat is not None and dari <= b.tenggat <= sampai:
             acara.append({"jenis": "tenggat", "tanggal": b.tenggat, "judul": b.nama, "ref_id": b.id, "selesai": False})
+    # Tenggat beasiswa yang direkomendasikan (memenuhi atau hampir memenuhi) ikut tampil otomatis, ditandai "rekomendasi"
+    # supaya kalender tidak kosong sebelum pengguna menyimpan apa pun. Memakai hasil tersimpan, tidak memicu hitung ulang.
+    ada = {a["ref_id"] for a in acara}
+    for r, b in sesi.execute(
+        select(Rekomendasi, Beasiswa)
+        .join(Beasiswa, Beasiswa.id == Rekomendasi.beasiswa_id)
+        .where(
+            Rekomendasi.pengguna_id == p.id,
+            Rekomendasi.kategori.in_(("memenuhi", "hampir_memenuhi")),
+            Beasiswa.status == "terbit",
+            Beasiswa.tenggat.between(max(dari, hari_ini), sampai),
+        )
+        .order_by(Rekomendasi.skor.desc())
+        .limit(60)
+    ):
+        if b.id not in ada:
+            acara.append(
+                {
+                    "jenis": "rekomendasi",
+                    "tanggal": b.tenggat,
+                    "judul": b.nama,
+                    "ref_id": b.id,
+                    "selesai": False,
+                    "kategori": r.kategori,
+                }
+            )
     for t in sesi.scalars(
         select(TugasPribadi).where(TugasPribadi.pengguna_id == p.id, TugasPribadi.tanggal.between(dari, sampai))
     ):

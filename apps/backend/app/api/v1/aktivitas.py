@@ -51,11 +51,12 @@ class CentangIn(BaseModel):
 
 
 class AcaraOut(BaseModel):
-    jenis: Literal["tenggat", "tugas"]
+    jenis: Literal["tenggat", "tugas", "rekomendasi"]
     tanggal: date
     judul: str
     ref_id: uuid.UUID
     selesai: bool
+    kategori: str | None = None  # untuk acara rekomendasi: memenuhi atau hampir_memenuhi
 
 
 class TugasIn(BaseModel):
