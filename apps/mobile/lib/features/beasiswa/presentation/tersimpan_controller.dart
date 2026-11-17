@@ -30,13 +30,32 @@ class TersimpanController extends GetxController {
     Get.find<KalenderController>().checklist.muat();
   }
 
+  /// Tanda bookmark berubah seketika (optimis); server menyusul di latar belakang dan perubahan dibatalkan bila gagal.
+  void _setLokal(String id, bool ada) {
+    final baru = {...ids};
+    ada ? baru.add(id) : baru.remove(id);
+    idTersimpan.state.value = AsyncState.sukses(baru);
+  }
+
   Future<void> simpan(String id) async {
-    await _repo.simpan(id);
+    _setLokal(id, true);
+    try {
+      await _repo.simpan(id);
+    } catch (_) {
+      _setLokal(id, false);
+      rethrow;
+    }
     _segarkan();
   }
 
   Future<void> hapus(String id) async {
-    await _repo.hapusSimpan(id);
+    _setLokal(id, false);
+    try {
+      await _repo.hapusSimpan(id);
+    } catch (_) {
+      _setLokal(id, true);
+      rethrow;
+    }
     _segarkan();
   }
 }

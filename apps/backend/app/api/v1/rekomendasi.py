@@ -19,6 +19,7 @@ SesiDep = Annotated[Session, Depends(get_session)]
 SaatIni = Annotated[Pengguna, Depends(pengguna_saat_ini)]
 Kategori = Literal["memenuhi", "hampir_memenuhi", "belum_memenuhi"]
 Wilayah = Literal["dalam", "luar"]
+Urut = Literal["peluang", "tenggat", "kecocokan"]
 
 
 class RekomendasiOut(KelayakanKartu):
@@ -59,10 +60,20 @@ def daftar(
     kategori: Annotated[Kategori | None, Query()] = None,
     wilayah: Annotated[Wilayah | None, Query(description="dalam atau luar negeri")] = None,
     batas: Annotated[int | None, Query(ge=1, le=200, description="Ambil hanya sekian teratas (Beranda memakai 1)")] = None,
+    urut: Annotated[Urut, Query(description="peluang (bawaan), tenggat, atau kecocokan")] = "peluang",
+    min_peluang: Annotated[int, Query(ge=0, le=90, description="Hanya yang estimasi peluangnya minimal sekian persen")] = 0,
 ) -> Amplop[list[RekomendasiOut]]:
-    baris = layanan.daftar(sesi, p, date.today(), kategori, wilayah=wilayah, batas=batas)
+    baris = layanan.daftar(sesi, p, date.today(), kategori, wilayah=wilayah)
     sesi.commit()
-    return Amplop(data=[_item(r, b, p) for r, b in baris])
+    item = [_item(r, b, p) for r, b in baris]
+    if min_peluang:
+        item = [x for x in item if (x.estimasi_peluang or 0) >= min_peluang]
+    if urut == "peluang":
+        # Peluang tertinggi dulu; yang belum punya estimasi (syarat belum tercatat) di akhir.
+        item.sort(key=lambda x: -(x.estimasi_peluang if x.estimasi_peluang is not None else -1))
+    elif urut == "tenggat":
+        item.sort(key=lambda x: (x.tenggat is None, x.tenggat))
+    return Amplop(data=item[:batas] if batas else item)
 
 
 @router.get("/ringkasan", summary="Jumlah rekomendasi per kategori", response_model=Amplop[RingkasanOut])

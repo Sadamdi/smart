@@ -453,6 +453,47 @@ void main() {
       );
     });
 
+    testWidgets(
+      'Beranda: berganti ke Luar negeri memuat pilihan utama wilayah itu',
+      (t) async {
+        final s = ServerPalsu(_rutePokok());
+        await _pasang(t, s);
+        await t.tap(find.text('Luar negeri'));
+        await t.pumpAndSettle();
+        final minta = s.permintaan.where(
+          (o) => o.path.endsWith('/rekomendasi') && o.method == 'GET',
+        );
+        expect(
+          minta.any(
+            (o) =>
+                o.queryParameters['wilayah'] == 'luar' &&
+                o.queryParameters['batas'] == 1,
+          ),
+          isTrue,
+          reason: 'Pilihan utama Beranda harus diminta ulang untuk wilayah luar (bug: memuat terus)',
+        );
+      },
+    );
+
+    testWidgets('Rekomendasi: urut bawaan peluang dan dapat diganti', (
+      t,
+    ) async {
+      final s = ServerPalsu(_rutePokok());
+      await _pasang(t, s);
+      await _tab(t, 'Rekomendasi');
+      expect(s.terakhir('GET /rekomendasi').queryParameters['urut'], 'peluang');
+      await t.ensureVisible(find.text('Tenggat terdekat'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('Tenggat terdekat'));
+      await t.pumpAndSettle();
+      expect(s.terakhir('GET /rekomendasi').queryParameters['urut'], 'tenggat');
+      await t.ensureVisible(find.text('Peluang 30%+'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('Peluang 30%+'));
+      await t.pumpAndSettle();
+      expect(s.terakhir('GET /rekomendasi').queryParameters['min_peluang'], 30);
+    });
+
     testWidgets('Jelajah memakai tab wilayah dan meneruskannya', (t) async {
       final s = ServerPalsu(_rutePokok());
       await _pasang(t, s);
