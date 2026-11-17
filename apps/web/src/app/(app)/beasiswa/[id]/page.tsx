@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import type { ComponentType } from "react";
 import { DaftarChecklist } from "@/components/DaftarChecklist";
 import { Tampil, pesanGalat } from "@/components/state";
-import { adaAngka, adaPenilaian as adaSkor, BarisSyarat, CincinSkor, warnaSkor } from "@/components/Skor";
+import { adaPenilaian as adaSkor, BarisSyarat, CincinSkor, warnaSkor } from "@/components/Skor";
 import { ChipStatus, JudulBagian, Kartu, Lencana, Pilihan, Tombol, cx } from "@/components/ui";
 import { kirim } from "@/lib/api";
 import { kunci, useAksi, useChecklist, useDetail, useTersimpan } from "@/lib/hooks";
@@ -117,11 +117,18 @@ export default function DetailBeasiswa() {
               </div>
               {adaSkor(b) && (
                 <div className="mt-5 flex items-center gap-5 rounded-[20px] border border-c4/60 bg-c1 p-4">
-                  <CincinSkor skor={adaAngka(b) ? b.skor_kelayakan : null} warna={warnaSkor(b.kategori)} ukuran={88} tebal={10} />
+                  <CincinSkor skor={b.estimasi_peluang ?? null} warna={warnaSkor(b.kategori)} ukuran={88} tebal={10} />
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-muted">Skor kelayakan</p>
+                    <p className="text-xs font-semibold text-muted">Estimasi peluang</p>
                     <BarisSyarat k={b} />
-                    <p className="mt-1 text-xs text-muted">Ukuran syarat yang sudah Anda penuhi, bukan peluang diterima.</p>
+                    {(b.alasan_peluang ?? []).length > 0 && (
+                      <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs text-ink">
+                        {b.alasan_peluang?.map((a) => (
+                          <li key={a}>{a}</li>
+                        ))}
+                      </ul>
+                    )}
+                    <p className="mt-1 text-xs text-muted">Perkiraan dari kecocokan syarat, kekuatan profil, dan persaingan umum. Bukan jaminan diterima.</p>
                   </div>
                 </div>
               )}

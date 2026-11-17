@@ -81,10 +81,7 @@ class KartuBeasiswa extends StatelessWidget {
                     if (kel != null)
                       Padding(
                         padding: const EdgeInsets.only(right: 12),
-                        child: CincinSkor(
-                          skor: kel.adaAngka ? kel.skor : null,
-                          warna: warnaSkor,
-                        ),
+                        child: CincinSkor(skor: kel.peluang, warna: warnaSkor),
                       )
                     else
                       Container(
@@ -192,7 +189,7 @@ class KartuBeasiswa extends StatelessWidget {
                 ),
                 if (kel != null) ...[
                   const SizedBox(height: 10),
-                  if (kel.adaAngka)
+                  if (kel.adaSyarat)
                     Row(
                       children: [
                         TitikSyarat(

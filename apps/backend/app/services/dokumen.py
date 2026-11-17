@@ -138,7 +138,8 @@ def baca_dengan_ai(settings: Settings, teks: str) -> dict:
             '"organisasi": [{"nama": teks, "jabatan": teks atau null, "tahun": angka atau null}], '
             '"prestasi": [{"nama": teks, "tingkat": "sekolah"/"kota"/"provinsi"/"nasional"/"internasional" atau null, '
             '"tahun": angka atau null}], '
-            '"sertifikat": [{"nama": teks, "penerbit": teks atau null, "tahun": angka atau null}], '
+            '"sertifikat": [{"nama": teks, "jenis": "keahlian"/"bahasa"/"kepanitiaan"/"pelatihan"/"kompetensi"/"lainnya", '
+            '"penerbit": teks atau null, "tahun": angka atau null}], '
             '"pengalaman": [{"nama": teks, "peran": teks atau null, "tahun": angka atau null}], '
             '"keahlian": [teks]}. Isi hanya yang tertulis jelas.\n\n' + teks,
             timeout=90,
@@ -226,6 +227,11 @@ def simpan(sesi: Session, p: Pengguna, jenis: str, nama: str, isi: bytes, settin
             d.status_baca = "gagal"
     except ValueError:
         d.status_baca = "gagal"
+    if not settings.upload_simpan_berkas:
+        # Privasi dan ruang server: berkas asli hanya dibutuhkan untuk dibaca. Setelah dibaca (berhasil atau gagal) langsung
+        # dihapus; yang disimpan hanya hasil bacanya, yang dapat dikoreksi pengguna dan masuk ke profil.
+        lokasi.unlink(missing_ok=True)
+        d.lokasi_penyimpanan = ""
     sesi.add(d)
     sesi.flush()
     return d
@@ -278,6 +284,7 @@ def terapkan_ke_profil(sesi: Session, p: Pengguna, hasil: dict) -> list[str]:
 
 def hapus(sesi: Session, p: Pengguna, dokumen_id: uuid.UUID) -> None:
     d = ambil(sesi, p, dokumen_id)
-    Path(d.lokasi_penyimpanan).unlink(missing_ok=True)
+    if d.lokasi_penyimpanan:
+        Path(d.lokasi_penyimpanan).unlink(missing_ok=True)
     sesi.delete(d)
     sesi.flush()

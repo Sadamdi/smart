@@ -15,6 +15,7 @@ class Kelayakan {
   const Kelayakan({
     this.kategori,
     this.skor,
+    this.peluang,
     this.terpenuhi = 0,
     this.total = 0,
     this.luarNegeri = false,
@@ -22,23 +23,29 @@ class Kelayakan {
 
   final String? kategori;
   final int? skor;
+
+  /// Estimasi peluang diterima (2 sampai 90): perkiraan dari kecocokan syarat, kekuatan profil, dan persaingan umum.
+  final int? peluang;
   final int terpenuhi;
   final int total;
   final bool luarNegeri;
 
-  bool get adaAngka => skor != null && total > 0;
+  bool get adaAngka => peluang != null;
+  bool get adaSyarat => total > 0;
 
   /// Null bila respons tidak memuat penilaian sama sekali (mis. daftar yang bukan milik pengguna).
   static Kelayakan? dari(Map<String, dynamic> j) {
     // Hanya bila server sudah mengirim kolom skor; 'kategori' saja (server lama) memakai tampilan alasan.
     if (!j.containsKey('skor_kelayakan') &&
         !j.containsKey('syarat_total') &&
+        !j.containsKey('estimasi_peluang') &&
         !j.containsKey('luar_negeri')) {
       return null;
     }
     return Kelayakan(
       kategori: j['kategori'] as String?,
       skor: (j['skor_kelayakan'] as num?)?.round(),
+      peluang: (j['estimasi_peluang'] as num?)?.round(),
       terpenuhi: ((j['syarat_terpenuhi'] ?? 0) as num).toInt(),
       total: ((j['syarat_total'] ?? 0) as num).toInt(),
       luarNegeri: (j['luar_negeri'] ?? false) as bool,
@@ -176,8 +183,10 @@ class BeasiswaDetail {
     this.kategori,
     this.alasan = const [],
     this.catatanKekurangan = const [],
+    this.alasanPeluang = const [],
   });
 
+  final List<String> alasanPeluang;
   final String? kategori;
   final List<String> alasan;
   final List<String> catatanKekurangan;
@@ -204,6 +213,7 @@ class BeasiswaDetail {
     catatanKekurangan: [
       for (final x in (j['catatan_kekurangan'] as List? ?? [])) '$x',
     ],
+    alasanPeluang: [for (final x in (j['alasan_peluang'] as List? ?? [])) '$x'],
   );
 
   /// Bentuk datar seperti respons API: kolom ringkasan berada di tingkat atas.

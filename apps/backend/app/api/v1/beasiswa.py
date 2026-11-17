@@ -17,7 +17,7 @@ from app.schemas.beasiswa import BeasiswaDetail, BeasiswaKartu, BeasiswaRingkas,
 from app.schemas.common import Amplop, Meta
 from app.services import beasiswa as layanan
 from app.services import rekomendasi as layanan_rek
-from app.services.kartu import luar_negeri, metrik, sesuai_wilayah
+from app.services.kartu import luar_negeri, peluang_untuk, sesuai_wilayah
 from app.services.rekomendasi import profil_dari
 
 logger = logging.getLogger(__name__)
@@ -82,12 +82,16 @@ def daftar(
     data = []
     for b in item:
         r = nilai.get(b.id)
-        ekstra = (
-            {"kategori": r.kategori, **metrik(r.skor_kelayakan, r.alasan, r.catatan_kekurangan)} if r is not None else {}
-        )
-        data.append(
-            BeasiswaKartu(**BeasiswaRingkas.model_validate(b).model_dump(), luar_negeri=luar_negeri(b.negara), **ekstra)
-        )
+        ekstra: dict = {}
+        if r is not None:
+            ekstra = {
+                "kategori": r.kategori,
+                **peluang_untuk(pengguna, b, r.kategori, r.skor_kelayakan, r.alasan, r.catatan_kekurangan),
+            }
+            ekstra.pop("_alasan_peluang", None)
+        else:
+            ekstra = {"luar_negeri": luar_negeri(b.negara)}
+        data.append(BeasiswaKartu(**BeasiswaRingkas.model_validate(b).model_dump(), **ekstra))
     return Amplop(data=data, meta=Meta(kursor_berikut=halaman.kursor_berikut))
 
 
@@ -96,10 +100,19 @@ def daftar(
     summary="Detail beasiswa beserta persyaratan dan berkas wajib",
     response_model=Amplop[BeasiswaDetail],
 )
-def detail(beasiswa_id: uuid.UUID, _: SaatIni, repo: RepoDep, profil: ProfilDep) -> Amplop[BeasiswaDetail]:
+def detail(beasiswa_id: uuid.UUID, pengguna: SaatIni, repo: RepoDep, profil: ProfilDep) -> Amplop[BeasiswaDetail]:
     hasil = layanan.detail(repo, beasiswa_id, date.today())
     ringkas = BeasiswaRingkas.model_validate(hasil.beasiswa).model_dump()
     nilai = layanan.nilai_untuk(hasil.persyaratan, profil, date.today(), hasil.beasiswa.jenjang)
+    ekstra_detail = peluang_untuk(
+        pengguna,
+        hasil.beasiswa,
+        nilai.kelayakan.kategori,
+        nilai.kelayakan.skor,
+        nilai.kelayakan.alasan,
+        nilai.kelayakan.catatan_kekurangan,
+    )
+    alasan_p = ekstra_detail.pop("_alasan_peluang", [])
     return Amplop(
         data=BeasiswaDetail(
             **ringkas,
@@ -117,8 +130,8 @@ def detail(beasiswa_id: uuid.UUID, _: SaatIni, repo: RepoDep, profil: ProfilDep)
             ],
             berkas_wajib=[BerkasWajibOut.model_validate(b) for b in hasil.berkas_wajib],
             kategori=nilai.kelayakan.kategori,
-            luar_negeri=luar_negeri(hasil.beasiswa.negara),
-            **metrik(nilai.kelayakan.skor, nilai.kelayakan.alasan, nilai.kelayakan.catatan_kekurangan),
+            **ekstra_detail,
+            alasan_peluang=alasan_p,
             alasan=nilai.kelayakan.alasan,
             catatan_kekurangan=nilai.kelayakan.catatan_kekurangan,
         )
