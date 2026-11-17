@@ -25,17 +25,31 @@ KUAT = {
 
 PROFIL = {
     "A. S1 kuat (IPK 3,85, prestasi nasional, TOEFL 560)": dict(
-        p=dict(jenjang="S1", semester=5, ipk=3.85, jenis_kampus="negeri", skor_bahasa={"toefl": 560}), pl=KUAT, minat=["teknologi", "riset"], prodi="Teknik Informatika"
+        p=dict(jenjang="S1", semester=5, ipk=3.85, jenis_kampus="negeri", skor_bahasa={"toefl": 560}),
+        pl=KUAT,
+        minat=["teknologi", "riset"],
+        prodi="Teknik Informatika",
     ),
-    "B. S1 rata-rata (IPK 3,2, tanpa isian CV)": dict(p=dict(jenjang="S1", semester=3, ipk=3.2, jenis_kampus="swasta"), pl={}, minat=[], prodi="Manajemen"),
+    "B. S1 rata-rata (IPK 3,2, tanpa isian CV)": dict(
+        p=dict(jenjang="S1", semester=3, ipk=3.2, jenis_kampus="swasta"), pl={}, minat=[], prodi="Manajemen"
+    ),
     "C. D3 vokasi kurang mampu (IPK 3,0)": dict(
-        p=dict(jenjang="D3", semester=4, ipk=3.0, jenis_kampus="swasta", penghasilan_orang_tua=1500000), pl={}, minat=["teknik"], prodi="Teknik Mesin"
+        p=dict(jenjang="D3", semester=4, ipk=3.0, jenis_kampus="swasta", penghasilan_orang_tua=1500000),
+        pl={},
+        minat=["teknik"],
+        prodi="Teknik Mesin",
     ),
     "D. S1 tingkat akhir kejar S2 luar negeri (sem 8, IPK 3,7, IELTS 7)": dict(
-        p=dict(jenjang="S1", semester=8, ipk=3.7, jenis_kampus="negeri", skor_bahasa={"ielts": 7.0}), pl=KUAT, minat=["riset"], prodi="Fisika"
+        p=dict(jenjang="S1", semester=8, ipk=3.7, jenis_kampus="negeri", skor_bahasa={"ielts": 7.0}),
+        pl=KUAT,
+        minat=["riset"],
+        prodi="Fisika",
     ),
     "E. S2 kejar S3 (IPK 3,8, IELTS 7)": dict(
-        p=dict(jenjang="S2", semester=3, ipk=3.8, jenis_kampus="negeri", skor_bahasa={"ielts": 7.0}), pl=KUAT, minat=["riset", "kebijakan"], prodi="Ilmu Politik"
+        p=dict(jenjang="S2", semester=3, ipk=3.8, jenis_kampus="negeri", skor_bahasa={"ielts": 7.0}),
+        pl=KUAT,
+        minat=["riset", "kebijakan"],
+        prodi="Ilmu Politik",
     ),
 }
 
@@ -47,7 +61,13 @@ def main() -> None:
         beasiswa = {b.id: b for b in sesi.scalars(select(Beasiswa))}
     print(f"Beasiswa dinilai: {len(masukan)}")
     for nama, cfg in PROFIL.items():
-        profil = ProfilKelayakan(kewarganegaraan="Indonesia", negara_domisili="Indonesia", kota_domisili="Malang", provinsi_domisili="Jawa Timur", **cfg["p"])
+        profil = ProfilKelayakan(
+            kewarganegaraan="Indonesia",
+            negara_domisili="Indonesia",
+            kota_domisili="Malang",
+            provinsi_domisili="Jawa Timur",
+            **cfg["p"],
+        )
         hasil = susun(profil, cfg["minat"], cfg["prodi"], masukan, hari)
         per = {"dalam": Counter(), "luar": Counter()}
         peng = SimpleNamespace(ipk=cfg["p"].get("ipk"), profil_lanjutan=cfg["pl"], skor_bahasa=cfg["p"].get("skor_bahasa"))

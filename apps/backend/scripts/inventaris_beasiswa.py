@@ -14,7 +14,9 @@ from app.models import Beasiswa
 
 def main() -> None:
     with sesi_baru() as sesi:
-        baris = sesi.execute(select(Beasiswa.status, Beasiswa.nama, Beasiswa.penyelenggara, Beasiswa.negara, Beasiswa.jenjang)).all()
+        baris = sesi.execute(
+            select(Beasiswa.status, Beasiswa.nama, Beasiswa.penyelenggara, Beasiswa.negara, Beasiswa.jenjang)
+        ).all()
     status = Counter(b[0] for b in baris)
     terbit = [b for b in baris if b[0] == "terbit"]
     penyelenggara = Counter((b[2] or "?").strip() for b in terbit)
