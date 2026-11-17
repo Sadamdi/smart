@@ -5,7 +5,7 @@ import uuid
 from collections import defaultdict
 from datetime import date
 
-from sqlalchemy import delete, func, insert, or_, select, text
+from sqlalchemy import and_, case, delete, func, insert, or_, select, text
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -16,6 +16,7 @@ from app.rekomendasi.konfigurasi import VERSI_MODEL
 from app.rekomendasi.mesin import HasilRekomendasi, MasukanBeasiswa, susun
 from app.rekomendasi.peringkat import muat, urut_ulang
 from app.rekomendasi.wilayah import provinsi_kanonik
+from app.services.kartu import sesuai_wilayah
 
 
 def lanjutan(p: Pengguna) -> dict:
@@ -53,6 +54,7 @@ def profil_dari(sesi: Session, p: Pengguna) -> ProfilKelayakan:
         skor_bahasa=p.skor_bahasa,
         kewarganegaraan=p.kewarganegaraan,
         berkas_diunggah=berkas,
+        jenjang_tuju=[j for j in ((lanjutan(p).get("target_studi") or {}).get("jenjang") or []) if isinstance(j, str)],
     )
 
 
@@ -166,26 +168,46 @@ def hitung(sesi: Session, p: Pengguna, hari_ini: date) -> list[HasilRekomendasi]
 
 def _usang(sesi: Session, p: Pengguna) -> bool:
     """Hasil tersimpan dihitung ulang bila belum ada, profil berubah setelahnya, atau versi aturan berganti."""
-    terbaru = sesi.scalar(select(func.max(Rekomendasi.diubah_pada)).where(Rekomendasi.pengguna_id == p.id))
+    # Satu kueri (bukan dua): tiap kueri ke basis data jarak jauh memakan sekitar 240 ms.
+    lama_ver = case((func.coalesce(Rekomendasi.versi_model, "").like(f"{VERSI_MODEL}%"), 0), else_=1)
+    terbaru, ada_lama = sesi.execute(
+        select(func.max(Rekomendasi.diubah_pada), func.max(lama_ver)).where(Rekomendasi.pengguna_id == p.id)
+    ).one()
     if terbaru is None:
         return True
     if p.diubah_pada is not None and p.diubah_pada > terbaru:
         return True
-    lama = sesi.scalar(
-        select(Rekomendasi.id)
-        .where(Rekomendasi.pengguna_id == p.id, ~func.coalesce(Rekomendasi.versi_model, "").like(f"{VERSI_MODEL}%"))
-        .limit(1)
-    )
-    return lama is not None
+    return bool(ada_lama)
 
 
-def daftar(
-    sesi: Session, p: Pengguna, hari_ini: date, kategori: str | None, paksa: bool = False
-) -> list[tuple[Rekomendasi, Beasiswa]]:
+def pastikan(sesi: Session, p: Pengguna, hari_ini: date, paksa: bool = False) -> None:
     if paksa or _usang(sesi, p):
         _kunci_hitung(sesi, p)
         if paksa or _usang(sesi, p):  # periksa lagi: permintaan lain mungkin sudah menghitung saat menunggu kunci
             hitung(sesi, p, hari_ini)
+
+
+def peta(sesi: Session, p: Pengguna, beasiswa_ids: list, hari_ini: date) -> dict:
+    """Hasil rekomendasi pengguna untuk sekumpulan beasiswa (dipakai kartu di Jelajah), id beasiswa menjadi kunci."""
+    if not beasiswa_ids:
+        return {}
+    pastikan(sesi, p, hari_ini)
+    baris = sesi.scalars(
+        select(Rekomendasi).where(Rekomendasi.pengguna_id == p.id, Rekomendasi.beasiswa_id.in_(beasiswa_ids))
+    ).all()
+    return {r.beasiswa_id: r for r in baris}
+
+
+def daftar(
+    sesi: Session,
+    p: Pengguna,
+    hari_ini: date,
+    kategori: str | None,
+    paksa: bool = False,
+    wilayah: str | None = None,
+    batas: int | None = None,
+) -> list[tuple[Rekomendasi, Beasiswa]]:
+    pastikan(sesi, p, hari_ini, paksa)
     stmt = (
         select(Rekomendasi, Beasiswa)
         .join(Beasiswa, Beasiswa.id == Rekomendasi.beasiswa_id)
@@ -198,13 +220,40 @@ def daftar(
     if kategori:
         stmt = stmt.where(Rekomendasi.kategori == kategori)
     urutan = {"memenuhi": 0, "hampir_memenuhi": 1, "belum_memenuhi": 2}
-    baris = [(r, b) for r, b in sesi.execute(stmt).all()]
+    baris = [(r, b) for r, b in sesi.execute(stmt).all() if sesuai_wilayah(b.negara, wilayah)]
     baris.sort(key=lambda x: (urutan[x[0].kategori], -float(x[0].skor), x[1].tenggat or date.max))
-    return baris
+    return baris[:batas] if batas else baris
 
 
-def ringkasan(sesi: Session, p: Pengguna, hari_ini: date) -> dict[str, int]:
+def _filter_wilayah_sql(wilayah: str | None):
+    """Sama dengan kartu.luar_negeri: luar negeri bila negara tercatat dan bukan Indonesia."""
+    luar = and_(
+        func.length(func.trim(func.coalesce(Beasiswa.negara, ""))) > 0, ~func.lower(Beasiswa.negara).like("%indonesia%")
+    )
+    if wilayah == "luar":
+        return luar
+    if wilayah == "dalam":
+        return ~luar
+    return None
+
+
+def ringkasan(sesi: Session, p: Pengguna, hari_ini: date, wilayah: str | None = None) -> dict[str, int]:
+    """Jumlah per kategori lewat satu kueri agregat. Sebelumnya memuat dan mengurutkan seluruh daftar (sekitar 1,5 detik)."""
+    pastikan(sesi, p, hari_ini)
+    stmt = (
+        select(Rekomendasi.kategori, func.count())
+        .join(Beasiswa, Beasiswa.id == Rekomendasi.beasiswa_id)
+        .where(
+            Rekomendasi.pengguna_id == p.id,
+            Beasiswa.status == "terbit",
+            or_(Beasiswa.tenggat.is_(None), Beasiswa.tenggat >= hari_ini),
+        )
+        .group_by(Rekomendasi.kategori)
+    )
+    saring = _filter_wilayah_sql(wilayah)
+    if saring is not None:
+        stmt = stmt.where(saring)
     hasil = {"memenuhi": 0, "hampir_memenuhi": 0, "belum_memenuhi": 0}
-    for r, _ in daftar(sesi, p, hari_ini, None):
-        hasil[r.kategori] += 1
+    for kategori, jumlah in sesi.execute(stmt).all():
+        hasil[kategori] = int(jumlah)
     return hasil

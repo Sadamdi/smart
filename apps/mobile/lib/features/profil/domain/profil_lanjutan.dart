@@ -1,5 +1,14 @@
 /// Pengubah isian "nama | kolom kedua | tahun" (satu butir per baris) dari dan ke daftar peta
 /// untuk profil lanjutan (organisasi, prestasi, sertifikat, pengalaman).
+const _jenisSertifikat = {
+  'keahlian',
+  'bahasa',
+  'kepanitiaan',
+  'pelatihan',
+  'kompetensi',
+  'lainnya',
+};
+
 List<Map<String, dynamic>> uraiBaris(String teks, List<String> kolom) {
   final hasil = <Map<String, dynamic>>[];
   for (final baris in teks.split('\n')) {
@@ -9,6 +18,12 @@ List<Map<String, dynamic>> uraiBaris(String teks, List<String> kolom) {
     for (var i = 0; i < kolom.length && i < bagian.length; i++) {
       final nilai = bagian[i];
       if (nilai.isEmpty) continue;
+      if (kolom[i] == 'jenis') {
+        // Jenis sertifikat yang tidak dikenal dibuang agar server tidak menolak seluruh profil.
+        final j = nilai.toLowerCase();
+        if (_jenisSertifikat.contains(j)) butir['jenis'] = j;
+        continue;
+      }
       butir[kolom[i]] = kolom[i] == 'tahun' ? int.tryParse(nilai) : nilai;
     }
     butir.removeWhere((_, v) => v == null);

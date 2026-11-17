@@ -1,4 +1,5 @@
 "use client";
+import { BantuanAdmin } from "@/components/BantuanAdmin";
 import { Tampil } from "@/components/state";
 import { BarProgres, JudulHalaman, Kartu, Metrik } from "@/components/ui";
 import { useLaporan } from "@/lib/hooks";
@@ -31,9 +32,17 @@ export default function Laporan() {
   return (
     <div className="halaman-masuk">
       <JudulHalaman judul="Laporan Sistem" deskripsi="Kondisi data beasiswa dan keandalan sumber pemantauan." />
+      <BantuanAdmin>
+        <p>Halaman ini hanya membaca: tidak ada yang bisa diubah di sini. Pakai ringkasan kalimat di bawah untuk melihat apa yang perlu dikerjakan, lalu lanjut ke Antrean atau Kelola Sumber.</p>
+      </BantuanAdmin>
       <Tampil kueri={kueri} adaIsi={() => true}>
         {(l) => (
           <div className="space-y-6">
+            <p className="rounded-kartu border border-c4/60 bg-c1 p-4 text-sm text-ink">
+              Saat ini {l.beasiswa_per_status.terbit ?? 0} beasiswa terbit dan tampil ke {l.jumlah_mahasiswa} mahasiswa. {l.beasiswa_per_status.menunggu_validasi ?? 0} menunggu validasi,{" "}
+              {l.beasiswa_per_status.ditolak ?? 0} ditolak, dan {l.beasiswa_per_status.kedaluwarsa ?? 0} sudah kedaluwarsa. Dari {l.jumlah_sumber} sumber, {l.sumber_per_status.berhasil ?? 0} berhasil
+              diperiksa, {l.sumber_per_status.gagal ?? 0} gagal, dan {l.sumber_per_status.belum_pernah ?? 0} belum pernah dipantau.
+            </p>
             <div className="grid gap-4 sm:grid-cols-2">
               <Metrik label="Jumlah sumber" nilai={l.jumlah_sumber} />
               <Metrik label="Mahasiswa terdaftar" nilai={l.jumlah_mahasiswa} />

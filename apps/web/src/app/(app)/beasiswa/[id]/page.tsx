@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import type { ComponentType } from "react";
 import { DaftarChecklist } from "@/components/DaftarChecklist";
 import { Tampil, pesanGalat } from "@/components/state";
+import { adaPenilaian as adaSkor, BarisSyarat, CincinSkor, warnaSkor } from "@/components/Skor";
 import { ChipStatus, JudulBagian, Kartu, Lencana, Pilihan, Tombol, cx } from "@/components/ui";
 import { kirim } from "@/lib/api";
 import { kunci, useAksi, useChecklist, useDetail, useTersimpan } from "@/lib/hooks";
@@ -22,6 +23,13 @@ const STATUS_SYARAT: Record<string, TampilanSyarat> = {
   dalam_toleransi: { label: "Hampir memenuhi", ikon: CircleAlert, kelas: "bg-warn-soft text-warn" },
   gagal: { label: "Belum terpenuhi", ikon: CircleX, kelas: "bg-danger-soft text-danger-ink" },
   tidak_diketahui: { label: "Belum dapat dinilai", ikon: CircleHelp, kelas: "bg-c2 text-ink" },
+};
+
+const LABEL_TINGKAT: Record<string, string> = {
+  sangat_ketat: "sangat ketat (program sejenis menerima sekitar 2% pelamar)",
+  ketat: "ketat (program sejenis menerima sekitar 15% pelamar)",
+  sedang: "sedang (perkiraan)",
+  longgar: "longgar (perkiraan)",
 };
 
 export default function DetailBeasiswa() {
@@ -114,6 +122,56 @@ export default function DetailBeasiswa() {
                 </div>
                 <div className="hidden lg:block">{tombolSimpan()}</div>
               </div>
+              {adaSkor(b) && (
+                <div className="mt-5 flex items-center gap-5 rounded-[20px] border border-c4/60 bg-c1 p-4">
+                  <CincinSkor skor={b.estimasi_peluang ?? null} warna={warnaSkor(b.kategori)} ukuran={88} tebal={10} />
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-muted">Estimasi peluang</p>
+                    <BarisSyarat k={b} />
+                    {(b.alasan_peluang ?? []).length > 0 && (
+                      <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs text-ink">
+                        {b.alasan_peluang?.map((a) => (
+                          <li key={a}>{a}</li>
+                        ))}
+                      </ul>
+                    )}
+                    <p className="mt-1 text-xs text-muted">Perkiraan dari kecocokan syarat, kekuatan profil, dan persaingan umum. Bukan jaminan diterima.</p>
+                  </div>
+                </div>
+              )}
+              {adaSkor(b) && (
+                <div className="mt-3 rounded-[20px] border border-c4/60 bg-card p-4">
+                  <p className="text-sm font-bold text-navy">Data seleksi sebelumnya</p>
+                  {(b.statistik_seleksi ?? []).length === 0 ? (
+                    <p className="mt-1 text-xs text-ink">
+                      Belum ada data resmi jumlah pendaftar dan penerima untuk program ini. Estimasi memakai tingkat persaingan program sejenis:{" "}
+                      {LABEL_TINGKAT[b.tingkat_persaingan ?? ""] ?? "perkiraan"}. Ini bukan data seleksi program ini.
+                    </p>
+                  ) : (
+                    <ul className="mt-2 space-y-3">
+                      {b.statistik_seleksi?.map((s) => (
+                        <li key={`${s.program}-${s.periode}`} className="text-sm text-ink">
+                          <p className="font-semibold text-navy">{s.program}, {s.periode}</p>
+                          <p className="text-xs">
+                            {[
+                              s.kuota != null ? `kuota ${s.kuota.toLocaleString("id-ID")}` : null,
+                              s.pendaftar != null ? `${s.pendaftar.toLocaleString("id-ID")} pendaftar` : null,
+                              s.diterima != null ? `${s.diterima.toLocaleString("id-ID")} diterima` : null,
+                              s.rasio != null ? `rasio sekitar ${Math.round(s.rasio * 100)}%` : null,
+                            ]
+                              .filter(Boolean)
+                              .join(", ")}
+                          </p>
+                          {s.catatan && <p className="text-xs text-muted">{s.catatan}</p>}
+                          <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-primary underline">
+                            Sumber: {s.sumber}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
               <div
                 className={cx(
                   "mt-5 flex flex-wrap items-center gap-2 rounded-[14px] px-4 py-3 text-sm font-semibold",

@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 import 'dependensi.dart';
+import '../features/admin/presentation/admin_page.dart';
 import '../features/auth/presentation/auth_controller.dart';
 import '../features/auth/presentation/auth_pages.dart';
 import '../features/beasiswa/presentation/detail_page.dart';
@@ -22,7 +23,8 @@ import '../features/profil/presentation/profil_controller.dart';
 import '../features/profil/presentation/profil_page.dart';
 import '../features/rekomendasi/presentation/rekomendasi_page.dart';
 import 'widgets/item_menu_bawah.dart';
-import 'widgets/state_widgets.dart';
+import 'widgets/banner_perbarui.dart';
+import 'widgets/ilustrasi_gerak.dart';
 
 /// Penyegar router: dipicu setiap status auth berubah agar redirect dievaluasi ulang.
 class SegarkanRouter extends ChangeNotifier {
@@ -50,7 +52,7 @@ GoRouter buatRouter(SegarkanRouter segarkan) {
     routes: [
       GoRoute(
         path: '/memuat',
-        builder: (_, _) => const Scaffold(body: MemuatState()),
+        builder: (_, _) => const Scaffold(body: MemuatHalaman()),
       ),
       GoRoute(path: '/masuk', builder: (_, _) => const LoginPage()),
       GoRoute(path: '/daftar', builder: (_, _) => const DaftarPage()),
@@ -63,6 +65,7 @@ GoRouter buatRouter(SegarkanRouter segarkan) {
         builder: (_, _) => const ProfilLanjutanPage(),
       ),
       GoRoute(path: '/pengaturan', builder: (_, _) => const PengaturanPage()),
+      GoRoute(path: '/admin', builder: (_, _) => const AdminPage()),
       GoRoute(
         path: '/beasiswa/:id',
         builder: (_, s) => DetailPage(id: s.pathParameters['id']!),
@@ -133,7 +136,18 @@ class _Cangkang extends StatelessWidget {
         shell.goBranch(0);
       },
       child: Scaffold(
-        body: shell,
+        // Spanduk melayang di atas isi (tanpa menggeser tata letak) dan tidak menahan sentuhan saat kosong.
+        body: Stack(
+          children: [
+            shell,
+            const Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              child: SafeArea(bottom: false, child: BannerPerbarui()),
+            ),
+          ],
+        ),
         bottomNavigationBar: DecoratedBox(
           decoration: BoxDecoration(
             color: Warna.kartu,

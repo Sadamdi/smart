@@ -22,8 +22,10 @@ class Rekomendasi {
     required this.kategori,
     required this.alasan,
     required this.catatanKekurangan,
+    this.kelayakan,
   });
 
+  final Kelayakan? kelayakan;
   final BeasiswaRingkas beasiswa;
   final Kategori kategori;
   final List<String> alasan;
@@ -32,6 +34,7 @@ class Rekomendasi {
   factory Rekomendasi.fromJson(Map<String, dynamic> j) => Rekomendasi(
     beasiswa: BeasiswaRingkas.fromJson(j['beasiswa'] as Map<String, dynamic>),
     kategori: Kategori.dari(j['kategori'] as String),
+    kelayakan: Kelayakan.dari(j),
     alasan: [for (final x in (j['alasan'] as List? ?? [])) '$x'],
     catatanKekurangan: [
       for (final x in (j['catatan_kekurangan'] as List? ?? [])) '$x',

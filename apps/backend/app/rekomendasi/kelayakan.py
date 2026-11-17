@@ -37,6 +37,7 @@ class ProfilKelayakan:
     skor_bahasa: dict | None = None
     kewarganegaraan: str | None = None
     berkas_diunggah: set[str] = field(default_factory=set)
+    jenjang_tuju: list[str] = field(default_factory=list)  # target studi dari profil lanjutan (mis. mahasiswa S1 menuju S2)
 
 
 @dataclass
@@ -297,6 +298,31 @@ def _kelompok_sasaran(batas: dict | None, profil: ProfilKelayakan) -> HasilSyara
     return None
 
 
+# Lanjutan jenjang yang lazim: mahasiswa tingkat akhir boleh mendaftar program jenjang berikutnya (lulus sebelum berangkat).
+_LANJUT = {"S1": ("S2", 7), "D4": ("S2", 7), "S2": ("S3", 3)}
+
+
+def _jenjang(jenis: str, batas: dict | None, profil: ProfilKelayakan) -> HasilSyarat | None:
+    """Jenjang saat ini cocok bila ada di daftar. Bila tidak, jenjang tujuan di profil lanjutan atau kelulusan yang
+    dekat (S1 semester 7 ke atas menuju S2, S2 semester 3 ke atas menuju S3) tetap dinilai, bukan langsung gagal."""
+    diminta = _daftar(batas)
+    if not diminta:
+        return None
+    if not profil.jenjang and not profil.jenjang_tuju:
+        return _tidak_diketahui(jenis, "jenjang")
+    if profil.jenjang in diminta:
+        return HasilSyarat(jenis, OK, 1.0, f"Jenjang {profil.jenjang} sesuai")
+    tuju = [t for t in profil.jenjang_tuju if t in diminta]
+    if tuju:
+        return HasilSyarat(jenis, OK, 1.0, f"Jenjang tujuan {tuju[0]} sesuai")
+    lanjut = _LANJUT.get(profil.jenjang or "")
+    if lanjut and lanjut[0] in diminta and (profil.semester or 0) >= lanjut[1]:
+        return HasilSyarat(
+            jenis, TOLERAN, 0.8, kekurangan=f"Program {lanjut[0]}: kamu perlu lulus {profil.jenjang} lebih dulu"
+        )
+    return HasilSyarat(jenis, GAGAL, 0.0, kekurangan=f"Untuk jenjang {', '.join(diminta)}")
+
+
 def periksa_syarat(
     jenis: str, batas: dict | None, profil: ProfilKelayakan, hari_ini: date, tol: Toleransi = TOLERANSI
 ) -> HasilSyarat | None:
@@ -306,7 +332,7 @@ def periksa_syarat(
     if jenis in ("semester_minimum", "semester_maksimum"):
         return _semester(jenis, batas, profil, tol)
     if jenis == "jenjang":
-        return _pilihan(jenis, batas, profil.jenjang, "jenjang", "Jenjang {nilai} sesuai", huruf_kecil=False)
+        return _jenjang(jenis, batas, profil)
     if jenis == "jenis_kampus":
         return _pilihan(jenis, batas, profil.jenis_kampus, "kampus", "Kampus {nilai} sesuai")
     if jenis == "domisili":
@@ -347,6 +373,9 @@ def periksa_syarat(
 
 
 _LEMAH = {"jenjang", "berkas_pendukung"}
+# Syarat terukur selain jenjang dan berkas yang diperlukan agar boleh disebut memenuhi. Satu syarat cukup; kehati-hatian soal
+# data tipis dilakukan di estimasi peluang (diredam) supaya hitungan Memenuhi, Hampir, Belum di Beranda tetap berguna.
+SYARAT_KUAT_MINIMUM = 1
 
 
 @dataclass
@@ -371,10 +400,16 @@ def nilai_kelayakan(
     if gagal:
         return HasilKelayakan(BELUM, skor, alasan, [h.kekurangan for h in gagal if h.kekurangan] + kurang)
     if all(h.status == OK for h in hasil):
-        if all(h.jenis in _LEMAH for h in hasil):
+        kuat = [h for h in hasil if h.jenis not in _LEMAH]
+        if not kuat:
             # Hanya jenjang (atau berkas) yang terukur: belum cukup untuk menyatakan memenuhi.
             return HasilKelayakan(
                 HAMPIR, min(skor, 0.5), alasan, ["Hanya jenjang yang tercatat, periksa syarat lain di laman resmi"]
+            )
+        if len(kuat) < SYARAT_KUAT_MINIMUM:
+            # Satu syarat terukur (mis. hanya kewarganegaraan) terlalu tipis untuk disebut memenuhi.
+            return HasilKelayakan(
+                HAMPIR, min(skor, 0.5), alasan, ["Syarat terukur masih sedikit, periksa syarat lain di laman resmi"]
             )
         return HasilKelayakan(MEMENUHI, skor, alasan, [])
     return HasilKelayakan(HAMPIR, skor, alasan, kurang)

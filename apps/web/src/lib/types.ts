@@ -54,6 +54,14 @@ export type BeasiswaRingkas = {
   jenjang?: string[] | null;
   tenggat?: string | null;
   tautan_resmi: string;
+  /** Penilaian untuk pengguna; ada di daftar Jelajah dan Detail. */
+  kategori?: string | null;
+  skor_kelayakan?: number | null;
+  /** Estimasi peluang diterima (2 sampai 90), perkiraan dari kecocokan syarat, kekuatan profil, dan persaingan umum. */
+  estimasi_peluang?: number | null;
+  syarat_terpenuhi?: number;
+  syarat_total?: number;
+  luar_negeri?: boolean;
 };
 /** Hasil pemeriksaan satu syarat terhadap profil; hanya ada bila API mengirimnya. */
 export type StatusSyarat = "terpenuhi" | "dalam_toleransi" | "gagal" | "tidak_diketahui";
@@ -65,6 +73,18 @@ export type Persyaratan = {
   catatan?: string | null;
 };
 export type BerkasWajib = { id: string; nama_berkas: string };
+export type StatistikSeleksi = {
+  program: string;
+  periode: string;
+  kuota?: number | null;
+  pendaftar?: number | null;
+  diterima?: number | null;
+  rasio?: number | null;
+  keandalan?: string;
+  catatan?: string | null;
+  sumber: string;
+  url: string;
+};
 export type BeasiswaDetail = BeasiswaRingkas & {
   manfaat?: string | null;
   tanggal_diperiksa?: string | null;
@@ -74,6 +94,10 @@ export type BeasiswaDetail = BeasiswaRingkas & {
   kategori?: Kategori | string | null;
   alasan?: string[];
   catatan_kekurangan?: string[];
+  alasan_peluang?: string[];
+  dasar_peluang?: "statistik" | "perkiraan" | null;
+  tingkat_persaingan?: "sangat_ketat" | "ketat" | "sedang" | "longgar" | null;
+  statistik_seleksi?: StatistikSeleksi[];
 };
 export type DetailAdmin = BeasiswaDetail & { status: string; alasan_ditandai?: string | null };
 export type AntreanItem = BeasiswaRingkas & { status: string; alasan_ditandai?: string | null; nama_sumber: string };
@@ -84,6 +108,11 @@ export type Rekomendasi = {
   alasan: string[];
   catatan_kekurangan: string[];
   tenggat?: string | null;
+  skor_kelayakan?: number | null;
+  estimasi_peluang?: number | null;
+  syarat_terpenuhi?: number;
+  syarat_total?: number;
+  luar_negeri?: boolean;
 };
 export type Ringkasan = { memenuhi: number; hampir_memenuhi: number; belum_memenuhi: number };
 
