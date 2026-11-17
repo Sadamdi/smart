@@ -244,7 +244,7 @@ def _cuplikan(teks: str, nama: str, lebar: int = 2500) -> str:
 
 
 def validasi_beasiswa(sesi: Session, settings: Settings, b: Beasiswa, hari_ini: date, teks: str | None = None) -> str:
-    """Memvalidasi satu beasiswa dengan AI. Mengembalikan 'terbit', 'kedaluwarsa', atau 'menunggu'.
+    """Memvalidasi satu beasiswa dengan AI. Hasilnya 'terbit', 'kedaluwarsa', 'ditolak' (laman menolak robot), atau 'menunggu'.
 
     Melempar UpstreamUnavailable bila layanan AI mati (beasiswa tidak ditandai sudah diproses, jadi dicoba lagi nanti).
     """
@@ -252,6 +252,9 @@ def validasi_beasiswa(sesi: Session, settings: Settings, b: Beasiswa, hari_ini: 
         try:
             teks = _cuplikan(laman.ambil_teks(b.tautan_resmi, maks=POTONGAN * POTONGAN_MAKS), b.nama)
         except laman.LamanGagal as exc:
+            if exc.permanen:  # laman menolak robot: keluar dari daftar dan tidak dicoba lagi
+                b.status = "ditolak"
+                return _selesai(b, "ditolak", f"Laman menolak akses otomatis ({exc}). Tidak dicoba lagi.")
             return _selesai(b, "menunggu", f"Validasi AI: {exc}. Perlu diperiksa admin.")
     if len(teks) < 80:
         return _selesai(b, "menunggu", "Validasi AI: isi laman terlalu sedikit untuk dibaca. Perlu diperiksa admin.")
@@ -356,7 +359,7 @@ def _selesai(b: Beasiswa, hasil: str, alasan: str | None) -> str:
 
 def validasi_antrean(sesi: Session, settings: Settings, hari_ini: date, batas: int = 5) -> dict[str, int]:
     """Memvalidasi beasiswa menunggu yang belum pernah diproses AI. Satu per satu, dengan jeda antarlaman."""
-    hasil = {"diproses": 0, "terbit": 0, "kedaluwarsa": 0, "menunggu": 0, "layanan_ai_mati": 0}
+    hasil = {"diproses": 0, "terbit": 0, "kedaluwarsa": 0, "menunggu": 0, "ditolak": 0, "layanan_ai_mati": 0}
     antre = list(
         sesi.scalars(
             select(Beasiswa)
@@ -384,6 +387,17 @@ def validasi_antrean(sesi: Session, settings: Settings, hari_ini: date, batas: i
 
 def pantau_sumber(sesi: Session, settings: Settings, sumber: Sumber, hari_ini: date) -> dict[str, int]:
     """Membaca laman sumber dengan AI dan menyimpan program yang ditemukan sebagai beasiswa menunggu validasi."""
+    try:
+        return _pantau_sumber(sesi, settings, sumber, hari_ini)
+    except laman.LamanGagal as exc:
+        if exc.permanen:  # sumber menolak robot: nonaktif, tidak dijadwalkan lagi; admin dapat mengaktifkan kembali
+            sumber.aktif = False
+            sumber.status_terakhir = "gagal"
+            sesi.flush()
+        raise
+
+
+def _pantau_sumber(sesi: Session, settings: Settings, sumber: Sumber, hari_ini: date) -> dict[str, int]:
     if sumber.url.endswith(".xml"):
         return pantau_sitemap(sesi, sumber)
     ringkas = {"ditemukan": 0, "baru": 0}
