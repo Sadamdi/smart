@@ -96,6 +96,11 @@ def daftar(
     return Amplop(data=data, meta=Meta(kursor_berikut=halaman.kursor_berikut))
 
 
+@router.get("/sinkron", summary="Paket data beasiswa untuk mode luring")
+def sinkron(sesi: Annotated[Session, Depends(get_session)], _: SaatIni) -> Amplop[list[dict]]:
+    return Amplop(data=layanan_rek.sinkron(sesi, date.today()))
+
+
 @router.get(
     "/{beasiswa_id}",
     summary="Detail beasiswa beserta persyaratan dan berkas wajib",

@@ -392,3 +392,17 @@ def test_llm_tanya_tanpa_konfigurasi_melempar_galat():
 
     with pytest.raises(UpstreamUnavailable):
         llm.tanya(SETTINGS_UJI, "s", "p")
+
+
+def test_sinkron_paket_beasiswa_untuk_mode_luring(klien_db, sesi):
+    h = _akun(klien_db)
+    s = _sumber(sesi)
+    b = _beasiswa(sesi, s, "Beasiswa Paket Luring", HARI + timedelta(days=30), syarat=[("ipk_minimum", {"nilai": 3.0})])
+    tunda = _beasiswa(sesi, s, "Tidak Terbit", HARI + timedelta(days=30), status="menunggu_validasi")
+    assert klien_db.get(f"{B}/beasiswa/sinkron").status_code == 401
+    paket = {x["id"]: x for x in klien_db.get(f"{B}/beasiswa/sinkron", headers=h).json()["data"]}
+    assert str(tunda.id) not in paket
+    item = paket[str(b.id)]
+    jenis = [j for j, _ in item["syarat"]]
+    assert "ipk_minimum" in jenis and "jenjang" in jenis  # jenjang beasiswa ikut menjadi syarat efektif
+    assert item["luar_negeri"] is False and item["tautan_resmi"].startswith("https://uji.example/")

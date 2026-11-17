@@ -23,6 +23,7 @@ import '../features/rekomendasi/data/rekomendasi_repository.dart';
 import '../features/rekomendasi/presentation/rekomendasi_controller.dart';
 import 'api_client.dart';
 import 'cache_lokal.dart';
+import 'lokal/mesin_lokal.dart';
 import 'tema_controller.dart';
 import 'token_storage.dart';
 
@@ -47,15 +48,18 @@ void pasangDependensi({
   TokenStorage? storage,
   Future<bool> Function(Uri)? bukaTautan,
   CacheLokal? cache,
+  MesinLokal? mesin,
 }) {
   Get.put<TokenStorage>(storage ?? SecureTokenStorage(), permanent: true);
   Get.put<Dio>(dio ?? buatDio(), permanent: true);
   Get.put<CacheLokal>(cache ?? CacheLokal(), permanent: true);
+  Get.put<MesinLokal>(mesin ?? MesinLokal(), permanent: true);
   Get.put<ApiClient>(
     ApiClient(
       dio: Get.find<Dio>(),
       storage: Get.find<TokenStorage>(),
       cache: Get.find<CacheLokal>(),
+      lokal: Get.find<MesinLokal>(),
       onSesiBerakhir: () => Get.find<AuthController>().sesiBerakhir(),
     ),
     permanent: true,
@@ -94,6 +98,12 @@ String pesanGalat(Object e) {
 /// Mengosongkan data milik akun yang baru keluar, agar akun berikutnya tidak melihat data lama.
 void bersihkanDataSesi() {
   if (Get.isRegistered<CacheLokal>()) Get.find<CacheLokal>().bersihkan();
+  if (Get.isRegistered<MesinLokal>()) Get.find<MesinLokal>().bersihkan();
+  segarkanTampilan();
+}
+
+/// Mengosongkan data di layar supaya dimuat ulang dari sumber terbaru (server atau mesin luring).
+void segarkanTampilan() {
   if (Get.isRegistered<RekomendasiController>()) {
     Get.find<RekomendasiController>().bersihkan();
   }

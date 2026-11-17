@@ -8,6 +8,7 @@ import '../../../core/update/app_update_checker.dart';
 import '../../../core/update/versi_aplikasi.dart';
 import '../../../core/widgets/tombol_bulat.dart';
 import '../../auth/presentation/auth_controller.dart';
+import 'mode_luring.dart';
 import 'pengaturan_controller.dart';
 
 class PengaturanPage extends StatefulWidget {
@@ -113,6 +114,7 @@ class _PengaturanPageState extends State<PengaturanPage> {
                       ),
                     ),
                   ),
+                const _Grup(judul: 'Mode luring', anak: KartuModeLuring()),
                 _Grup(
                   judul: 'Aplikasi',
                   anak: Column(

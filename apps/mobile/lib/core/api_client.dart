@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 
 import 'cache_lokal.dart';
+import 'lokal/mesin_lokal.dart';
 import 'token_storage.dart';
 
 /// Galat dari server dengan bentuk baku { success: false, error: { code, message } }.
@@ -70,10 +71,14 @@ class ApiClient {
     required this.storage,
     this.onSesiBerakhir,
     this.cache,
+    this.lokal,
   });
 
   /// Cache data terakhir untuk mode luring (baca saja); null bila tidak dipakai.
   final CacheLokal? cache;
+
+  /// Mesin luring (hitung dan simpan di perangkat); null bila tidak dipakai.
+  final MesinLokal? lokal;
 
   final Dio dio;
   final TokenStorage storage;
@@ -86,6 +91,26 @@ class ApiClient {
   static const _jalurAuth = ['/auth/login', '/auth/register', '/auth/refresh'];
 
   Future<Respons> get(String jalur, {Map<String, dynamic>? query}) async {
+    final l = lokal;
+    if (l != null && l.aktif.value) {
+      final r = l.layaniGet(jalur, query);
+      if (r != null) return r;
+    }
+    try {
+      return await _getJaringan(jalur, query);
+    } on ApiException catch (e) {
+      if (!e.galatJaringan || l == null) rethrow;
+      final r = l.layaniGet(jalur, query);
+      if (r == null) rethrow;
+      cache?.luring.value = true;
+      return r;
+    }
+  }
+
+  Future<Respons> _getJaringan(
+    String jalur,
+    Map<String, dynamic>? query,
+  ) async {
     final c = cache;
     if (c == null || _jalurAuth.contains(jalur)) {
       return _kirim('GET', jalur, query: query);
@@ -95,9 +120,12 @@ class ApiClient {
       final r = await _kirim('GET', jalur, query: query);
       c.luring.value = false;
       unawaited(c.simpan(kunci, r.data, r.meta));
+      _kirimAntreanBilaPerlu();
       return r;
     } on ApiException catch (e) {
       if (!e.galatJaringan) rethrow;
+      // Mesin luring lebih dulu: hasilnya dihitung ulang dari profil terbaru, bukan salinan lama.
+      if (lokal?.layaniGet(jalur, query) != null) rethrow;
       final m = await c.baca(kunci);
       if (m == null) rethrow;
       c.luring.value = true;
@@ -107,12 +135,78 @@ class ApiClient {
   }
 
   Future<Respons> post(String jalur, {Object? body}) =>
-      _kirim('POST', jalur, body: body);
+      _tulis('POST', jalur, body);
 
   Future<Respons> put(String jalur, {Object? body}) =>
-      _kirim('PUT', jalur, body: body);
+      _tulis('PUT', jalur, body);
 
-  Future<Respons> delete(String jalur) => _kirim('DELETE', jalur);
+  Future<Respons> delete(String jalur) => _tulis('DELETE', jalur, null);
+
+  /// Penulisan: dilayani lokal saat mode luring (dan masuk antrean), atau saat jaringan putus bila datanya sudah ada.
+  Future<Respons> _tulis(String metode, String jalur, Object? body) async {
+    final l = lokal;
+    if (l != null && l.aktif.value && body is! FormData) {
+      final r = l.layaniTulis(metode, jalur, body);
+      if (r != null) return r;
+    }
+    try {
+      return await _kirim(metode, jalur, body: body);
+    } on ApiException catch (e) {
+      if (!e.galatJaringan || l == null || body is FormData) rethrow;
+      final r = l.layaniTulis(metode, jalur, body);
+      if (r == null) rethrow;
+      cache?.luring.value = true;
+      return r;
+    }
+  }
+
+  bool _mengantre = false;
+
+  void _kirimAntreanBilaPerlu() {
+    final l = lokal;
+    if (l == null || l.aktif.value || l.menunggu.value == 0 || _mengantre) {
+      return;
+    }
+    unawaited(sinkronkan());
+  }
+
+  /// Mengirim perubahan yang tertunda lalu mengunduh paket data terbaru untuk dipakai saat luring.
+  Future<bool> sinkronkan() async {
+    final l = lokal;
+    if (l == null || _mengantre) return false;
+    _mengantre = true;
+    l.sedangSinkron.value = true;
+    try {
+      await l.kosongkanAntrean((m, j, b) => _kirim(m, j, body: b));
+      if (l.menunggu.value > 0) return false;
+      final beasiswa = (await _kirim('GET', '/beasiswa/sinkron')).data as List;
+      final profil = (await _kirim('GET', '/me')).data as Map<String, dynamic>;
+      final tersimpan = (await _kirim('GET', '/me/tersimpan')).data as List;
+      final dokumen = (await _kirim('GET', '/me/dokumen')).data as List;
+      await l.simpanSinkron(
+        beasiswa: [
+          for (final x in beasiswa) Map<String, dynamic>.from(x as Map),
+        ],
+        profil: Map<String, dynamic>.from(profil),
+        tersimpan: {
+          for (final x in tersimpan)
+            ((x as Map)['beasiswa'] as Map)['id'] as String,
+        },
+        berkas: {
+          for (final x in dokumen) ...[
+            (x as Map)['jenis'] as String,
+            x['nama_berkas'] as String,
+          ],
+        },
+      );
+      return true;
+    } on ApiException {
+      return false;
+    } finally {
+      _mengantre = false;
+      l.sedangSinkron.value = false;
+    }
+  }
 
   /// Mengunduh berkas biner (mis. dokumen asli) ke [simpanKe], dengan token dan satu kali penyegaran.
   Future<void> unduh(String jalur, String simpanKe) async {
