@@ -196,3 +196,44 @@ def test_beasiswa_terbit_tanpa_tenggat_terlihat_di_daftar_dan_rekomendasi(sesi, 
     assert [x.id for x in halaman.item] == [b.id]
     assert BeasiswaRepoSql(sesi).detail(b.id, HARI) is not None
     assert b.id in {m.id for m in layanan._masukan(sesi, HARI)}
+
+
+class _Dummy:
+    """Pengganti ringan Beasiswa dan Sumber untuk uji aturan 403 tanpa basis data."""
+
+    def __init__(self, **kw):
+        self.__dict__.update(kw)
+
+
+def _tolak_403(*a, **k):
+    raise laman.LamanGagal("Laman mengembalikan status 403", permanen=True)
+
+
+def test_laman_403_ditolak_dan_tidak_dicoba_lagi(monkeypatch):
+    monkeypatch.setattr(laman, "ambil_teks", _tolak_403)
+    b = _Dummy(tautan_resmi="https://a.id/x", nama="Beasiswa X", status="menunggu_validasi", alasan_ditandai=None)
+    assert pemantau_ai.validasi_beasiswa(None, S, b, HARI) == "ditolak"
+    assert b.status == "ditolak" and "tidak dicoba lagi" in b.alasan_ditandai.lower()
+
+
+def test_galat_sementara_tetap_menunggu(monkeypatch):
+    def sementara(*a, **k):
+        raise laman.LamanGagal("Laman tidak dapat dibuka")
+
+    monkeypatch.setattr(laman, "ambil_teks", sementara)
+    b = _Dummy(tautan_resmi="https://a.id/x", nama="Beasiswa X", status="menunggu_validasi", alasan_ditandai=None)
+    assert pemantau_ai.validasi_beasiswa(None, S, b, HARI) == "menunggu"
+    assert b.status == "menunggu_validasi"
+
+
+class _SesiPalsu:
+    def flush(self):
+        pass
+
+
+def test_sumber_403_dinonaktifkan(monkeypatch):
+    monkeypatch.setattr(laman, "ambil_teks", _tolak_403)
+    s = _Dummy(url="https://a.id/daftar", aktif=True, status_terakhir="belum_pernah")
+    with pytest.raises(laman.LamanGagal):
+        pemantau_ai.pantau_sumber(_SesiPalsu(), S, s, HARI)
+    assert s.aktif is False and s.status_terakhir == "gagal"
