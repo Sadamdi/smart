@@ -9,10 +9,11 @@ class RekomendasiRepository {
   Future<List<Rekomendasi>> daftar({
     Kategori? kategori,
     String? wilayah,
+    int? batas,
   }) async {
     final r = await _api.get(
       '/rekomendasi',
-      query: {'kategori': kategori?.kode, 'wilayah': wilayah},
+      query: {'kategori': kategori?.kode, 'wilayah': wilayah, 'batas': batas},
     );
     return [
       for (final x in r.data as List)

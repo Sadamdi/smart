@@ -30,7 +30,7 @@ class ProfilController extends GetxController {
       await Get.find<AuthController>().ubahProfil(masukan);
       // Profil menentukan rekomendasi: muat ulang ringkasan dan daftar agar Beranda dan Rekomendasi ikut berubah.
       if (Get.isRegistered<RekomendasiController>()) {
-        Get.find<RekomendasiController>().muatSemua();
+        Get.find<RekomendasiController>().perbaruiSetelahProfil();
       }
       return true;
     } catch (e) {

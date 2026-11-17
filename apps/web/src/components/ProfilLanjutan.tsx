@@ -5,6 +5,7 @@ import { useState } from "react";
 import { pesanGalat } from "@/components/state";
 import { Kartu, Masukan, Medan, Pilihan, Tombol } from "@/components/ui";
 import { kirim } from "@/lib/api";
+import { usePerbaruiRekomendasi } from "@/lib/perbarui";
 import { kunci } from "@/lib/hooks";
 import type { Pengguna, ProfilLanjutan } from "@/lib/types";
 
@@ -75,6 +76,7 @@ const pisah = (t: string) => t.split(",").map((x) => x.trim()).filter(Boolean);
 
 export function ProfilLanjutanKartu({ saya }: { saya: Pengguna }) {
   const qc = useQueryClient();
+  const perbarui = usePerbaruiRekomendasi();
   const awal: ProfilLanjutan = saya.profil_lanjutan ?? {};
   const [skalar, setSkalar] = useState({
     provinsi_asal: awal.provinsi_asal ?? "",
@@ -124,8 +126,9 @@ export function ProfilLanjutanKartu({ saya }: { saya: Pengguna }) {
     };
     try {
       await kirim("/me/profil", "PUT", { profil_lanjutan: muatan });
-      await Promise.all([qc.invalidateQueries({ queryKey: kunci.saya }), qc.invalidateQueries({ queryKey: ["rekomendasi"] })]);
-      setInfo("Profil lanjutan tersimpan. Hitung ulang rekomendasi untuk memakainya.");
+      await qc.invalidateQueries({ queryKey: kunci.saya });
+      void perbarui();
+      setInfo("Profil lanjutan tersimpan. Rekomendasi sedang diperbarui otomatis.");
     } catch (e) {
       setGalat(e);
     } finally {
