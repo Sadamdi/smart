@@ -80,3 +80,17 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<ApiS
 
 export const kirim = <T>(path: string, method: string, body?: unknown) =>
   api<T>(path, { method, body: body === undefined ? undefined : JSON.stringify(body) });
+
+/** Mengambil berkas biner (mis. dokumen asli) dengan token; menyegarkan token satu kali bila perlu. */
+export async function unduhBerkas(path: string): Promise<Blob> {
+  const ambil = () => fetch(`${API_URL}${path}`, { headers: { Authorization: `Bearer ${tokenStore.akses() ?? ""}` } });
+  let res: Response;
+  try {
+    res = await ambil();
+    if (res.status === 401 && (await segarkanToken())) res = await ambil();
+  } catch {
+    throw new ApiError("NETWORK", "Tidak dapat terhubung ke server. Periksa koneksi lalu coba lagi.", 0);
+  }
+  if (!res.ok) throw new ApiError("NOT_FOUND", "Berkas asli tidak tersimpan di server.", res.status);
+  return res.blob();
+}

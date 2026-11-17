@@ -3,14 +3,14 @@ import { Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { Tombol, cx } from "./ui";
 
-export const BATAS_BYTE = 5 * 1024 * 1024;
+export const BATAS_BYTE = 10 * 1024 * 1024;
 export const EKSTENSI = [".pdf", ".docx", ".txt", ".png", ".jpg", ".jpeg"];
 
 /** Validasi di sisi klien; server tetap memeriksa ulang. Mengembalikan pesan galat atau null. */
 export function periksaBerkas(f: { name: string; size: number }): string | null {
   const ext = f.name.slice(f.name.lastIndexOf(".")).toLowerCase();
   if (!EKSTENSI.includes(ext)) return "Tipe berkas harus PDF, DOCX, TXT, PNG, atau JPG.";
-  if (f.size > BATAS_BYTE) return "Ukuran berkas maksimal 5 MB.";
+  if (f.size > BATAS_BYTE) return "Ukuran berkas maksimal 10 MB.";
   if (f.size === 0) return "Berkas kosong.";
   return null;
 }
@@ -47,7 +47,7 @@ export function KolomUnggah({ onPilih, sibuk }: { onPilih: (f: File) => void; si
       >
         <Upload className="mb-2 h-7 w-7 text-primary" aria-hidden />
         <p className="text-sm font-semibold text-navy">Tarik berkas ke sini atau pilih dari perangkat</p>
-        <p className="mt-1 text-xs text-muted">PDF, DOCX, TXT, PNG, atau JPG. Maksimal 5 MB.</p>
+        <p className="mt-1 text-xs text-muted">PDF, DOCX, TXT, PNG, atau JPG. Maksimal 10 MB. Disimpan di server agar bisa dilihat dari web dan HP.</p>
         <Tombol disabled={sibuk} onClick={() => ref.current?.click()} className="mt-4">
           {sibuk ? "Mengunggah" : "Pilih berkas"}
         </Tombol>

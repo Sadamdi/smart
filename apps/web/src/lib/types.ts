@@ -123,6 +123,7 @@ export type Dokumen = {
   status_baca: string;
   hasil_baca?: Record<string, unknown> | null;
   tanggal_unggah: string;
+  ada_berkas?: boolean;
 };
 
 export type Tersimpan = { beasiswa: BeasiswaRingkas; status_rencana?: string | null };

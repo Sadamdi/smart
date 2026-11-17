@@ -238,6 +238,11 @@ def test_unggah_cv_dibaca_dikoreksi_dan_diterapkan_ke_profil(klien_db, tmp_path)
         and d["hasil_baca"]["skor_bahasa"] == {"toefl": 520.0}
     )
     assert d["hasil_baca"]["semester"] == 5 and d["hasil_baca"]["pengalaman_organisasi"]
+    # berkas asli tersimpan di server dan bisa dilihat kembali (web dan HP)
+    assert d["ada_berkas"] is True
+    asli = klien_db.get(f"{B}/me/dokumen/{d['id']}/berkas", headers=h)
+    assert asli.status_code == 200 and asli.content == cv.encode()
+    assert klien_db.get(f"{B}/me/dokumen/{d['id']}/berkas").status_code == 401
     kor = klien_db.put(
         f"{B}/me/dokumen/{d['id']}/hasil-baca", headers=h, json={"hasil_baca": {**d["hasil_baca"], "ipk": 3.7}}
     )
@@ -247,6 +252,7 @@ def test_unggah_cv_dibaca_dikoreksi_dan_diterapkan_ke_profil(klien_db, tmp_path)
     assert klien_db.get(f"{B}/me", headers=h).json()["data"]["ipk"] == "3.70"
     assert len(klien_db.get(f"{B}/me/dokumen", headers=h).json()["data"]) == 1
     assert klien_db.delete(f"{B}/me/dokumen/{d['id']}", headers=h).status_code == 200
+    assert not list(tmp_path.rglob("*.txt"))  # berkas ikut terhapus dari server
     assert klien_db.get(f"{B}/me/dokumen/{d['id']}", headers=h).status_code == 404
     app.dependency_overrides[get_settings] = lambda: SETTINGS_UJI
 

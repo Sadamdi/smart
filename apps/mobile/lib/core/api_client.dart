@@ -84,6 +84,36 @@ class ApiClient {
 
   Future<Respons> delete(String jalur) => _kirim('DELETE', jalur);
 
+  /// Mengunduh berkas biner (mis. dokumen asli) ke [simpanKe], dengan token dan satu kali penyegaran.
+  Future<void> unduh(String jalur, String simpanKe) async {
+    Future<Response<dynamic>> coba(String? token) => dio.download(
+      jalur,
+      simpanKe,
+      options: Options(
+        headers: {if (token != null) 'Authorization': 'Bearer $token'},
+      ),
+    );
+    try {
+      var res = await coba((await storage.baca())?.akses);
+      if (res.statusCode == 401 && await _segarkan()) {
+        res = await coba((await storage.baca())?.akses);
+      }
+      if (res.statusCode != 200) {
+        throw ApiException(
+          'NOT_FOUND',
+          'Berkas asli tidak tersimpan di server.',
+          res.statusCode ?? 0,
+        );
+      }
+    } on DioException {
+      throw ApiException(
+        'NETWORK',
+        'Tidak dapat terhubung ke server. Periksa koneksi internet lalu coba lagi.',
+        0,
+      );
+    }
+  }
+
   Future<Response<dynamic>> _sekali(
     String metode,
     String jalur,

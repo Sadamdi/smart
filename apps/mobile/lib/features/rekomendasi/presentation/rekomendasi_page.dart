@@ -77,18 +77,6 @@ class _RekomendasiPageState extends State<RekomendasiPage> {
 
     return Scaffold(
       appBar: const SmartAppBar(),
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'Chatbot beasiswa',
-        onPressed: () => context.push('/chat'),
-        backgroundColor: Warna.primary,
-        foregroundColor: Warna.putih,
-        elevation: 0,
-        highlightElevation: 0,
-        focusElevation: 0,
-        hoverElevation: 0,
-        shape: const CircleBorder(side: BorderSide.none),
-        child: const Icon(Icons.chat_bubble_outline_rounded),
-      ),
       body: RefreshIndicator(
         onRefresh: () async {
           await _c.muatSemua();

@@ -33,9 +33,14 @@ class Settings(BaseSettings):
     model_peringkat_path: str = "data/model/peringkat.lgb"
 
     upload_dir: str = "data/unggahan"
-    upload_maks_byte: int = 5 * 1024 * 1024
-    # False (bawaan): berkas asli dihapus segera setelah dibaca, hanya hasil baca yang disimpan.
-    upload_simpan_berkas: bool = False
+    upload_maks_byte: int = 10 * 1024 * 1024
+    # Total berkas per pengguna di server, supaya penyimpanan tidak membengkak.
+    upload_total_maks_byte: int = 50 * 1024 * 1024
+    # Gambar yang lebih besar dari sisi ini diperkecil sebelum disimpan.
+    upload_gambar_sisi_maks: int = 1600
+    # True (bawaan sejak 18 November 2026): berkas disimpan di server agar bisa dilihat dari web dan HP.
+    # False: berkas dihapus segera setelah dibaca, hanya hasil baca yang disimpan.
+    upload_simpan_berkas: bool = True
 
     @field_validator("destructive_db_hosts", "cors_origins", mode="before")
     @classmethod
