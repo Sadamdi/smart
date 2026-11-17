@@ -173,14 +173,30 @@ def test_rekomendasi_per_kategori_dengan_alasan_dan_catatan(klien_db, sesi):
     belum = _beasiswa(
         sesi, s, "Beasiswa Magister Uji", HARI + timedelta(days=30), syarat=[("jenjang", {"nilai": ["S2"]})], jenjang=["S2"]
     )
-    data = klien_db.get(f"{B}/rekomendasi", headers=h).json()["data"]
+    data = klien_db.get(f"{B}/rekomendasi?urut=kecocokan", headers=h).json()["data"]
     kategori = {x["beasiswa"]["id"]: x for x in data}
     assert kategori[str(ok.id)]["kategori"] == "memenuhi" and kategori[str(ok.id)]["alasan"]
     assert kategori[str(hampir.id)]["kategori"] == "hampir_memenuhi"
     assert any("IPK kurang" in c for c in kategori[str(hampir.id)]["catatan_kekurangan"])
     assert kategori[str(belum.id)]["kategori"] == "belum_memenuhi"
+    # Kalender memuat tenggat beasiswa yang direkomendasikan (memenuhi dan hampir), bukan yang belum memenuhi.
+    kal = {
+        x["ref_id"]: x
+        for x in klien_db.get(f"{B}/me/kalender?dari={HARI}&sampai={HARI + timedelta(days=60)}", headers=h).json()["data"]
+    }
+    assert kal[str(ok.id)]["jenis"] == "rekomendasi" and kal[str(ok.id)]["kategori"] == "memenuhi"
+    assert kal[str(hampir.id)]["kategori"] == "hampir_memenuhi"
+    assert str(belum.id) not in kal
     urutan = [x["kategori"] for x in data]
     assert urutan == sorted(urutan, key=["memenuhi", "hampir_memenuhi", "belum_memenuhi"].index)
+    # Urutan bawaan: estimasi peluang tertinggi dulu, yang belum punya estimasi di akhir.
+    bawaan = klien_db.get(f"{B}/rekomendasi", headers=h).json()["data"]
+    pel = [x["estimasi_peluang"] if x["estimasi_peluang"] is not None else -1 for x in bawaan]
+    assert pel == sorted(pel, reverse=True)
+    # Filter peluang minimal
+    ambang = max(pel)
+    tersaring = klien_db.get(f"{B}/rekomendasi?min_peluang={ambang}", headers=h).json()["data"]
+    assert tersaring and all((x["estimasi_peluang"] or 0) >= ambang for x in tersaring)
     assert all("skor" not in x for x in data)  # tidak ada persen peluang
     only = klien_db.get(f"{B}/rekomendasi?kategori=memenuhi", headers=h).json()["data"]
     assert only and all(x["kategori"] == "memenuhi" for x in only)
@@ -222,6 +238,11 @@ def test_unggah_cv_dibaca_dikoreksi_dan_diterapkan_ke_profil(klien_db, tmp_path)
         and d["hasil_baca"]["skor_bahasa"] == {"toefl": 520.0}
     )
     assert d["hasil_baca"]["semester"] == 5 and d["hasil_baca"]["pengalaman_organisasi"]
+    # berkas asli tersimpan di server dan bisa dilihat kembali (web dan HP)
+    assert d["ada_berkas"] is True
+    asli = klien_db.get(f"{B}/me/dokumen/{d['id']}/berkas", headers=h)
+    assert asli.status_code == 200 and asli.content == cv.encode()
+    assert klien_db.get(f"{B}/me/dokumen/{d['id']}/berkas").status_code == 401
     kor = klien_db.put(
         f"{B}/me/dokumen/{d['id']}/hasil-baca", headers=h, json={"hasil_baca": {**d["hasil_baca"], "ipk": 3.7}}
     )
@@ -231,6 +252,7 @@ def test_unggah_cv_dibaca_dikoreksi_dan_diterapkan_ke_profil(klien_db, tmp_path)
     assert klien_db.get(f"{B}/me", headers=h).json()["data"]["ipk"] == "3.70"
     assert len(klien_db.get(f"{B}/me/dokumen", headers=h).json()["data"]) == 1
     assert klien_db.delete(f"{B}/me/dokumen/{d['id']}", headers=h).status_code == 200
+    assert not list(tmp_path.rglob("*.txt"))  # berkas ikut terhapus dari server
     assert klien_db.get(f"{B}/me/dokumen/{d['id']}", headers=h).status_code == 404
     app.dependency_overrides[get_settings] = lambda: SETTINGS_UJI
 

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="SMART">
+  <path d="M74 20C52 4 20 18 30 40C35 50 52 50 64 46C50 46 42 40 46 32C50 25 62 22 74 20Z" fill="#3E83D6"/>
+  <path d="M26 80C48 96 80 82 70 60C65 50 48 50 36 54C50 54 58 60 54 68C50 75 38 78 26 80Z" fill="#143F7C"/>
+  <path d="M30 40C35 50 52 50 64 46C50 52 36 52 30 40Z" fill="#BCD2F1"/>
+  <circle cx="80" cy="16" r="7" fill="#F5B73B"/>
+  <path d="M80 9L81.6 14.4L87 16L81.6 17.6L80 23L78.4 17.6L73 16L78.4 14.4Z" fill="#fff"/>
+</svg>

@@ -1,14 +1,16 @@
 import uuid
 from datetime import datetime
+from pathlib import Path
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
-from pydantic import BaseModel, ConfigDict
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, ConfigDict, model_validator
 from sqlalchemy.orm import Session
 
 from app.api.deps import pengguna_saat_ini
 from app.core.config import Settings, get_settings
-from app.core.errors import ValidationFailed
+from app.core.errors import NotFound, ValidationFailed
 from app.db import get_session
 from app.models import Pengguna
 from app.schemas.common import Amplop, Kosong
@@ -30,6 +32,22 @@ class DokumenOut(BaseModel):
     status_baca: str
     hasil_baca: dict | None = None
     tanggal_unggah: datetime
+    ada_berkas: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def _tandai(cls, d):
+        if hasattr(d, "lokasi_penyimpanan"):
+            return {
+                "id": d.id,
+                "jenis": d.jenis,
+                "nama_berkas": d.nama_berkas,
+                "status_baca": d.status_baca,
+                "hasil_baca": d.hasil_baca,
+                "tanggal_unggah": d.tanggal_unggah,
+                "ada_berkas": bool(d.lokasi_penyimpanan) and Path(d.lokasi_penyimpanan).exists(),
+            }
+        return d
 
 
 class HasilBacaIn(BaseModel):
@@ -40,7 +58,9 @@ class TerapkanOut(BaseModel):
     kolom_terisi: list[str]
 
 
-@router.post("", status_code=201, summary="Unggah dokumen (maksimal 5 MB)", response_model=Amplop[DokumenOut])
+@router.post(
+    "", status_code=201, summary="Unggah dokumen (maksimal 10 MB, disimpan di server)", response_model=Amplop[DokumenOut]
+)
 async def unggah(
     sesi: SesiDep,
     p: SaatIni,
@@ -64,6 +84,14 @@ def daftar(sesi: SesiDep, p: SaatIni) -> Amplop[list[DokumenOut]]:
 @router.get("/{dokumen_id}", summary="Detail dan hasil baca", response_model=Amplop[DokumenOut])
 def detail(dokumen_id: uuid.UUID, sesi: SesiDep, p: SaatIni) -> Amplop[DokumenOut]:
     return Amplop(data=DokumenOut.model_validate(layanan.ambil(sesi, p, dokumen_id)))
+
+
+@router.get("/{dokumen_id}/berkas", summary="Unduh atau lihat berkas asli", response_class=FileResponse)
+def berkas_asli(dokumen_id: uuid.UUID, sesi: SesiDep, p: SaatIni) -> FileResponse:
+    d = layanan.ambil(sesi, p, dokumen_id)
+    if not d.lokasi_penyimpanan or not Path(d.lokasi_penyimpanan).exists():
+        raise NotFound("Berkas asli tidak tersimpan di server")
+    return FileResponse(d.lokasi_penyimpanan, filename=d.nama_berkas, content_disposition_type="inline")
 
 
 @router.put("/{dokumen_id}/hasil-baca", summary="Koreksi hasil baca", response_model=Amplop[DokumenOut])

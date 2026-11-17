@@ -1,5 +1,9 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
+import 'cache_lokal.dart';
 import 'token_storage.dart';
 
 /// Galat dari server dengan bentuk baku { success: false, error: { code, message } }.
@@ -61,7 +65,15 @@ class Respons {
 /// Klien API: menyisipkan token akses, menyegarkan token otomatis satu kali
 /// ketika menerima 401, dan menerjemahkan galat jaringan menjadi [ApiException].
 class ApiClient {
-  ApiClient({required this.dio, required this.storage, this.onSesiBerakhir});
+  ApiClient({
+    required this.dio,
+    required this.storage,
+    this.onSesiBerakhir,
+    this.cache,
+  });
+
+  /// Cache data terakhir untuk mode luring (baca saja); null bila tidak dipakai.
+  final CacheLokal? cache;
 
   final Dio dio;
   final TokenStorage storage;
@@ -73,8 +85,26 @@ class ApiClient {
 
   static const _jalurAuth = ['/auth/login', '/auth/register', '/auth/refresh'];
 
-  Future<Respons> get(String jalur, {Map<String, dynamic>? query}) =>
-      _kirim('GET', jalur, query: query);
+  Future<Respons> get(String jalur, {Map<String, dynamic>? query}) async {
+    final c = cache;
+    if (c == null || _jalurAuth.contains(jalur)) {
+      return _kirim('GET', jalur, query: query);
+    }
+    final kunci = '$jalur?${jsonEncode(query ?? const {})}';
+    try {
+      final r = await _kirim('GET', jalur, query: query);
+      c.luring.value = false;
+      unawaited(c.simpan(kunci, r.data, r.meta));
+      return r;
+    } on ApiException catch (e) {
+      if (!e.galatJaringan) rethrow;
+      final m = await c.baca(kunci);
+      if (m == null) rethrow;
+      c.luring.value = true;
+      final meta = m['meta'];
+      return Respons(m['data'], meta is Map<String, dynamic> ? meta : null);
+    }
+  }
 
   Future<Respons> post(String jalur, {Object? body}) =>
       _kirim('POST', jalur, body: body);
@@ -83,6 +113,36 @@ class ApiClient {
       _kirim('PUT', jalur, body: body);
 
   Future<Respons> delete(String jalur) => _kirim('DELETE', jalur);
+
+  /// Mengunduh berkas biner (mis. dokumen asli) ke [simpanKe], dengan token dan satu kali penyegaran.
+  Future<void> unduh(String jalur, String simpanKe) async {
+    Future<Response<dynamic>> coba(String? token) => dio.download(
+      jalur,
+      simpanKe,
+      options: Options(
+        headers: {if (token != null) 'Authorization': 'Bearer $token'},
+      ),
+    );
+    try {
+      var res = await coba((await storage.baca())?.akses);
+      if (res.statusCode == 401 && await _segarkan()) {
+        res = await coba((await storage.baca())?.akses);
+      }
+      if (res.statusCode != 200) {
+        throw ApiException(
+          'NOT_FOUND',
+          'Berkas asli tidak tersimpan di server.',
+          res.statusCode ?? 0,
+        );
+      }
+    } on DioException {
+      throw ApiException(
+        'NETWORK',
+        'Tidak dapat terhubung ke server. Periksa koneksi internet lalu coba lagi.',
+        0,
+      );
+    }
+  }
 
   Future<Response<dynamic>> _sekali(
     String metode,
@@ -130,6 +190,7 @@ class ApiClient {
       }
       if (!ok || res.statusCode == 401) {
         await storage.hapus();
+        unawaited(cache?.bersihkan());
         onSesiBerakhir?.call();
       }
     }

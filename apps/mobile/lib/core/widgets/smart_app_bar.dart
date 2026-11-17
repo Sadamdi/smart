@@ -51,6 +51,12 @@ class _SmartAppBarState extends State<SmartAppBar> {
         ],
       ),
       actions: [
+        TombolBulat(
+          ikon: Icons.person_outline,
+          tooltip: 'Profil',
+          onTap: () => context.go('/profil'),
+        ),
+        const SizedBox(width: 8),
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: TombolBulat(

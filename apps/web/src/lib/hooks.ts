@@ -24,7 +24,7 @@ import type {
 
 export const kunci = {
   saya: ["saya"] as const,
-  rekom: (k?: string, w?: string) => ["rekomendasi", k ?? "semua", w ?? "semua"] as const,
+  rekom: (k?: string, w?: string, u?: string, m?: number) => ["rekomendasi", k ?? "semua", w ?? "semua", u ?? "peluang", m ?? 0] as const,
   ringkasan: (w?: string) => ["rekomendasi", "ringkasan", w ?? "semua"] as const,
   tersimpan: ["tersimpan"] as const,
   checklist: ["checklist"] as const,
@@ -38,13 +38,15 @@ const ambil = async <T>(path: string) => (await api<T>(path)).data;
 export const useSaya = (aktif = true) => useQuery({ queryKey: kunci.saya, queryFn: () => ambil<Pengguna>("/me"), enabled: aktif, retry: false });
 export const useWilayah = () =>
   useQuery({ queryKey: ["referensi", "wilayah"], queryFn: () => ambil<ReferensiWilayah>("/referensi/wilayah"), staleTime: Infinity });
-export const useRekomendasi = (kategori?: string, wilayah?: string) =>
+export const useRekomendasi = (kategori?: string, wilayah?: string, urut: string = "peluang", minPeluang = 0) =>
   useQuery({
-    queryKey: kunci.rekom(kategori, wilayah),
+    queryKey: kunci.rekom(kategori, wilayah, urut, minPeluang),
     queryFn: () => {
       const q = new URLSearchParams();
       if (kategori) q.set("kategori", kategori);
       if (wilayah) q.set("wilayah", wilayah);
+      q.set("urut", urut);
+      if (minPeluang) q.set("min_peluang", String(minPeluang));
       return ambil<Rekomendasi[]>(`/rekomendasi${q.size ? `?${q}` : ""}`);
     },
   });

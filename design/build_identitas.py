@@ -133,3 +133,112 @@ def svg_komponen():
     o.append(kotak(256, 666, 200, 52, 26, "#FFFFFF", stroke=PALE, sw=1.5) + t(356, 698, "Simpan", 15, 700, DEEP, "middle"))
     o.append("</svg>")
     return "\n".join(o), W, H
+
+
+def _hp(x, y, judul_layar):
+    return [kotak(x, y, 360, 720, 36, "#FFFFFF", stroke="#C9D6EC", sw=2), t(x + 20, y - 12, judul_layar, 14, 800, NAVY)]
+
+
+def _kepala(x, y):
+    g = [toga(x + 16, y + 14, 32), t(x + 56, y + 37, "SMART", 16, 800, NAVY)]
+    g.append('<circle cx="%d" cy="%d" r="18" fill="%s"/><circle cx="%d" cy="%d" r="5" fill="#FFFFFF"/>' % (x + 276, y + 30, PALE, x + 276, y + 26))
+    g.append(kotak(x + 266, y + 33, 20, 9, 4, "#FFFFFF"))
+    g.append('<circle cx="%d" cy="%d" r="18" fill="%s"/>' % (x + 322, y + 30, PALE))
+    g.append('<circle cx="%d" cy="%d" r="4" fill="#FF7A6B"/>' % (x + 330, y + 20))
+    return "".join(g)
+
+
+def _nav(x, y, aktif):
+    """Bar bawah: Beranda, Rekomendasi, Jelajah, Kalender, Asisten AI. Profil ada di kepala halaman."""
+    g = [kotak(x, y, 360, 76, 28, "#FFFFFF", stroke="#C9D6EC", sw=1)]
+    for i, n in enumerate(["Beranda", "Rekomendasi", "Jelajah", "Kalender", "Asisten AI"]):
+        cx = x + 36 + i * 72
+        warna = BLUE if i == aktif else "#7A8CA8"
+        g.append('<circle cx="%d" cy="%d" r="11" fill="%s"/>' % (cx, y + 28, warna if i == aktif else PALE))
+        g.append(t(cx, y + 58, n, 10.5, 700 if i == aktif else 500, warna, "middle"))
+    return "".join(g)
+
+
+def svg_pembaruan():
+    W, H = 1680, 880
+    o = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d" width="%d" height="%d">' % (W, H, W, H), kotak(0, 0, W, H, 0, "#F3F6FB")]
+    o.append(t(40, 48, "Pembaruan 18 November 2026: bar bawah, kalender, dokumen, profil lanjutan", 24, 800, NAVY))
+    # 1. Rekomendasi dengan urut peluang dan bar bawah baru
+    x, y = 40, 120
+    o += _hp(x, y, "Rekomendasi: urut peluang, Asisten AI di bar bawah")
+    o.append(_kepala(x, y))
+    o.append(t(x + 20, y + 92, "Rekomendasi Beasiswa", 20, 800, NAVY))
+    xx = x + 20
+    for lab, on in (("Peluang diterima", True), ("Tenggat", False), ("Skor kelayakan", False)):
+        c, w = K.chip(xx, y + 112, lab, NAVY if on else PALE, "#FFFFFF" if on else DEEP)
+        o.append(c)
+        xx += w + 8
+    for i in range(3):
+        yy = y + 168 + i * 150
+        o.append(kotak(x + 16, yy, 328, 134, 24, "#FFFFFF", stroke="#E1E9F6", sw=1))
+        o.append(t(x + 32, yy + 30, "Nama beasiswa %d" % (i + 1), 15, 800, NAVY))
+        o.append(t(x + 32, yy + 50, "Penyelenggara | Tenggat 12 hari", 12, 500, K.MUTED))
+        o.append(K.cincin(x + 290, yy + 40, 24, [62, 38, 21][i], [GOLD, GOLD, "#BA1A1A"][i], tebal=6))
+        o.append(t(x + 32, yy + 92, "Estimasi peluang (perkiraan)", 11.5, 600, K.MUTED))
+    o.append(_nav(x, y + 636, 4))
+    # 2. Kalender dengan pop up
+    x = 450
+    o += _hp(x, y, "Kalender: rekomendasi masuk otomatis, pop up ke detail")
+    o.append(_kepala(x, y))
+    o.append(t(x + 20, y + 92, "November 2026", 18, 800, NAVY))
+    for r_ in range(5):
+        for c_ in range(7):
+            n = r_ * 7 + c_ + 1
+            if n > 30:
+                continue
+            cx, cy = x + 40 + c_ * 46, y + 128 + r_ * 44
+            o.append(t(cx, cy + 5, str(n), 13, 600, NAVY, "middle"))
+            if n in (12, 19, 24):
+                o.append('<circle cx="%d" cy="%d" r="3" fill="#F5B73B"/>' % (cx, cy + 14))
+            if n in (8, 27):
+                o.append('<circle cx="%d" cy="%d" r="3" fill="#BA1A1A"/>' % (cx, cy + 14))
+    o.append(t(x + 20, y + 372, "Emas: rekomendasi. Merah: tersimpan.", 12, 500, K.MUTED))
+    o.append(kotak(x, y + 440, 360, 280, 36, "#FFFFFF", stroke="#C9D6EC", sw=2))
+    o.append(kotak(x + 150, y + 452, 60, 5, 2, "#C9D6EC"))
+    o.append(t(x + 24, y + 496, "Beasiswa Prestasi Nusantara", 17, 800, NAVY))
+    o.append(t(x + 24, y + 522, "Direkomendasikan: memenuhi syarat", 13, 500, K.INK))
+    o.append(t(x + 24, y + 544, "Tenggat 24 November 2026", 12, 500, K.MUTED))
+    o.append(kotak(x + 24, y + 572, 312, 48, 24, BLUE) + t(x + 180, y + 602, "Lihat detail", 15, 700, "#FFFFFF", "middle"))
+    o.append(t(x + 180, y + 660, "Tutup", 13, 600, DEEP, "middle"))
+    # 3. Dokumen dengan lihat isi
+    x = 860
+    o += _hp(x, y, "Dokumen: disimpan di server, tombol Lihat isi")
+    o.append(_kepala(x, y))
+    o.append(t(x + 20, y + 92, "Dokumen Saya", 20, 800, NAVY))
+    o.append(t(x + 20, y + 116, "PDF, DOCX, TXT, PNG, JPG. Maksimal 10 MB.", 12, 500, K.MUTED))
+    o.append(kotak(x + 16, y + 132, 328, 48, 24, BLUE) + t(x + 180, y + 162, "Unggah dokumen", 15, 700, "#FFFFFF", "middle"))
+    for i, (n, s) in enumerate((("CV_Nabila.pdf", "Terbaca: IPK 3.72, Semester 5"), ("Sertifikat_TOEFL.jpg", "Terbaca: TOEFL 520"))):
+        yy = y + 204 + i * 110
+        o.append(kotak(x + 16, yy, 328, 96, 20, "#FFFFFF", stroke="#E1E9F6", sw=1))
+        o.append(kotak(x + 28, yy + 14, 40, 50, 10, PALE))
+        o.append(t(x + 80, yy + 32, n, 14, 800, NAVY))
+        o.append(t(x + 80, yy + 52, s, 11.5, 500, K.MUTED))
+        o.append(chip_kecil(x + 80, yy + 64, "Selesai"))
+        o.append('<circle cx="%d" cy="%d" r="14" fill="%s"/>' % (x + 280, yy + 30, PALE))
+        o.append('<circle cx="%d" cy="%d" r="14" fill="%s"/>' % (x + 318, yy + 30, PALE))
+    o.append(_nav(x, y + 636, -1))
+    # 4. Profil lanjutan dengan bilah simpan aman
+    x = 1270
+    o += _hp(x, y, "Profil Lanjutan: kartu, lembar isian, bilah simpan")
+    o.append(t(x + 20, y + 40, "Profil Lanjutan", 20, 800, NAVY))
+    for i, (n, ket) in enumerate((("Keahlian", "Python, Desain, Analisis"), ("Prestasi", "2 prestasi"), ("Organisasi", "BEM Fakultas"), ("Sertifikat", "1 sertifikat"), ("Target jenjang", "S2"))):
+        yy = y + 72 + i * 84
+        o.append(kotak(x + 16, yy, 328, 72, 20, "#FFFFFF", stroke="#E1E9F6", sw=1))
+        o.append(t(x + 32, yy + 30, n, 14, 800, NAVY))
+        o.append(t(x + 32, yy + 52, ket, 12, 500, K.MUTED))
+        o.append(t(x + 326, yy + 40, "Ubah", 12, 700, BLUE, "end"))
+    o.append(kotak(x, y + 600, 360, 120, 36, "#FFFFFF", stroke="#C9D6EC", sw=1))
+    o.append(kotak(x + 20, y + 620, 320, 48, 24, BLUE) + t(x + 180, y + 650, "Simpan perubahan", 15, 700, "#FFFFFF", "middle"))
+    o.append(kotak(x + 130, y + 700, 100, 4, 2, "#143F7C", op=0.25))
+    o.append(t(x + 180, y + 690, "Jarak aman untuk tombol navigasi Android", 10, 500, K.MUTED, "middle"))
+    o.append("</svg>")
+    return "\n".join(o), W, H
+
+
+def chip_kecil(x, y, label):
+    return kotak(x, y, 60, 20, 10, K.MINT) + t(x + 30, y + 14, label, 10.5, 700, K.MINT_T, "middle")
