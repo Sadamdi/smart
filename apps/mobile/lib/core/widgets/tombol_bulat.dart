@@ -41,20 +41,48 @@ class TombolBulat extends StatelessWidget {
           child: SizedBox(
             width: 48,
             height: 48,
-            child: Center(
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Warna.container2,
-                  shape: BoxShape.circle,
-                ),
-                child: Badge(
-                  isLabelVisible: lencana > 0,
-                  label: Text('$lencana'),
+            child: Stack(
+              alignment: Alignment.center,
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Warna.container2,
+                    shape: BoxShape.circle,
+                  ),
                   child: Icon(ikon, size: 22, color: Warna.navy),
                 ),
-              ),
+                if (lencana > 0)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Warna.error,
+                        borderRadius: BorderRadius.circular(9),
+                        border: Border.all(color: Warna.surface, width: 1.5),
+                      ),
+                      child: Text(
+                        lencana > 99 ? '99+' : '$lencana',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          height: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ),

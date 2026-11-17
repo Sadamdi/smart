@@ -3,6 +3,7 @@ import { RefreshCw, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { KartuBeasiswa } from "@/components/KartuBeasiswa";
+import { TabWilayah, type Wilayah } from "@/components/Skor";
 import { KosongState, MemuatKisi, Tampil, pesanGalat } from "@/components/state";
 import { ChipFilter, ChipStatus, JudulHalaman, Kartu, Tombol, TautanTombol } from "@/components/ui";
 import { kirim } from "@/lib/api";
@@ -14,9 +15,10 @@ const KATEGORI = ["", "memenuhi", "hampir_memenuhi", "belum_memenuhi"] as const;
 
 export default function Rekomendasi() {
   const [kategori, setKategori] = useState<string>("");
+  const [wilayah, setWilayah] = useState<Wilayah>("dalam");
   const saya = useSaya().data;
-  const kueri = useRekomendasi(kategori || undefined);
-  const ringkasan = useRingkasan();
+  const kueri = useRekomendasi(kategori || undefined, wilayah);
+  const ringkasan = useRingkasan(wilayah);
   const hitung = useAksi(() => kirim("/rekomendasi/hitung-ulang", "POST"), ["rekomendasi"]);
   const kel = saya ? kelengkapanProfil(saya) : null;
 
@@ -56,6 +58,7 @@ export default function Rekomendasi() {
           )}
         </Kartu>
       )}
+      <TabWilayah nilai={wilayah} onPilih={setWilayah} className="mb-4" />
       <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="Kategori">
         {KATEGORI.map((k) => (
           <ChipFilter key={k} aktif={kategori === k} onClick={() => setKategori(k)}>
@@ -80,7 +83,7 @@ export default function Rekomendasi() {
           <ul className="grid gap-4 lg:grid-cols-2">
             {daftar.map((r) => (
               <li key={r.beasiswa.id}>
-                <KartuBeasiswa beasiswa={r.beasiswa} kepala={<ChipStatus kategori={r.kategori} />}>
+                <KartuBeasiswa beasiswa={r.beasiswa} kelayakan={r} kepala={<ChipStatus kategori={r.kategori} />}>
                   {r.alasan.length > 0 && (
                     <div>
                       <p className="text-[11px] font-bold uppercase tracking-wide text-muted">Alasan</p>

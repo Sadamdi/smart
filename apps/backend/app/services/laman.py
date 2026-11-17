@@ -21,7 +21,13 @@ LONCAT_MAKS = 3
 
 
 class LamanGagal(Exception):
-    """Laman tidak dapat diambil dengan aman; pesan aman ditampilkan ke admin."""
+    """Laman tidak dapat diambil dengan aman; pesan aman ditampilkan ke admin.
+
+    permanen=True bila laman menolak robot (401, 403, atau robots.txt melarang): tidak boleh dicoba lagi."""
+
+    def __init__(self, pesan: str, permanen: bool = False) -> None:
+        super().__init__(pesan)
+        self.permanen = permanen
 
 
 def periksa_alamat(url: str) -> None:
@@ -101,10 +107,10 @@ def ambil_mentah(url: str, klien: httpx.Client | None = None) -> str:
     klien = klien or httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=30, follow_redirects=False)
     try:
         if not boleh_diambil(klien, url):
-            raise LamanGagal("robots.txt melarang pengambilan laman ini")
+            raise LamanGagal("robots.txt melarang pengambilan laman ini", permanen=True)
         r = _unduh(klien, url)
         if r.status_code >= 400:
-            raise LamanGagal(f"Laman mengembalikan status {r.status_code}")
+            raise LamanGagal(f"Laman mengembalikan status {r.status_code}", permanen=r.status_code in (401, 403))
         return r.text
     finally:
         if punya:
@@ -117,10 +123,10 @@ def ambil_teks(url: str, klien: httpx.Client | None = None, maks: int = TEKS_MAK
     klien = klien or httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=20, follow_redirects=False)
     try:
         if not boleh_diambil(klien, url):
-            raise LamanGagal("robots.txt melarang pengambilan laman ini")
+            raise LamanGagal("robots.txt melarang pengambilan laman ini", permanen=True)
         r = _unduh(klien, url)
         if r.status_code >= 400:
-            raise LamanGagal(f"Laman mengembalikan status {r.status_code}")
+            raise LamanGagal(f"Laman mengembalikan status {r.status_code}", permanen=r.status_code in (401, 403))
         if "html" not in r.jenis and "text" not in r.jenis:
             raise LamanGagal("Isi laman bukan teks atau HTML")
         return html_ke_teks(r.text, url, maks)

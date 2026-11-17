@@ -6,6 +6,7 @@ import '../../../core/format.dart';
 import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
+import '../../../core/widgets/cincin_skor.dart';
 import '../../../core/widgets/metrik_dan_progres.dart';
 import '../../../core/widgets/state_widgets.dart';
 import '../../../core/widgets/tombol_bulat.dart';
@@ -186,6 +187,10 @@ class _Isi extends StatelessWidget {
               Lencana.kategori(Kategori.dari(detail.kategori!)),
           ],
         ),
+        if (detail.ringkas.kelayakan != null) ...[
+          const SizedBox(height: 16),
+          _KartuSkor(kelayakan: detail.ringkas.kelayakan!),
+        ],
         const SizedBox(height: 16),
         _KotakInfo(
           warnaLatar: dekat ? Warna.errorSoft : Warna.container2,
@@ -481,6 +486,77 @@ class _RencanaDaftar extends StatelessWidget {
             },
           ),
       ],
+    );
+  }
+}
+
+/// Skor kelayakan besar di atas Detail: cincin, angka, dan jumlah syarat terpenuhi.
+class _KartuSkor extends StatelessWidget {
+  const _KartuSkor({required this.kelayakan});
+
+  final Kelayakan kelayakan;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final warna = warnaKategoriSkor(kelayakan.kategori);
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Warna.kartu,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Warna.container4),
+        boxShadow: bayanganKartu,
+      ),
+      child: Row(
+        children: [
+          CincinSkor(
+            skor: kelayakan.adaAngka ? kelayakan.skor : null,
+            warna: warna,
+            ukuran: 92,
+            tebal: 11,
+          ),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Skor kelayakan', style: t.bodySmall),
+                const SizedBox(height: 2),
+                if (kelayakan.adaAngka) ...[
+                  Text(
+                    '${kelayakan.skor}%',
+                    style: t.headlineMedium?.copyWith(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Syarat terpenuhi ${kelayakan.terpenuhi} dari ${kelayakan.total}',
+                    style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 6),
+                  TitikSyarat(
+                    terpenuhi: kelayakan.terpenuhi,
+                    total: kelayakan.total,
+                    warna: warna,
+                  ),
+                ] else
+                  Text(
+                    'Belum tersedia. Syarat beasiswa ini belum tercatat, cek laman resmi.',
+                    style: t.bodyMedium,
+                  ),
+                const SizedBox(height: 8),
+                Text(
+                  'Ukuran syarat yang sudah kamu penuhi, bukan peluang diterima.',
+                  style: t.bodySmall?.copyWith(fontSize: 11.5),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

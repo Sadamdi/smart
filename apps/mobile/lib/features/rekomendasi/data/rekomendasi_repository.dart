@@ -6,10 +6,13 @@ class RekomendasiRepository {
 
   final ApiClient _api;
 
-  Future<List<Rekomendasi>> daftar({Kategori? kategori}) async {
+  Future<List<Rekomendasi>> daftar({
+    Kategori? kategori,
+    String? wilayah,
+  }) async {
     final r = await _api.get(
       '/rekomendasi',
-      query: {'kategori': kategori?.kode},
+      query: {'kategori': kategori?.kode, 'wilayah': wilayah},
     );
     return [
       for (final x in r.data as List)
@@ -17,8 +20,11 @@ class RekomendasiRepository {
     ];
   }
 
-  Future<RingkasanRekomendasi> ringkasan() async {
-    final r = await _api.get('/rekomendasi/ringkasan');
+  Future<RingkasanRekomendasi> ringkasan({String? wilayah}) async {
+    final r = await _api.get(
+      '/rekomendasi/ringkasan',
+      query: {'wilayah': wilayah},
+    );
     return RingkasanRekomendasi.fromJson(r.data as Map<String, dynamic>);
   }
 

@@ -24,8 +24,8 @@ import type {
 
 export const kunci = {
   saya: ["saya"] as const,
-  rekom: (k?: string) => ["rekomendasi", k ?? "semua"] as const,
-  ringkasan: ["rekomendasi", "ringkasan"] as const,
+  rekom: (k?: string, w?: string) => ["rekomendasi", k ?? "semua", w ?? "semua"] as const,
+  ringkasan: (w?: string) => ["rekomendasi", "ringkasan", w ?? "semua"] as const,
   tersimpan: ["tersimpan"] as const,
   checklist: ["checklist"] as const,
   kalender: ["kalender"] as const,
@@ -38,12 +38,21 @@ const ambil = async <T>(path: string) => (await api<T>(path)).data;
 export const useSaya = (aktif = true) => useQuery({ queryKey: kunci.saya, queryFn: () => ambil<Pengguna>("/me"), enabled: aktif, retry: false });
 export const useWilayah = () =>
   useQuery({ queryKey: ["referensi", "wilayah"], queryFn: () => ambil<ReferensiWilayah>("/referensi/wilayah"), staleTime: Infinity });
-export const useRekomendasi = (kategori?: string) =>
+export const useRekomendasi = (kategori?: string, wilayah?: string) =>
   useQuery({
-    queryKey: kunci.rekom(kategori),
-    queryFn: () => ambil<Rekomendasi[]>(`/rekomendasi${kategori ? `?kategori=${kategori}` : ""}`),
+    queryKey: kunci.rekom(kategori, wilayah),
+    queryFn: () => {
+      const q = new URLSearchParams();
+      if (kategori) q.set("kategori", kategori);
+      if (wilayah) q.set("wilayah", wilayah);
+      return ambil<Rekomendasi[]>(`/rekomendasi${q.size ? `?${q}` : ""}`);
+    },
   });
-export const useRingkasan = () => useQuery({ queryKey: kunci.ringkasan, queryFn: () => ambil<Ringkasan>("/rekomendasi/ringkasan") });
+export const useRingkasan = (wilayah?: string) =>
+  useQuery({
+    queryKey: kunci.ringkasan(wilayah),
+    queryFn: () => ambil<Ringkasan>(`/rekomendasi/ringkasan${wilayah ? `?wilayah=${wilayah}` : ""}`),
+  });
 export const useTersimpan = () => useQuery({ queryKey: kunci.tersimpan, queryFn: () => ambil<Tersimpan[]>("/me/tersimpan") });
 export const useChecklist = () => useQuery({ queryKey: kunci.checklist, queryFn: () => ambil<ChecklistBeasiswa[]>("/me/checklist") });
 export const useKalender = (dari?: string, sampai?: string) =>
@@ -61,7 +70,7 @@ export const useNotifikasi = () => useQuery({ queryKey: kunci.notif, queryFn: ()
 export const useDetail = (id: string) =>
   useQuery({ queryKey: ["beasiswa", id], queryFn: () => ambil<BeasiswaDetail>(`/beasiswa/${id}`) });
 
-export function useJelajah(filter: { q: string; jenjang: string; negara: string }) {
+export function useJelajah(filter: { q: string; jenjang: string; negara: string; wilayah?: string }) {
   return useInfiniteQuery({
     queryKey: ["jelajah", filter],
     initialPageParam: "",
@@ -70,6 +79,7 @@ export function useJelajah(filter: { q: string; jenjang: string; negara: string 
       if (filter.q) q.set("q", filter.q);
       if (filter.jenjang) q.set("jenjang", filter.jenjang);
       if (filter.negara) q.set("negara", filter.negara);
+      if (filter.wilayah) q.set("wilayah", filter.wilayah);
       if (pageParam) q.set("kursor", pageParam);
       const r = await api<BeasiswaRingkas[]>(`/beasiswa?${q}`);
       return { item: r.data, berikut: r.meta?.kursor_berikut ?? null };

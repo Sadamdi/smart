@@ -9,12 +9,19 @@ class BeasiswaRepository {
   Future<HalamanBeasiswa> daftar({
     String? q,
     String? jenjang,
+    String? wilayah,
     String? kursor,
     int batas = 10,
   }) async {
     final r = await _api.get(
       '/beasiswa',
-      query: {'q': q, 'jenjang': jenjang, 'kursor': kursor, 'batas': batas},
+      query: {
+        'q': q,
+        'jenjang': jenjang,
+        'wilayah': wilayah,
+        'kursor': kursor,
+        'batas': batas,
+      },
     );
     return HalamanBeasiswa([
       for (final x in r.data as List)

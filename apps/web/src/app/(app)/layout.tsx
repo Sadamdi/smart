@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Gerbang } from "@/components/Gerbang";
-import { MemuatState } from "@/components/state";
+import { MemuatHalaman } from "@/components/Ilustrasi";
 
 // Seluruh data halaman dimuat di sisi klien setelah token diperiksa, jadi navigasi ke sini tidak instan.
 export const instant = false;
@@ -10,7 +10,7 @@ export default function LayoutAplikasi({ children }: { children: React.ReactNode
     <Suspense
       fallback={
         <div className="mx-auto max-w-lg px-4 py-16">
-          <MemuatState baris={2} />
+          <MemuatHalaman />
         </div>
       }
     >

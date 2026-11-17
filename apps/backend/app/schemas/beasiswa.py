@@ -16,6 +16,20 @@ class BeasiswaRingkas(BaseModel):
     tautan_resmi: str
 
 
+class KelayakanKartu(BaseModel):
+    """Penilaian terhadap profil pengguna untuk kartu. Skor adalah skor kelayakan, bukan peluang diterima."""
+
+    kategori: str | None = None  # memenuhi, hampir_memenuhi, belum_memenuhi
+    skor_kelayakan: int | None = None  # 0 sampai 100; None bila belum ada syarat terukur
+    syarat_terpenuhi: int = 0
+    syarat_total: int = 0
+    luar_negeri: bool = False
+
+
+class BeasiswaKartu(BeasiswaRingkas, KelayakanKartu):
+    pass
+
+
 class PersyaratanOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -34,11 +48,10 @@ class BerkasWajibOut(BaseModel):
     nama_berkas: str
 
 
-class BeasiswaDetail(BeasiswaRingkas):
+class BeasiswaDetail(BeasiswaRingkas, KelayakanKartu):
     manfaat: str | None = None
     tanggal_diperiksa: datetime | None = None
     persyaratan: list[PersyaratanOut] = []
     berkas_wajib: list[BerkasWajibOut] = []
-    kategori: str | None = None  # memenuhi, hampir_memenuhi, belum_memenuhi
     alasan: list[str] = []
     catatan_kekurangan: list[str] = []

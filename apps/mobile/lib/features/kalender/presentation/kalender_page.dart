@@ -6,6 +6,7 @@ import '../../../core/format.dart';
 import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
+import '../../../core/widgets/ilustrasi_gerak.dart';
 import '../../../core/widgets/metrik_dan_progres.dart';
 import '../../../core/widgets/smart_app_bar.dart';
 import '../../../core/widgets/state_widgets.dart';
@@ -187,6 +188,8 @@ class _KalenderPageState extends State<KalenderPage> {
                       aksi: '+ Tugas',
                       onAksi: _tambahTugas,
                     ),
+                    if (bulanIni.isEmpty)
+                      const Center(child: LembarTerakhir(ukuran: 88)),
                     if (hariIni.isEmpty)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -233,6 +236,7 @@ class _KalenderPageState extends State<KalenderPage> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: KosongState(
+                      ilustrasi: const LembarTerakhir(ukuran: 88),
                       ikon: Icons.checklist,
                       judul: 'Belum ada checklist',
                       pesan: 'Simpan beasiswa dari Jelajah atau Rekomendasi, lalu daftar berkas wajibnya muncul di sini.',

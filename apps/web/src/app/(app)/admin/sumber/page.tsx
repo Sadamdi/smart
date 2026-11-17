@@ -5,6 +5,7 @@ import { useState } from "react";
 import { JENIS_SUMBER } from "@/components/FormSumber";
 import { Database } from "lucide-react";
 import { KosongState, Tampil } from "@/components/state";
+import { BantuanAdmin } from "@/components/BantuanAdmin";
 import { JudulHalaman, TautanTombol, cx } from "@/components/ui";
 import { kirim } from "@/lib/api";
 import { useSumber } from "@/lib/hooks";
@@ -38,11 +39,43 @@ function TombolPantau({ id }: { id: string }) {
   );
 }
 
+function SaklarAktif({ id, aktif }: { id: string; aktif: boolean }) {
+  const qc = useQueryClient();
+  const [sibuk, setSibuk] = useState(false);
+  async function ubah() {
+    setSibuk(true);
+    try {
+      await kirim(`/admin/sumber/${id}`, "PUT", { aktif: !aktif });
+    } finally {
+      setSibuk(false);
+      await qc.invalidateQueries({ queryKey: ["admin"] });
+    }
+  }
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={aktif}
+      aria-label={aktif ? "Nonaktifkan sumber" : "Aktifkan sumber"}
+      onClick={ubah}
+      disabled={sibuk}
+      className={cx("relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition-colors duration-150 disabled:opacity-60", aktif ? "border-primary bg-primary" : "border-line bg-c2")}
+    >
+      <span className={cx("inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-150", aktif ? "translate-x-6" : "translate-x-1")} />
+    </button>
+  );
+}
+
 export default function KelolaSumber() {
   const kueri = useSumber();
   return (
     <div className="halaman-masuk">
       <JudulHalaman judul="Kelola Sumber" deskripsi="Laman resmi yang dipantau untuk menemukan beasiswa." aksi={<TautanTombol href="/admin/sumber/baru">Tambah sumber</TautanTombol>} />
+      <BantuanAdmin>
+        <p><b>Pantau sekarang</b> membaca laman resmi lewat AI dan menyimpan beasiswa yang ditemukan ke Antrean Validasi. Hasilnya tampil di sebelah tombol: berapa yang ditemukan dan berapa yang baru.</p>
+        <p><b>Saklar Aktif</b> menghentikan atau melanjutkan pemantauan otomatis sebuah sumber tanpa menghapusnya. Sumber yang daftarnya menolak robot (403) tetap dibiarkan aktif, hanya ditandai gagal, supaya bisa dipantau dari komputer lain.</p>
+        <p>Status <b>Gagal</b> berarti pemeriksaan terakhir tidak berhasil. Coba Pantau sekarang sekali lagi, atau Ubah alamat laman bila sudah berpindah.</p>
+      </BantuanAdmin>
       <Tampil kueri={kueri} kosong={<KosongState ikon={Database} judul="Belum ada sumber" pesan="Tambahkan laman resmi beasiswa untuk dipantau." aksi={<TautanTombol href="/admin/sumber/baru">Tambah sumber</TautanTombol>} />}>
         {(daftar) => (
           <div className="overflow-x-auto rounded-kartu border border-c4/60 bg-card shadow-kartu">
@@ -69,7 +102,9 @@ export default function KelolaSumber() {
                         {STATUS[s.status_terakhir] ?? s.status_terakhir}
                       </span>
                     </td>
-                    <td className="px-4 py-3">{s.aktif ? "Ya" : "Tidak"}</td>
+                    <td className="px-4 py-3">
+                      <SaklarAktif id={s.id} aktif={s.aktif} />
+                    </td>
                     <td className="px-4 py-3 text-right">
                       {s.jenis === "pantau_otomatis" && <TombolPantau id={s.id} />}
                       <Link href={`/admin/sumber/${s.id}`} className="inline-flex min-h-11 items-center font-semibold text-primary underline">
