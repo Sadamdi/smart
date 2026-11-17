@@ -1,4 +1,5 @@
 "use client";
+import { BannerPerbarui } from "./BannerPerbarui";
 import {
   Bell,
   Bookmark,
@@ -294,6 +295,7 @@ export function AppShell({ pengguna, admin, children }: { pengguna: Pengguna; ad
       )}
       <Header pengguna={pengguna} admin={admin} bukaMenu={() => setBuka(true)} />
       <main id="konten" className="mx-auto w-full max-w-[1126px] px-4 py-6 sm:px-6 md:px-10 md:py-8">
+        <BannerPerbarui />
         {children}
       </main>
     </div>

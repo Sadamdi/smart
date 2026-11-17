@@ -65,11 +65,12 @@ def peluang_untuk(pengguna, beasiswa, kategori: str | None, skor_kelayakan, alas
         luar_negeri=luar,
         kekuatan=kuat,
         dasar_statistik=dasar_stat,
+        jumlah_syarat=m["syarat_total"],
     )
     tingkat = None if dasar_stat is not None else tingkat_persaingan(beasiswa.nama, beasiswa.penyelenggara, luar)
     hasil = {**m, "luar_negeri": luar, "estimasi_peluang": nilai}
     if nilai is not None:
-        hasil["_alasan_peluang"] = alasan_peluang(kategori, tingkat, kuat, dasar_stat is not None)
+        hasil["_alasan_peluang"] = alasan_peluang(kategori, tingkat, kuat, dasar_stat is not None, m["syarat_total"] < 3)
     hasil["_statistik"] = entri
     hasil["_dasar_peluang"] = "statistik" if dasar_stat is not None else "perkiraan"
     hasil["_tingkat"] = tingkat

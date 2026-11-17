@@ -12,8 +12,7 @@ class BerandaController extends GetxController {
   KalenderController get _kalender => Get.find<KalenderController>();
 
   Muatan<RingkasanRekomendasi> get ringkasan => _rekomendasi.ringkasan;
-  Muatan<List<Rekomendasi>> get utama =>
-      _rekomendasi.daftarUntuk(Kategori.memenuhi);
+  Muatan<List<Rekomendasi>> get utama => _rekomendasi.utamaBeranda;
   Muatan<List<Acara>> get acara => _kalender.acara;
 
   /// Memuat data yang belum pernah diminta saat Beranda dibuka.

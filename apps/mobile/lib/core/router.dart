@@ -23,6 +23,7 @@ import '../features/profil/presentation/profil_controller.dart';
 import '../features/profil/presentation/profil_page.dart';
 import '../features/rekomendasi/presentation/rekomendasi_page.dart';
 import 'widgets/item_menu_bawah.dart';
+import 'widgets/banner_perbarui.dart';
 import 'widgets/ilustrasi_gerak.dart';
 
 /// Penyegar router: dipicu setiap status auth berubah agar redirect dievaluasi ulang.
@@ -135,7 +136,12 @@ class _Cangkang extends StatelessWidget {
         shell.goBranch(0);
       },
       child: Scaffold(
-        body: shell,
+        body: Column(
+          children: [
+            const SafeArea(bottom: false, child: BannerPerbarui()),
+            Expanded(child: shell),
+          ],
+        ),
         bottomNavigationBar: DecoratedBox(
           decoration: BoxDecoration(
             color: Warna.kartu,

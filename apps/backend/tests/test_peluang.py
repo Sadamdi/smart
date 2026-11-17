@@ -169,3 +169,28 @@ def test_peluang_untuk_program_tanpa_data_menyebut_tingkat():
     h = peluang_untuk(_P(ipk=3.4), _B("Beasiswa Yayasan Lokal"), "memenuhi", 1.0, ["a", "b"], [])
     assert h["_tingkat"] == "sedang" and h["_dasar_peluang"] == "perkiraan"
     assert any("diperkirakan sedang" in a for a in h["_alasan_peluang"])
+
+
+def test_pencocokan_statistik_tidak_salah_penyelenggara():
+    from app.rekomendasi import statistik
+
+    # Beasiswa Unggulan milik Kemendikbud tidak boleh dipakai untuk Beasiswa UNGGULAN kampus atau Kemenag
+    assert statistik.cari("Beasiswa Unggulan", "Kementerian Pendidikan Tinggi, Sains, dan Teknologi")
+    assert not statistik.cari("Beasiswa UNGGULAN", "Universitas Udayana")
+    assert not statistik.cari("Beasiswa Unggulan Keagamaan Sarjana", "Kementerian Agama Republik Indonesia")
+    # LPDP-AAS bukan program LPDP reguler
+    assert not any(
+        e["program"].startswith("LPDP") for e in statistik.cari("Australia Awards Indonesia: LPDP-AAS", "LPDP-AAS")
+    )
+    assert statistik.cari("Beasiswa LPDP Tahap 1 2026", "LPDP")
+    # Türkiye dan Pertamina
+    assert statistik.rasio_terbaru(statistik.cari("Türkiye Scholarships (Graduate)", "Türkiye Scholarships")) == 0.041
+    assert statistik.cari("Beasiswa Pertamina Sobat Bumi 2026", "Pertamina Foundation")
+
+
+def test_teladan_hanya_milik_tanoto():
+    from app.rekomendasi import statistik
+
+    assert statistik.cari("Beasiswa TELADAN", "Tanoto Foundation")
+    assert not statistik.cari("Beasiswa Kepemimpinan Teladan", "Kementerian Pendidikan Tinggi, Sains, dan Teknologi")
+    assert not statistik.cari("Tanoto Foundation: BEACON", "Tanoto Foundation")

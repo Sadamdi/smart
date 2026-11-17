@@ -2,116 +2,527 @@
   "catatan": "Data seleksi yang dipublikasikan penyelenggara atau dikutip media. Hanya angka yang punya sumber yang dimasukkan. Rasio dihitung dari diterima dibagi pendaftar bila keduanya ada. Penyelenggara jarang mengumumkan pendaftar, jadi banyak program hanya punya kuota atau jumlah penerima. Tambahkan entri baru hanya dengan sumber dan tanggal akses. Keandalan: tinggi (laporan resmi penyelenggara), sedang (siaran resmi atau media yang mengutip penyelenggara), rendah (angka beda antarsumber, perkiraan, atau sumber sekunder).",
   "entri": [
     {
-      "kunci": ["lpdp"], "jenjang": ["S2", "S3"], "program": "LPDP (beasiswa S2 dan S3)", "periode": "2023",
-      "kuota": null, "pendaftar": null, "diterima": 9154, "rasio": 0.29, "keandalan": "sedang",
+      "kunci": [
+        "lpdp"
+      ],
+      "jenjang": [
+        "S2",
+        "S3"
+      ],
+      "program": "LPDP (beasiswa S2 dan S3)",
+      "periode": "2023",
+      "kuota": null,
+      "pendaftar": null,
+      "diterima": 9154,
+      "rasio": 0.29,
+      "keandalan": "sedang",
       "catatan": "Penerima dari Laporan Tahunan LPDP 2023 (5.097 dalam negeri dan 4.057 luar negeri, dijumlahkan oleh GoodStats). Rasio sekitar 29 persen menurut artikel yang sama.",
       "sumber": "GoodStats, 19 Desember 2024, mengutip Laporan Tahunan LPDP 2023",
-      "url": "https://goodstats.id/article/lpdp-dibuka-januari-2025-simak-keketatan-seleksi-periode-sebelumnya-TwicS", "diakses": "2026-11-17"
+      "url": "https://goodstats.id/article/lpdp-dibuka-januari-2025-simak-keketatan-seleksi-periode-sebelumnya-TwicS",
+      "diakses": "2026-11-17",
+      "kecuali": [
+        "aas",
+        "co-funding"
+      ]
     },
     {
-      "kunci": ["lpdp"], "jenjang": ["S2", "S3"], "program": "LPDP (beasiswa S2 dan S3)", "periode": "2024",
-      "kuota": 10000, "pendaftar": 51027, "diterima": null, "rasio": 0.19, "keandalan": "rendah",
+      "kunci": [
+        "lpdp"
+      ],
+      "jenjang": [
+        "S2",
+        "S3"
+      ],
+      "program": "LPDP (beasiswa S2 dan S3)",
+      "periode": "2024",
+      "kuota": 10000,
+      "pendaftar": 51027,
+      "diterima": null,
+      "rasio": 0.19,
+      "keandalan": "rendah",
       "catatan": "Pendaftar 51.027 disampaikan Direktur Utama LPDP kepada Komisi X DPR RI (30 Agustus 2024). Penerima 2024 belum dirilis resmi pada artikel sumber; rasio sekitar 19 persen adalah perkiraan artikel dari kuota 8.000 sampai 10.000.",
       "sumber": "GoodStats, 19 Desember 2024, mengutip paparan Dirut LPDP di Komisi X DPR RI",
-      "url": "https://goodstats.id/article/lpdp-dibuka-januari-2025-simak-keketatan-seleksi-periode-sebelumnya-TwicS", "diakses": "2026-11-17"
+      "url": "https://goodstats.id/article/lpdp-dibuka-januari-2025-simak-keketatan-seleksi-periode-sebelumnya-TwicS",
+      "diakses": "2026-11-17",
+      "kecuali": [
+        "aas",
+        "co-funding"
+      ]
     },
     {
-      "kunci": ["iisma"], "jenjang": ["S1", "D3", "D4"], "program": "IISMA (mobilitas mahasiswa ke luar negeri)", "periode": "2023",
-      "kuota": null, "pendaftar": 9170, "diterima": 1984, "rasio": 0.216, "keandalan": "sedang",
+      "kunci": [
+        "iisma"
+      ],
+      "jenjang": [
+        "S1",
+        "D3",
+        "D4"
+      ],
+      "program": "IISMA (mobilitas mahasiswa ke luar negeri)",
+      "periode": "2023",
+      "kuota": null,
+      "pendaftar": 9170,
+      "diterima": 1984,
+      "rasio": 0.216,
+      "keandalan": "sedang",
       "catatan": "Pendaftar 7.714 jalur sarjana dan 1.456 jalur vokasi. Penerima 1.984 awardee. Rasio dihitung dari kedua angka.",
       "sumber": "Kemdiktisaintek, Pendaftar Terus Meningkat, Bukti IISMA Menyita Perhatian",
-      "url": "https://kemdiktisaintek.go.id/news/article/pendaftar-terus-meningkat-bukti-iisma-menyita-perhatian", "diakses": "2026-11-17"
+      "url": "https://kemdiktisaintek.go.id/news/article/pendaftar-terus-meningkat-bukti-iisma-menyita-perhatian",
+      "diakses": "2026-11-17"
     },
     {
-      "kunci": ["iisma"], "jenjang": ["S1", "D3", "D4"], "program": "IISMA (mobilitas mahasiswa ke luar negeri)", "periode": "2024",
-      "kuota": 3000, "pendaftar": 15211, "diterima": 2277, "rasio": 0.15, "keandalan": "rendah",
+      "kunci": [
+        "iisma"
+      ],
+      "jenjang": [
+        "S1",
+        "D3",
+        "D4"
+      ],
+      "program": "IISMA (mobilitas mahasiswa ke luar negeri)",
+      "periode": "2024",
+      "kuota": 3000,
+      "pendaftar": 15211,
+      "diterima": 2277,
+      "rasio": 0.15,
+      "keandalan": "rendah",
       "catatan": "Pendaftar sekitar 15.211 dan 2.277 mahasiswa lolos menurut pemberitaan. Angka antarsumber berbeda (kuota 3.000, ada laporan 2.029 penerima jalur reguler dari 9.000 lebih pendaftar).",
       "sumber": "detikEdu, Selamat 2.277 Mahasiswa Siap Jalani IISMA 2024",
-      "url": "https://www.detik.com/edu/perguruan-tinggi/d-7271819/selamat-2-277-mahasiswa-siap-jalani-iisma-2024-akan-kuliah-di-30-negara", "diakses": "2026-11-17"
+      "url": "https://www.detik.com/edu/perguruan-tinggi/d-7271819/selamat-2-277-mahasiswa-siap-jalani-iisma-2024-akan-kuliah-di-30-negara",
+      "diakses": "2026-11-17"
     },
     {
-      "kunci": ["tanoto", "teladan"], "jenjang": ["S1"], "program": "Tanoto Foundation (Beasiswa TELADAN)", "periode": "2024",
-      "kuota": null, "pendaftar": 6359, "diterima": 260, "rasio": 0.041, "keandalan": "sedang",
+      "kunci": [
+        "teladan"
+      ],
+      "jenjang": [
+        "S1"
+      ],
+      "program": "Tanoto Foundation (Beasiswa TELADAN)",
+      "periode": "2024",
+      "kuota": null,
+      "pendaftar": 6359,
+      "diterima": 260,
+      "rasio": 0.041,
+      "keandalan": "sedang",
       "catatan": "Pendaftar 6.359 (6.099 reguler dan 240 rekomendasi KIP Kuliah), terpilih 260. Rasio dihitung dari kedua angka.",
       "sumber": "Medcom, 260 Mahasiswa Terima Beasiswa Teladan 2024",
-      "url": "https://www.medcom.id/pendidikan/news-pendidikan/lKY8v0Vk-260-mahasiswa-terima-beasiswa-teladan-2024-sebagian-merupakan-penerima-kip-k", "diakses": "2026-11-17"
+      "url": "https://www.medcom.id/pendidikan/news-pendidikan/lKY8v0Vk-260-mahasiswa-terima-beasiswa-teladan-2024-sebagian-merupakan-penerima-kip-k",
+      "diakses": "2026-11-17",
+      "wajib_penyelenggara": [
+        "tanoto"
+      ]
     },
     {
-      "kunci": ["tanoto", "teladan"], "jenjang": ["S1"], "program": "Tanoto Foundation (Beasiswa TELADAN)", "periode": "2026",
-      "kuota": null, "pendaftar": 9283, "diterima": 176, "rasio": 0.019, "keandalan": "sedang",
+      "kunci": [
+        "teladan"
+      ],
+      "jenjang": [
+        "S1"
+      ],
+      "program": "Tanoto Foundation (Beasiswa TELADAN)",
+      "periode": "2026",
+      "kuota": null,
+      "pendaftar": 9283,
+      "diterima": 176,
+      "rasio": 0.019,
+      "keandalan": "sedang",
       "catatan": "176 terpilih dari 9.283 pendaftar (seleksi Juli sampai November 2025). Rasio dihitung dari kedua angka.",
       "sumber": "Indotelko, Tanoto Foundation Kukuhkan 176 Penerima Beasiswa Teladan 2026",
-      "url": "https://www.indotelko.com/read/1768517302/tanoto-foundation-kukuhkan-176-penerima-beasiswa-teladan-2026", "diakses": "2026-11-17"
+      "url": "https://www.indotelko.com/read/1768517302/tanoto-foundation-kukuhkan-176-penerima-beasiswa-teladan-2026",
+      "diakses": "2026-11-17",
+      "wajib_penyelenggara": [
+        "tanoto"
+      ]
     },
     {
-      "kunci": ["djarum"], "jenjang": ["S1", "D4"], "program": "Djarum Beasiswa Plus", "periode": "2016",
-      "kuota": null, "pendaftar": 18607, "diterima": 525, "rasio": 0.028, "keandalan": "rendah",
+      "kunci": [
+        "djarum"
+      ],
+      "jenjang": [
+        "S1",
+        "D4"
+      ],
+      "program": "Djarum Beasiswa Plus",
+      "periode": "2016",
+      "kuota": null,
+      "pendaftar": 18607,
+      "diterima": 525,
+      "rasio": 0.028,
+      "keandalan": "rendah",
       "catatan": "Data lama (2016). Pendaftar 18.607 menurut satu media (media lain menulis 18.067), penerima 525. Pendaftar nasional 2019/2020 disebut lebih dari 15.000.",
       "sumber": "Warta Ekonomi, 525 Mahasiswa Terima Djarum Beasiswa Plus 2016",
-      "url": "https://wartaekonomi.co.id/read120434/525-mahasiswa-terima-djarum-beasiswa-plus-2016", "diakses": "2026-11-17"
+      "url": "https://wartaekonomi.co.id/read120434/525-mahasiswa-terima-djarum-beasiswa-plus-2016",
+      "diakses": "2026-11-17"
     },
     {
-      "kunci": ["gates cambridge"], "jenjang": ["S2", "S3"], "program": "Gates Cambridge Scholarship", "periode": "2020",
-      "kuota": null, "pendaftar": 5506, "diterima": 78, "rasio": 0.014, "keandalan": "sedang",
+      "kunci": [
+        "gates cambridge"
+      ],
+      "jenjang": [
+        "S2",
+        "S3"
+      ],
+      "program": "Gates Cambridge Scholarship",
+      "periode": "2020",
+      "kuota": null,
+      "pendaftar": 5506,
+      "diterima": 78,
+      "rasio": 0.014,
+      "keandalan": "sedang",
       "catatan": "78 beasiswa dari 5.506 aplikasi menurut laporan tahunan Gates Cambridge Trust yang dikutip Varsity.",
       "sumber": "Varsity, Gates Cambridge Scholarship celebrates 20th anniversary",
-      "url": "https://varsity.co.uk/news/21472", "diakses": "2026-11-17"
+      "url": "https://varsity.co.uk/news/21472",
+      "diakses": "2026-11-17"
     },
     {
-      "kunci": ["chevening"], "jenjang": ["S2"], "program": "Chevening (seluruh dunia)", "periode": "2025/2026",
-      "kuota": 1500, "pendaftar": 102000, "diterima": 1500, "rasio": 0.015, "keandalan": "rendah",
+      "kunci": [
+        "chevening"
+      ],
+      "jenjang": [
+        "S2"
+      ],
+      "program": "Chevening (seluruh dunia)",
+      "periode": "2025/2026",
+      "kuota": 1500,
+      "pendaftar": 102000,
+      "diterima": 1500,
+      "rasio": 0.015,
+      "keandalan": "rendah",
       "catatan": "Lebih dari 102.000 aplikasi dan sekitar 1.500 beasiswa di seluruh dunia menurut sumber sekunder; bukan angka khusus Indonesia. Untuk Indonesia dan Timor Leste, 73 beasiswa pada 2017/2018.",
       "sumber": "Prospects (Jisc), Chevening Scholarships, dan GOV.UK untuk angka Indonesia",
-      "url": "https://www.prospects.ac.uk/postgraduate-study/funding-postgraduate-study/chevening-scholarships/", "diakses": "2026-11-17"
+      "url": "https://www.prospects.ac.uk/postgraduate-study/funding-postgraduate-study/chevening-scholarships/",
+      "diakses": "2026-11-17"
     },
     {
-      "kunci": ["fulbright", "aminef"], "jenjang": ["S2", "S3"], "program": "Fulbright AMINEF (Indonesia)", "periode": "2018",
-      "kuota": null, "pendaftar": null, "diterima": 55, "rasio": 0.08, "keandalan": "sedang",
+      "kunci": [
+        "fulbright",
+        "aminef"
+      ],
+      "jenjang": [
+        "S2",
+        "S3"
+      ],
+      "program": "Fulbright AMINEF (Indonesia)",
+      "periode": "2018",
+      "kuota": null,
+      "pendaftar": null,
+      "diterima": 55,
+      "rasio": 0.08,
+      "keandalan": "sedang",
       "catatan": "Direktur Eksekutif AMINEF menyebut hanya sekitar 8 persen pelamar yang diterima; 55 mahasiswa mendapat beasiswa pada tahun pemberitaan.",
       "sumber": "Liputan6, AMINEF beri beasiswa kepada 55 mahasiswa RI",
-      "url": "https://www.liputan6.com/global/read/3521253/3290464", "diakses": "2026-11-17"
+      "url": "https://www.liputan6.com/global/read/3521253/3290464",
+      "diakses": "2026-11-17"
     },
     {
-      "kunci": ["bidikmisi"], "jenjang": ["S1", "D3", "D4"], "program": "Bidikmisi (digantikan KIP Kuliah)", "periode": "2017",
-      "kuota": null, "pendaftar": 520688, "diterima": 80000, "rasio": 0.154, "keandalan": "sedang",
+      "kunci": [
+        "bidikmisi"
+      ],
+      "jenjang": [
+        "S1",
+        "D3",
+        "D4"
+      ],
+      "program": "Bidikmisi (digantikan KIP Kuliah)",
+      "periode": "2017",
+      "kuota": null,
+      "pendaftar": 520688,
+      "diterima": 80000,
+      "rasio": 0.154,
+      "keandalan": "sedang",
       "catatan": "Menurut pedoman resmi Bidikmisi, 520.688 pelamar pada 2017 dan sekitar 80.000 dapat diakomodasi.",
       "sumber": "Pedoman Bidikmisi 2018 (Kemenristekdikti)",
-      "url": "https://iqt.fuf.uin-alauddin.ac.id/assets/file/PEDOMAN_BIDIKMISI_SISWA_20181.pdf", "diakses": "2026-11-17"
+      "url": "https://iqt.fuf.uin-alauddin.ac.id/assets/file/PEDOMAN_BIDIKMISI_SISWA_20181.pdf",
+      "diakses": "2026-11-17"
     },
     {
-      "kunci": ["kip kuliah"], "jenjang": ["S1", "D1", "D2", "D3", "D4"], "program": "KIP Kuliah", "periode": "2024",
-      "kuota": 200000, "pendaftar": null, "diterima": null, "rasio": null, "keandalan": "sedang",
+      "kunci": [
+        "kip kuliah"
+      ],
+      "jenjang": [
+        "S1",
+        "D1",
+        "D2",
+        "D3",
+        "D4"
+      ],
+      "program": "KIP Kuliah",
+      "periode": "2024",
+      "kuota": 200000,
+      "pendaftar": null,
+      "diterima": null,
+      "rasio": null,
+      "keandalan": "sedang",
       "catatan": "Kuota penerima baru 200.000 dari total sasaran 985.577 mahasiswa (termasuk penerima berjalan). Pendaftar tidak diumumkan, jadi rasio tidak dihitung. Syarat utamanya kelayakan ekonomi, bukan persaingan nilai.",
       "sumber": "Kemendikbudristek, dikutip Republika dan Kompas, Februari 2024",
-      "url": "https://news.republika.co.id/berita/s8qlmh349/kemendikbudristek-kuota-kip-kuliah-2024-capai-985-577-mahasiswa", "diakses": "2026-11-17"
+      "url": "https://news.republika.co.id/berita/s8qlmh349/kemendikbudristek-kuota-kip-kuliah-2024-capai-985-577-mahasiswa",
+      "diakses": "2026-11-17"
     },
     {
-      "kunci": ["beasiswa unggulan"], "jenjang": ["S1", "S2", "S3"], "program": "Beasiswa Unggulan Kemendikbudristek", "periode": "2023",
-      "kuota": null, "pendaftar": null, "diterima": 2550, "rasio": null, "keandalan": "sedang",
+      "kunci": [
+        "beasiswa unggulan"
+      ],
+      "jenjang": [
+        "S1",
+        "S2",
+        "S3"
+      ],
+      "program": "Beasiswa Unggulan Kemendikbudristek",
+      "periode": "2023",
+      "kuota": null,
+      "pendaftar": null,
+      "diterima": 2550,
+      "rasio": null,
+      "keandalan": "sedang",
       "catatan": "2.550 penerima pada 2023 (748 pada 2022) menurut pedoman resmi. Pendaftar sempat diperkirakan lebih dari 100.000 pada 2021 menurut media, tetapi tidak ada angka resmi.",
       "sumber": "Pedoman Pendaftaran Beasiswa Unggulan Masyarakat Berprestasi 2024",
-      "url": "https://beasiswaunggulan.kemdikbud.go.id/wp-content/uploads/2024/06/PEDOMAN-PENDAFTARAN-BEASISWA-UNGGULAN-MASYARAKAT-BERPRESTASI-FINAL-12.pdf", "diakses": "2026-11-17"
+      "url": "https://beasiswaunggulan.kemdikbud.go.id/wp-content/uploads/2024/06/PEDOMAN-PENDAFTARAN-BEASISWA-UNGGULAN-MASYARAKAT-BERPRESTASI-FINAL-12.pdf",
+      "diakses": "2026-11-17",
+      "wajib_penyelenggara": [
+        "kementerian pendidikan",
+        "kemdik",
+        "kemendik",
+        "diktisaintek",
+        "puslapdik"
+      ]
     },
     {
-      "kunci": ["bank indonesia", "genbi"], "jenjang": ["S1", "D3", "D4"], "program": "Beasiswa Bank Indonesia (GenBI)", "periode": "2024",
-      "kuota": null, "pendaftar": null, "diterima": 12320, "rasio": null, "keandalan": "rendah",
+      "kunci": [
+        "bank indonesia",
+        "genbi"
+      ],
+      "jenjang": [
+        "S1",
+        "D3",
+        "D4"
+      ],
+      "program": "Beasiswa Bank Indonesia (GenBI)",
+      "periode": "2024",
+      "kuota": null,
+      "pendaftar": null,
+      "diterima": 12320,
+      "rasio": null,
+      "keandalan": "rendah",
       "catatan": "12.320 mahasiswa menerima beasiswa BI sepanjang 2024 menurut judul pemberitaan. Pendaftar tidak diumumkan.",
       "sumber": "Metro TV News, 12.320 Mahasiswa Dapat Beasiswa dari BI selama 2024",
-      "url": "https://www.metrotvnews.com/read/N4EC49EO-12320-mahasiswa-dapat-beasiswa-dari-bi-selama-2024", "diakses": "2026-11-17"
+      "url": "https://www.metrotvnews.com/read/N4EC49EO-12320-mahasiswa-dapat-beasiswa-dari-bi-selama-2024",
+      "diakses": "2026-11-17"
     },
     {
-      "kunci": ["monbukagakusho", "mext"], "jenjang": ["S1", "S2", "S3", "D3"], "program": "MEXT (Pemerintah Jepang), Indonesia", "periode": "2026",
-      "kuota": null, "pendaftar": null, "diterima": 58, "rasio": null, "keandalan": "sedang",
+      "kunci": [
+        "monbukagakusho",
+        "mext"
+      ],
+      "jenjang": [
+        "S1",
+        "S2",
+        "S3",
+        "D3"
+      ],
+      "program": "MEXT (Pemerintah Jepang), Indonesia",
+      "periode": "2026",
+      "kuota": null,
+      "pendaftar": null,
+      "diterima": 58,
+      "rasio": null,
+      "keandalan": "sedang",
       "catatan": "58 pemuda Indonesia menerima beasiswa MEXT untuk keberangkatan 2026. Pendaftar Indonesia tidak diumumkan.",
       "sumber": "RRI, Japan Urges Indonesian Scholarship Recipients to Strengthen Cultural Ties",
-      "url": "https://rri.co.id/en/international/2285032/japan-urges-indonesian-scholarship-recipients-to-strengthen-cultural-ties", "diakses": "2026-11-17"
+      "url": "https://rri.co.id/en/international/2285032/japan-urges-indonesian-scholarship-recipients-to-strengthen-cultural-ties",
+      "diakses": "2026-11-17"
     },
     {
-      "kunci": ["australia awards"], "jenjang": ["S2", "S3"], "program": "Australia Awards Indonesia (beasiswa jangka panjang)", "periode": "2014-2020",
-      "kuota": null, "pendaftar": null, "diterima": 2070, "rasio": null, "keandalan": "sedang",
+      "kunci": [
+        "australia awards"
+      ],
+      "jenjang": [
+        "S2",
+        "S3"
+      ],
+      "program": "Australia Awards Indonesia (beasiswa jangka panjang)",
+      "periode": "2014-2020",
+      "kuota": null,
+      "pendaftar": null,
+      "diterima": 2070,
+      "rasio": null,
+      "keandalan": "sedang",
       "catatan": "Total 2.070 penerima beasiswa jangka panjang selama 2014 sampai 2020 (rata-rata sekitar 300 per tahun). Pendaftar tidak dipublikasikan.",
       "sumber": "DFAT, Australia Awards Indonesia End-of-Program Review",
-      "url": "https://www.dfat.gov.au/sites/default/files/australia-awards-indonesia-end-program-review-report.docx", "diakses": "2026-11-17"
+      "url": "https://www.dfat.gov.au/sites/default/files/australia-awards-indonesia-end-program-review-report.docx",
+      "diakses": "2026-11-17"
+    },
+    {
+      "kunci": [
+        "türkiye",
+        "turkiye",
+        "turkey burslari"
+      ],
+      "program": "Türkiye Bursları (seluruh dunia)",
+      "periode": "2024",
+      "kuota": 5000,
+      "pendaftar": 122000,
+      "diterima": 5000,
+      "rasio": 0.041,
+      "keandalan": "rendah",
+      "catatan": "Sekitar 122 ribu aplikasi dari 171 negara pada 2024 menurut pemberitaan. Jumlah penerima sekitar 5.000 per tahun menurut panduan pihak ketiga; YTB tidak merilis angka resmi di sumber yang ditemukan. Bukan angka khusus Indonesia.",
+      "sumber": "Bengü Türk, Türkiye Bursları'na Rekor İlgi: 171 Ülkeden 122 Bin Başvuru",
+      "url": "https://www.benguturk.com/turk-dunyasi/turkiye-burslarina-rekor-ilgi-171-ulkeden-122-bin-basvuru-178548h",
+      "diakses": "2026-11-17"
+    },
+    {
+      "kunci": [
+        "sobat bumi"
+      ],
+      "jenjang": [
+        "S1",
+        "D3",
+        "D4"
+      ],
+      "program": "Beasiswa Pertamina Sobat Bumi",
+      "periode": "2025",
+      "kuota": null,
+      "pendaftar": 23313,
+      "diterima": 540,
+      "rasio": 0.023,
+      "keandalan": "sedang",
+      "catatan": "540 penerima angkatan ke-12 dari 23.313 pendaftar (2024: 19.236 pendaftar). 2023: 465 penerima dari 38 kampus mitra.",
+      "sumber": "BCA Sekuritas (berita Pertamina), Pertamina Umumkan 540 Mahasiswa Penerima Beasiswa Sobat Bumi",
+      "url": "https://bcasekuritas.co.id/latest-news/news/pertamina-umumkan-540-mahasiswa-penerima-beasiswa-sobat-bumi",
+      "diakses": "2026-11-17"
+    },
+    {
+      "kunci": [
+        "hkpfs",
+        "hong kong phd"
+      ],
+      "jenjang": [
+        "S3"
+      ],
+      "program": "Hong Kong PhD Fellowship Scheme (HKPFS)",
+      "periode": "2026/2027",
+      "kuota": 400,
+      "pendaftar": null,
+      "diterima": null,
+      "rasio": null,
+      "keandalan": "sedang",
+      "catatan": "Kuota 400 fellowship untuk 2026/27 (300 pada 2024/25, 250 pada 2019/20). Satu-satunya data pendaftar yang ditemukan sudah lama: 4.785 aplikasi dari 106 negara pada 2013/14, sehingga rasio tidak dihitung.",
+      "sumber": "HKU Graduate School, Hong Kong PhD Fellowship Scheme",
+      "url": "https://gradsch.hku.hk/hkpfs",
+      "diakses": "2026-11-17"
+    },
+    {
+      "kunci": [
+        "pmdsu"
+      ],
+      "jenjang": [
+        "S3"
+      ],
+      "program": "PMDSU (Magister Menuju Doktor untuk Sarjana Unggul)",
+      "periode": "2024",
+      "kuota": null,
+      "pendaftar": null,
+      "diterima": 200,
+      "rasio": null,
+      "keandalan": "sedang",
+      "catatan": "200 penerima batch VIII (2024). Batch II 321 penerima, batch III 243. Pendaftar tidak diumumkan.",
+      "sumber": "Kemdiktisaintek, Pengumuman Penerima Beasiswa PMDSU Batch VIII",
+      "url": "https://kemdiktisaintek.go.id/announcement/article/pengumuman-penerima-beasiswa-pmdsu-batch-viii",
+      "diakses": "2026-11-17"
+    },
+    {
+      "kunci": [
+        "5000 doktor",
+        "magister lanjut doktor",
+        "beasiswa doktor"
+      ],
+      "wajib_penyelenggara": [
+        "agama",
+        "kemenag"
+      ],
+      "jenjang": [
+        "S3"
+      ],
+      "program": "Beasiswa 5000 Doktor Kemenag",
+      "periode": "2015-2020",
+      "kuota": null,
+      "pendaftar": null,
+      "diterima": 2769,
+      "rasio": null,
+      "keandalan": "sedang",
+      "catatan": "Kumulatif lima tahun: 2.222 penerima studi dalam negeri dan 547 luar negeri. Perekrutan baru sempat berhenti 2020 dan 2021 lalu dibuka lagi 2022 lewat skema Kemenag-LPDP. Pendaftar tidak diumumkan.",
+      "sumber": "NU Online, Program 5000 Doktor Siapkan Duta Moderasi Beragama",
+      "url": "https://nu.or.id/nasional/program-5000-doktor-siapkan-duta-moderasi-beragama-2TBXb",
+      "diakses": "2026-11-17"
+    },
+    {
+      "kunci": [
+        "pbsb",
+        "santri berprestasi",
+        "beasiswa santri"
+      ],
+      "wajib_penyelenggara": [
+        "agama",
+        "kemenag",
+        "rmi"
+      ],
+      "jenjang": [
+        "S1",
+        "S2",
+        "S3"
+      ],
+      "program": "Program Beasiswa Santri Berprestasi (PBSB) Kemenag",
+      "periode": "2024",
+      "kuota": 1000,
+      "pendaftar": null,
+      "diterima": null,
+      "rasio": null,
+      "keandalan": "sedang",
+      "catatan": "Target kuota PBSB 2024 sebanyak 1.000 santri (600 penerima pada 2022). Pendaftar tidak diumumkan.",
+      "sumber": "Detik Jogja, Beasiswa Santri Kemenag 2024 Resmi Dibuka",
+      "url": "https://www.detik.com/jogja/kota-pelajar/d-7422015/beasiswa-santri-kemenag-2024-resmi-dibuka-ini-jadwal-dan-persyaratannya",
+      "diakses": "2026-11-17"
+    },
+    {
+      "kunci": [
+        "beasiswa pendidikan indonesia",
+        "bpi"
+      ],
+      "wajib_penyelenggara": [
+        "kementerian pendidikan",
+        "kemdik",
+        "kemendik",
+        "diktisaintek",
+        "puslapdik"
+      ],
+      "program": "Beasiswa Pendidikan Indonesia (BPI) Kemdikbudristek",
+      "periode": "2024",
+      "kuota": null,
+      "pendaftar": 4000,
+      "diterima": null,
+      "rasio": null,
+      "keandalan": "rendah",
+      "catatan": "Sekitar 4.000 pengusul (dalam dan luar negeri) menurut Kepala Balai Pembiayaan Pendidikan Tinggi. Penerima dalam negeri disebut 8.644 orang pada laporan lain, lebih besar dari pengusul, jadi satuan hitungnya berbeda dan rasio tidak dihitung.",
+      "sumber": "Koran Jakarta, 4.000 Pendaftar Ikuti BPI 2024",
+      "url": "https://koran-jakarta.com/2024-08-06/4-000-pendaftar-ikuti-bpi-2024",
+      "diakses": "2026-11-17"
+    },
+    {
+      "kunci": [
+        "chinese government scholarship",
+        "csc"
+      ],
+      "program": "Chinese Government Scholarship (Indonesia)",
+      "periode": "2017",
+      "kuota": 215,
+      "pendaftar": null,
+      "diterima": null,
+      "rasio": null,
+      "keandalan": "rendah",
+      "catatan": "Data lama: pemerintah Tiongkok menyediakan 215 kuota bagi mahasiswa Indonesia pada 2017. Kuota 2026/2027 tidak disebut pada sumber yang ditemukan.",
+      "sumber": "Kedutaan Besar Tiongkok di Indonesia, Pengumuman Beasiswa",
+      "url": "https://id.china-embassy.gov.cn/indo/whjy/lxzg/201708/t20170822_2347394.htm",
+      "diakses": "2026-11-17"
     }
   ]
 }

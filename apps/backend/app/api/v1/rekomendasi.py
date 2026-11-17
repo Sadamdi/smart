@@ -58,8 +58,9 @@ def daftar(
     p: SaatIni,
     kategori: Annotated[Kategori | None, Query()] = None,
     wilayah: Annotated[Wilayah | None, Query(description="dalam atau luar negeri")] = None,
+    batas: Annotated[int | None, Query(ge=1, le=200, description="Ambil hanya sekian teratas (Beranda memakai 1)")] = None,
 ) -> Amplop[list[RekomendasiOut]]:
-    baris = layanan.daftar(sesi, p, date.today(), kategori, wilayah=wilayah)
+    baris = layanan.daftar(sesi, p, date.today(), kategori, wilayah=wilayah, batas=batas)
     sesi.commit()
     return Amplop(data=[_item(r, b, p) for r, b in baris])
 
