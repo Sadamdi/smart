@@ -312,8 +312,18 @@ def test_kelompok_sasaran_khusus_tidak_dinyatakan_memenuhi():
 
 
 def test_kata_beasiswa_bukan_kelompok_pelajar():
-    umum = [("jenjang", {"nilai": ["S1"]}), ("lainnya", {"teks": "Penerima beasiswa lain tidak diperkenankan"})]
-    assert nilai_kelayakan(umum, _profil(jenjang="S1"), HARI).kategori == MEMENUHI
+    umum = [
+        ("jenjang", {"nilai": ["S1"]}),
+        ("ipk_minimum", {"nilai": 3.0}),
+        ("lainnya", {"teks": "Penerima beasiswa lain tidak diperkenankan"}),
+    ]
+    assert nilai_kelayakan(umum, _profil(jenjang="S1", ipk=3.5), HARI).kategori == MEMENUHI
+
+
+def test_hanya_jenjang_tidak_dinyatakan_memenuhi():
+    h = nilai_kelayakan([("jenjang", {"nilai": ["S1"]})], _profil(jenjang="S1"), HARI)
+    assert h.kategori == HAMPIR and h.skor <= 0.5
+    assert "laman resmi" in h.catatan_kekurangan[0]
 
 
 def test_syarat_turunan_dari_nama_dan_penyelenggara():
