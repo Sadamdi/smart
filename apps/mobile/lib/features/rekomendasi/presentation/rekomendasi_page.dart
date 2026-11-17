@@ -109,6 +109,38 @@ class _RekomendasiPageState extends State<RekomendasiPage> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
+                  Text('Urutkan', style: t.labelLarge),
+                  const SizedBox(width: 8),
+                  for (final (kode, label) in const [
+                    ('peluang', 'Peluang tertinggi'),
+                    ('tenggat', 'Tenggat terdekat'),
+                    ('kecocokan', 'Kecocokan syarat'),
+                  ]) ...[
+                    ChipFilter(
+                      label: label,
+                      terpilih: _c.urut.value == kode,
+                      onTap: () => _c.pilihUrut(kode),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Container(width: 1, height: 20, color: Warna.container4),
+                  const SizedBox(width: 8),
+                  for (final m in const [0, 10, 30]) ...[
+                    ChipFilter(
+                      label: m == 0 ? 'Semua peluang' : 'Peluang $m%+',
+                      terpilih: _c.minPeluang.value == m,
+                      onTap: () => _c.pilihMinPeluang(m),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
                   ChipFilter(
                     label: hitung(null, 'Semua'),
                     terpilih: kategori == null,

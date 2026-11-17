@@ -8,7 +8,9 @@ import { Tampil, pesanGalat } from "@/components/state";
 import { adaPenilaian as adaSkor, BarisSyarat, CincinSkor, warnaSkor } from "@/components/Skor";
 import { ChipStatus, JudulBagian, Kartu, Lencana, Pilihan, Tombol, cx } from "@/components/ui";
 import { kirim } from "@/lib/api";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { kunci, useAksi, useChecklist, useDetail, useTersimpan } from "@/lib/hooks";
+import type { Tersimpan } from "@/lib/types";
 import { LABEL_SYARAT, labelSisa, nilaiBatas, sisaHari, tanggalIndo } from "@/lib/format";
 
 const RENCANA: Record<string, string> = {
@@ -42,12 +44,24 @@ export default function DetailBeasiswa() {
   const tersimpanKah = Boolean(simpanan);
   const berkasSaya = checklist.data?.find((c) => c.beasiswa.id === id);
 
-  const simpan = useAksi(
-    () => (tersimpanKah ? kirim(`/beasiswa/${id}/interaksi/simpan`, "DELETE") : kirim(`/beasiswa/${id}/interaksi`, "POST", { aksi: "simpan" })),
-    kunci.tersimpan,
-    kunci.checklist,
-    kunci.kalender,
-  );
+  // Simpan optimis: tombol berubah seketika, server menyusul di latar belakang, dibatalkan bila gagal.
+  const qc = useQueryClient();
+  const simpan = useMutation({
+    mutationFn: () => (tersimpanKah ? kirim(`/beasiswa/${id}/interaksi/simpan`, "DELETE") : kirim(`/beasiswa/${id}/interaksi`, "POST", { aksi: "simpan" })),
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: kunci.tersimpan });
+      const sebelum = qc.getQueryData<Tersimpan[]>(kunci.tersimpan);
+      const ringkas = detail.data;
+      qc.setQueryData<Tersimpan[]>(kunci.tersimpan, (lama = []) =>
+        tersimpanKah ? lama.filter((t) => t.beasiswa.id !== id) : ringkas ? [...lama, { beasiswa: ringkas }] : lama,
+      );
+      return { sebelum };
+    },
+    onError: (_e, _v, konteks) => {
+      if (konteks?.sebelum) qc.setQueryData(kunci.tersimpan, konteks.sebelum);
+    },
+    onSettled: () => Promise.all([kunci.tersimpan, kunci.checklist, kunci.kalender].map((k) => qc.invalidateQueries({ queryKey: [...k] }))),
+  });
   const rencana = useAksi(
     (status: string) => kirim(`/beasiswa/${id}/interaksi`, "POST", { aksi: "rencana_daftar", status_rencana: status }),
     kunci.tersimpan,
@@ -62,7 +76,7 @@ export default function DetailBeasiswa() {
       varian={tersimpanKah ? "sekunder" : "utama"}
       className={kelas}
       onClick={() => simpan.mutate()}
-      disabled={simpan.isPending || tersimpan.isPending}
+      disabled={tersimpan.isPending}
     >
       {tersimpanKah ? <BookmarkCheck className="h-4 w-4" aria-hidden /> : <Bookmark className="h-4 w-4" aria-hidden />}
       {tersimpanKah ? "Tersimpan" : "Simpan beasiswa"}
