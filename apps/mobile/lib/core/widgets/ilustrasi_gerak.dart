@@ -179,16 +179,16 @@ class _PainterJamPasir extends CustomPainter {
       ..lineTo(36, 98)
       ..lineTo(56, 60)
       ..close();
-    canvas.drawPath(kaca, Paint()..color = _navy.withValues(alpha: 0.07));
+    canvas.drawPath(kaca, Paint()..color = Warna.navy.withValues(alpha: 0.07));
     canvas.drawPath(
       kaca,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3.4
         ..strokeJoin = StrokeJoin.round
-        ..color = _navy,
+        ..color = Warna.navy,
     );
-    final tutup = Paint()..color = _navy;
+    final tutup = Paint()..color = Warna.navy;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         const Rect.fromLTWH(30, 14, 60, 8),
