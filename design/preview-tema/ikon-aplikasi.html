@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><title>SMART, ikon aplikasi</title>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--n:#143F7C;--b:#3E83D6;--l:#BCD2F1;--g:#F5B73B}
+*{box-sizing:border-box;margin:0}
+body{background:#F3F6FB;font-family:'IBM Plex Sans',sans-serif;color:#10213a;padding:24px;width:1500px}
+h1{font:700 22px 'Familjen Grotesk';color:var(--n)}
+.sub{font-size:13px;color:#4b5d78;margin:4px 0 18px;max-width:1000px;line-height:1.5}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.c{background:#fff;border:1px solid #d3deee;border-radius:8px;padding:16px 14px}
+.big{width:120px;height:120px;margin:0 auto 12px;border-radius:27%;overflow:hidden;box-shadow:0 6px 16px rgba(20,63,124,.22)}
+.big svg,.s svg{width:100%;height:100%;display:block}
+.row{display:flex;gap:10px;align-items:flex-end;justify-content:center;margin-bottom:12px}
+.s{overflow:hidden;box-shadow:0 2px 5px rgba(20,63,124,.2)}
+.r{border-radius:27%}.o{border-radius:50%}
+.no{font:700 11px 'Familjen Grotesk';color:var(--b);letter-spacing:.08em}
+h2{font:700 15px 'Familjen Grotesk';color:var(--n);margin:2px 0 4px}
+p{font-size:12px;line-height:1.45;color:#3b4d68}
+.hs{margin-top:22px;background:linear-gradient(160deg,#cfe0f6,#e8f0fb);border-radius:16px;padding:22px;display:flex;gap:26px;align-items:flex-start}
+.hs .lbl{font:700 13px 'Familjen Grotesk';color:var(--n);width:150px}
+.app{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;color:#26405f;width:64px}
+.app .ic{width:58px;height:58px;border-radius:27%;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.app .ic svg{width:100%;height:100%;display:block}
+.fake{width:58px;height:58px;border-radius:27%}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><defs><polygon id="star" points="0,-9 2.1,-2.9 8.6,-2.8 3.4,1.1 5.3,7.3 0,3.6 -5.3,7.3 -3.4,1.1 -8.6,-2.8 -2.1,-2.9"/></defs></svg>
+<h1>SMART, ikon aplikasi</h1>
+<div class="sub">Enam kandidat ikon dalam bentuk yang dipakai di ponsel: persegi membulat (iOS dan Android modern), lingkaran (Android adaptif), dan ukuran kecil 48, 32, 24 dp untuk menguji keterbacaan. Di bawahnya ikon diletakkan di antara aplikasi lain.</div>
+<div class="grid" id="g"></div>
+<div class="hs"><div class="lbl">Di layar utama<br><span style="font:400 12px 'IBM Plex Sans';color:#4b5d78">Ikon yang bagus harus tetap menonjol di antara aplikasi lain.</span></div><div id="hs" style="display:flex;gap:14px;flex-wrap:wrap"></div></div>
+<script>
+const f=n=>+n.toFixed(2);
+function pt(cx,cy,r,fr){const a=Math.PI*(1-fr);return [cx+r*Math.cos(a),cy-r*Math.sin(a)]}
+function arc(cx,cy,r,f0,f1,col,w){const [x0,y0]=pt(cx,cy,r,f0),[x1,y1]=pt(cx,cy,r,f1);return `<path d="M${f(x0)} ${f(y0)}A${r} ${r} 0 0 1 ${f(x1)} ${f(y1)}" fill="none" stroke="${col}" stroke-width="${w}"/>`}
+function needle(cx,cy,len,fr,col,w){const [x,y]=pt(cx,cy,len,fr);return `<line x1="${cx}" y1="${cy}" x2="${f(x)}" y2="${f(y)}" stroke="${col}" stroke-width="${w}"/>`}
+const K={
+ // A: biru tua, busur emas, jarum putih
+ A:`<rect width="120" height="120" fill="#143F7C"/>${arc(60,76,42,0,1,'#2A5CA0',10)}${arc(60,76,42,0,.82,'#F5B73B',10)}${needle(60,76,36,.82,'#fff',4.5)}<circle cx="60" cy="76" r="7" fill="#fff"/>`,
+ // B: latar biru muda, tiga pita, jarum bintang
+ B:`<rect width="120" height="120" fill="#E3EEFF"/>${arc(60,76,42,0,.45,'#BCD2F1',10)}${arc(60,76,42,.45,.75,'#3E83D6',10)}${arc(60,76,42,.75,1,'#143F7C',10)}${needle(60,76,30,.86,'#143F7C',4)}<use href="#star" fill="#F5B73B" stroke="#fff" stroke-width="1.2" transform="translate(${f(pt(60,76,38,.86)[0])} ${f(pt(60,76,38,.86)[1])}) scale(1.25)"/><circle cx="60" cy="76" r="6" fill="#143F7C"/>`,
+ // C: biru tua, tiga pita, jarum bintang
+ C:`<rect width="120" height="120" fill="#143F7C"/>${arc(60,76,42,0,.45,'#7FA8E0',10)}${arc(60,76,42,.45,.75,'#BCD2F1',10)}${arc(60,76,42,.75,1,'#F5B73B',10)}${needle(60,76,28,.86,'#fff',4)}<use href="#star" fill="#fff" transform="translate(${f(pt(60,76,36,.86)[0])} ${f(pt(60,76,36,.86)[1])}) scale(1.1)"/><circle cx="60" cy="76" r="6" fill="#fff"/>`,
+ // D: minimal, hanya jarum dan bintang besar (paling terbaca kecil)
+ D:`<rect width="120" height="120" fill="#0F3470"/>${arc(60,80,40,0,1,'#2A5CA0',6)}<line x1="60" y1="80" x2="84" y2="44" stroke="#fff" stroke-width="7"/><circle cx="60" cy="80" r="9" fill="#fff"/><use href="#star" fill="#F5B73B" transform="translate(88 38) scale(2.1)"/>`,
+ // E: tangga buku
+ E:`<rect width="120" height="120" fill="#143F7C"/><rect x="16" y="82" width="88" height="16" fill="#BCD2F1"/><rect x="30" y="66" width="62" height="16" fill="#3E83D6"/><rect x="44" y="50" width="36" height="16" fill="#fff"/><use href="#star" fill="#F5B73B" transform="translate(62 36) scale(1.5)"/>`,
+ // F: toga lipat
+ F:`<rect width="120" height="120" fill="#143F7C"/><path d="M36 62V84C45 92 75 92 84 84V62L60 74Z" fill="#7FA8E0"/><polygon points="60,52 60,22 14,52" fill="#BCD2F1"/><polygon points="60,52 60,22 106,52" fill="#fff"/><polygon points="60,52 106,52 60,82" fill="#3E83D6"/><polygon points="60,52 60,82 14,52" fill="#7FA8E0"/><line x1="106" y1="52" x2="106" y2="78" stroke="#F5B73B" stroke-width="3.5"/><rect x="101" y="78" width="10" height="13" fill="#F5B73B"/>`
+};
+const info={A:['Gauge emas','Paling sederhana. Busur emas, jarum putih. Mudah dikenali.'],B:['Gauge pita, terang','Latar biru muda dan tiga pita. Cocok dengan tema pasteline dan ikon terang.'],C:['Gauge pita, gelap','Tiga pita kategori dan bintang di ujung jarum. Paling kaya makna.'],D:['Jarum dan bintang','Paling minimal. Satu jarum menunjuk bintang. Paling terbaca di ukuran kecil.'],E:['Tangga buku','Bentuk yang Anda suka. Jelas dan hangat, tetapi kurang menyiratkan skor.'],F:['Toga lipat','Bentuk yang Anda suka. Dikenali sebagai pendidikan, tetapi paling umum.']};
+const g=document.getElementById('g');
+for(const k of 'ABCDEF'){
+ const s=`<svg viewBox="0 0 120 120">${K[k]}</svg>`;
+ g.insertAdjacentHTML('beforeend',`<div class="c"><div class="big">${s}</div><div class="row"><div class="s r" style="width:48px;height:48px">${s}</div><div class="s r" style="width:32px;height:32px">${s}</div><div class="s r" style="width:24px;height:24px">${s}</div><div class="s o" style="width:48px;height:48px">${s}</div></div><div class="no">${k}</div><h2>${info[k][0]}</h2><p>${info[k][1]}</p></div>`);
+}
+const hs=document.getElementById('hs');
+const dummy=[['Foto','#8bc6a5'],['Peta','#e3b66b'],['Surel','#e58c85'],['Catatan','#e9d66a'],['Musik','#8e9fd8'],['Cuaca','#79b7e6'],['Kamera','#9aa3ad'],['Jam','#444c57']];
+function row(k){let h='';dummy.slice(0,3).forEach(d=>h+=`<div class="app"><div class="fake" style="background:${d[1]}"></div>${d[0]}</div>`);h+=`<div class="app"><div class="ic"><svg viewBox="0 0 120 120">${K[k]}</svg></div><b>SMART</b></div>`;dummy.slice(3,6).forEach(d=>h+=`<div class="app"><div class="fake" style="background:${d[1]}"></div>${d[0]}</div>`);return `<div style="display:flex;gap:10px;background:rgba(255,255,255,.45);padding:12px;border-radius:14px">${h}</div>`}
+'ACD'.split('').forEach(k=>hs.insertAdjacentHTML('beforeend',row(k)));
+</script></body></html>

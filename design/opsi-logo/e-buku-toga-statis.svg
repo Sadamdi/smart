@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="SMART">
+  
+  <path class="badan" d="M25 47V63C25 71 75 71 75 63V47L50 57Z" fill="#0E2D5A"/>
+  <path class="k kiri" d="M50 13L7 33L50 55Z" fill="#143F7C"/>
+  <path class="k kanan" d="M50 13L93 33L50 55Z" fill="#2B6BC0"/>
+  <path d="M50 13V55" stroke="#EAF1FF" stroke-width="1.6"/>
+  <g class="jumbai">
+    <path d="M87 34V60" stroke="#F5B73B" stroke-width="3" stroke-linecap="round"/>
+    <path class="bt" d="M87 59L89 64L94 66L89 68L87 73L85 68L80 66L85 64Z" fill="#F5B73B"/>
+  </g>
+</svg>
