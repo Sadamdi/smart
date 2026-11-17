@@ -93,7 +93,6 @@
     },
     {
       "kunci": [
-        "tanoto",
         "teladan"
       ],
       "jenjang": [
@@ -109,11 +108,13 @@
       "catatan": "Pendaftar 6.359 (6.099 reguler dan 240 rekomendasi KIP Kuliah), terpilih 260. Rasio dihitung dari kedua angka.",
       "sumber": "Medcom, 260 Mahasiswa Terima Beasiswa Teladan 2024",
       "url": "https://www.medcom.id/pendidikan/news-pendidikan/lKY8v0Vk-260-mahasiswa-terima-beasiswa-teladan-2024-sebagian-merupakan-penerima-kip-k",
-      "diakses": "2026-11-17"
+      "diakses": "2026-11-17",
+      "wajib_penyelenggara": [
+        "tanoto"
+      ]
     },
     {
       "kunci": [
-        "tanoto",
         "teladan"
       ],
       "jenjang": [
@@ -129,7 +130,10 @@
       "catatan": "176 terpilih dari 9.283 pendaftar (seleksi Juli sampai November 2025). Rasio dihitung dari kedua angka.",
       "sumber": "Indotelko, Tanoto Foundation Kukuhkan 176 Penerima Beasiswa Teladan 2026",
       "url": "https://www.indotelko.com/read/1768517302/tanoto-foundation-kukuhkan-176-penerima-beasiswa-teladan-2026",
-      "diakses": "2026-11-17"
+      "diakses": "2026-11-17",
+      "wajib_penyelenggara": [
+        "tanoto"
+      ]
     },
     {
       "kunci": [
