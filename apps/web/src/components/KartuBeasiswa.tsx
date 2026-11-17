@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { labelSisa, sisaHari, tanggalIndo } from "@/lib/format";
 import type { BeasiswaRingkas } from "@/lib/types";
-import { adaAngka, adaPenilaian, BarisSyarat, CincinSkor, type KelayakanKartu, warnaSkor } from "./Skor";
+import { adaPenilaian, BarisSyarat, CincinSkor, type KelayakanKartu, warnaSkor } from "./Skor";
 import { cx, KotakIkon, Lencana } from "./ui";
 
 export function KartuBeasiswa({
@@ -26,7 +26,7 @@ export function KartuBeasiswa({
       {kepala && <div className="relative mb-3">{kepala}</div>}
       <div className="flex items-start gap-3">
         {kel ? (
-          <CincinSkor skor={adaAngka(kel) ? kel.skor_kelayakan : null} warna={warnaSkor(kel.kategori)} />
+          <CincinSkor skor={kel.estimasi_peluang ?? null} warna={warnaSkor(kel.kategori)} />
         ) : (
           <KotakIkon>
             <GraduationCap className="h-5 w-5" aria-hidden />

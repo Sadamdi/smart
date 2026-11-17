@@ -13,6 +13,7 @@ type Kolom = { kunci: string; label: string; pilihan?: string[]; angka?: boolean
 
 const TINGKAT = ["sekolah", "kota", "provinsi", "nasional", "internasional"];
 const JENJANG = ["D3", "D4", "S1", "S2", "S3"];
+const JENIS_SERTIFIKAT = ["keahlian", "bahasa", "kepanitiaan", "pelatihan", "kompetensi", "lainnya"];
 
 const DAFTAR: { kunci: "organisasi" | "prestasi" | "sertifikat" | "pengalaman"; judul: string; kolom: Kolom[] }[] = [
   {
@@ -37,8 +38,9 @@ const DAFTAR: { kunci: "organisasi" | "prestasi" | "sertifikat" | "pengalaman"; 
     kunci: "sertifikat",
     judul: "Sertifikat",
     kolom: [
-      { kunci: "nama", label: "Nama sertifikat", lebar: "sm:col-span-5" },
-      { kunci: "penerbit", label: "Penerbit", lebar: "sm:col-span-4" },
+      { kunci: "nama", label: "Nama sertifikat", lebar: "sm:col-span-4" },
+      { kunci: "jenis", label: "Jenis", pilihan: JENIS_SERTIFIKAT, lebar: "sm:col-span-3" },
+      { kunci: "penerbit", label: "Penerbit", lebar: "sm:col-span-3" },
       { kunci: "tahun", label: "Tahun", angka: true, lebar: "sm:col-span-2" },
     ],
   },

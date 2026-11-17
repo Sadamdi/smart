@@ -11,14 +11,14 @@ const dasar = { id: "1", nama: "Beasiswa Uji", tautan_resmi: "https://contoh.id"
 
 describe("KartuBeasiswa dengan skor kelayakan", () => {
   it("menampilkan cincin skor dan syarat terpenuhi X dari Y", () => {
-    render(<KartuBeasiswa beasiswa={dasar} kelayakan={{ kategori: "memenuhi", skor_kelayakan: 82, syarat_terpenuhi: 5, syarat_total: 6 }} />);
-    expect(screen.getByRole("img", { name: "Skor kelayakan 82 persen" })).toBeTruthy();
+    render(<KartuBeasiswa beasiswa={dasar} kelayakan={{ kategori: "memenuhi", skor_kelayakan: 82, estimasi_peluang: 34, syarat_terpenuhi: 5, syarat_total: 6 }} />);
+    expect(screen.getByRole("img", { name: "Estimasi peluang 34 persen" })).toBeTruthy();
     expect(screen.getByText("Syarat terpenuhi 5 dari 6")).toBeTruthy();
   });
 
   it("tanpa syarat terukur tidak menampilkan angka", () => {
     render(<KartuBeasiswa beasiswa={dasar} kelayakan={{ kategori: "hampir_memenuhi", skor_kelayakan: null, syarat_terpenuhi: 0, syarat_total: 0 }} />);
-    expect(screen.getByRole("img", { name: "Skor kelayakan belum tersedia" })).toBeTruthy();
+    expect(screen.getByRole("img", { name: "Estimasi peluang belum tersedia" })).toBeTruthy();
     expect(screen.getByText("Syarat belum tercatat, cek laman resmi")).toBeTruthy();
     expect(screen.queryByText(/Syarat terpenuhi/)).toBeNull();
   });

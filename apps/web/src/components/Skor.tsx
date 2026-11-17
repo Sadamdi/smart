@@ -4,6 +4,8 @@ import { cx } from "./ui";
 export type KelayakanKartu = {
   kategori?: string | null;
   skor_kelayakan?: number | null;
+  /** Estimasi peluang diterima, 2 sampai 90. Kosong bila belum ada syarat terukur. */
+  estimasi_peluang?: number | null;
   syarat_terpenuhi?: number;
   syarat_total?: number;
   luar_negeri?: boolean;
@@ -11,8 +13,9 @@ export type KelayakanKartu = {
 
 /** Ada penilaian bila server mengirim kolom skor (server lama tidak mengirimnya, kartu memakai tampilan lama). */
 export const adaPenilaian = (k?: KelayakanKartu | null): k is KelayakanKartu =>
-  !!k && ("skor_kelayakan" in k || "syarat_total" in k || "luar_negeri" in k);
-export const adaAngka = (k: KelayakanKartu) => k.skor_kelayakan != null && (k.syarat_total ?? 0) > 0;
+  !!k && ("skor_kelayakan" in k || "syarat_total" in k || "luar_negeri" in k || "estimasi_peluang" in k);
+export const adaAngka = (k: KelayakanKartu) => k.estimasi_peluang != null;
+export const adaSyarat = (k: KelayakanKartu) => (k.syarat_total ?? 0) > 0;
 
 export const WARNA_SKOR: Record<string, string> = {
   memenuhi: "var(--ok)",
@@ -27,7 +30,7 @@ export function CincinSkor({ skor, warna, ukuran = 56, tebal = 6 }: { skor: numb
   const keliling = 2 * Math.PI * r;
   const isi = skor == null ? 0 : Math.max(0, Math.min(100, skor)) / 100;
   return (
-    <span className="relative inline-flex shrink-0" style={{ width: ukuran, height: ukuran }} role="img" aria-label={skor == null ? "Skor kelayakan belum tersedia" : `Skor kelayakan ${skor} persen`}>
+    <span className="relative inline-flex shrink-0" style={{ width: ukuran, height: ukuran }} role="img" aria-label={skor == null ? "Estimasi peluang belum tersedia" : `Estimasi peluang ${skor} persen`}>
       <svg width={ukuran} height={ukuran} viewBox={`0 0 ${ukuran} ${ukuran}`} aria-hidden>
         <circle cx={ukuran / 2} cy={ukuran / 2} r={r} fill="none" stroke="var(--c4)" strokeWidth={tebal} />
         {skor != null && skor > 0 && (
@@ -45,8 +48,8 @@ export function CincinSkor({ skor, warna, ukuran = 56, tebal = 6 }: { skor: numb
           />
         )}
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center font-extrabold leading-none text-navy" style={{ fontSize: ukuran * 0.3 }}>
-        {skor == null ? <span className="text-muted">-</span> : <>{skor}<span className="font-bold text-muted" style={{ fontSize: ukuran * 0.16 }}>%</span></>}
+      <span className="absolute inset-0 flex items-center justify-center font-extrabold leading-none text-navy" style={{ fontSize: ukuran * ((skor ?? 0) >= 100 ? 0.2 : 0.26) }}>
+        {skor == null ? <span className="text-muted">-</span> : <>{skor}<span className="font-bold text-muted" style={{ fontSize: ukuran * ((skor ?? 0) >= 100 ? 0.1 : 0.12) }}>%</span></>}
       </span>
     </span>
   );
@@ -65,7 +68,7 @@ export function TitikSyarat({ terpenuhi, total, warna }: { terpenuhi: number; to
 
 /** Baris ringkas di kartu: titik syarat dan "Syarat terpenuhi X dari Y", atau penjelasan bila belum ada syarat terukur. */
 export function BarisSyarat({ k }: { k: KelayakanKartu }) {
-  if (!adaAngka(k)) return <p className="text-xs font-semibold text-muted">Syarat belum tercatat, cek laman resmi</p>;
+  if (!adaSyarat(k)) return <p className="text-xs font-semibold text-muted">Syarat belum tercatat, cek laman resmi</p>;
   return (
     <p className="flex items-center gap-2 text-xs font-semibold text-ink">
       <TitikSyarat terpenuhi={k.syarat_terpenuhi ?? 0} total={k.syarat_total ?? 0} warna={warnaSkor(k.kategori)} />
