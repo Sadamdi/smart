@@ -136,10 +136,16 @@ class _Cangkang extends StatelessWidget {
         shell.goBranch(0);
       },
       child: Scaffold(
-        body: Column(
+        // Spanduk melayang di atas isi (tanpa menggeser tata letak) dan tidak menahan sentuhan saat kosong.
+        body: Stack(
           children: [
-            const SafeArea(bottom: false, child: BannerPerbarui()),
-            Expanded(child: shell),
+            shell,
+            const Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              child: SafeArea(bottom: false, child: BannerPerbarui()),
+            ),
           ],
         ),
         bottomNavigationBar: DecoratedBox(
