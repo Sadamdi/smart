@@ -73,6 +73,18 @@ export type Persyaratan = {
   catatan?: string | null;
 };
 export type BerkasWajib = { id: string; nama_berkas: string };
+export type StatistikSeleksi = {
+  program: string;
+  periode: string;
+  kuota?: number | null;
+  pendaftar?: number | null;
+  diterima?: number | null;
+  rasio?: number | null;
+  keandalan?: string;
+  catatan?: string | null;
+  sumber: string;
+  url: string;
+};
 export type BeasiswaDetail = BeasiswaRingkas & {
   manfaat?: string | null;
   tanggal_diperiksa?: string | null;
@@ -83,6 +95,8 @@ export type BeasiswaDetail = BeasiswaRingkas & {
   alasan?: string[];
   catatan_kekurangan?: string[];
   alasan_peluang?: string[];
+  dasar_peluang?: "statistik" | "perkiraan" | null;
+  statistik_seleksi?: StatistikSeleksi[];
 };
 export type DetailAdmin = BeasiswaDetail & { status: string; alasan_ditandai?: string | null };
 export type AntreanItem = BeasiswaRingkas & { status: string; alasan_ditandai?: string | null; nama_sumber: string };

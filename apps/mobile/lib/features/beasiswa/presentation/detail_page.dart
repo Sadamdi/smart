@@ -194,6 +194,10 @@ class _Isi extends StatelessWidget {
             alasan: detail.alasanPeluang,
           ),
         ],
+        if (detail.ringkas.kelayakan != null) ...[
+          const SizedBox(height: 12),
+          _DataSeleksi(statistik: detail.statistik),
+        ],
         const SizedBox(height: 16),
         _KotakInfo(
           warnaLatar: dekat ? Warna.errorSoft : Warna.container2,
@@ -567,6 +571,74 @@ class _KartuSkor extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+String _ribuan(int n) =>
+    n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => '.');
+
+/// Data seleksi sebelumnya sebagai dasar estimasi peluang, lengkap dengan sumbernya. Tanpa data, dinyatakan terus terang.
+class _DataSeleksi extends StatelessWidget {
+  const _DataSeleksi({required this.statistik});
+
+  final List<StatistikSeleksi> statistik;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Warna.kartu,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Warna.container4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Data seleksi sebelumnya', style: t.titleSmall),
+          const SizedBox(height: 6),
+          if (statistik.isEmpty)
+            Text(
+              'Belum ada data resmi jumlah pendaftar dan penerima untuk program ini. Estimasi memakai perkiraan tingkat persaingan umum, bukan data seleksi program ini.',
+              style: t.bodySmall,
+            )
+          else
+            for (final s in statistik) ...[
+              Text(
+                '${s.program}, ${s.periode}',
+                style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              Text(
+                [
+                  if (s.kuota != null) 'kuota ${_ribuan(s.kuota!)}',
+                  if (s.pendaftar != null) '${_ribuan(s.pendaftar!)} pendaftar',
+                  if (s.diterima != null) '${_ribuan(s.diterima!)} diterima',
+                  if (s.rasio != null)
+                    'rasio sekitar ${(s.rasio! * 100).round()}%',
+                ].join(', '),
+                style: t.bodySmall,
+              ),
+              if (s.catatan != null)
+                Text(s.catatan!, style: t.bodySmall?.copyWith(fontSize: 11.5)),
+              InkWell(
+                onTap: () => Get.find<PembukaTautan>().buka(Uri.parse(s.url)),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    'Sumber: ${s.sumber}',
+                    style: t.bodySmall?.copyWith(
+                      color: Warna.primary,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ),
+            ],
         ],
       ),
     );
