@@ -54,3 +54,17 @@ describe("Ilustrasi bergerak", () => {
     render(<JamPasir />);
   });
 });
+
+import { daftarTindakan } from "@/lib/admin";
+
+describe("daftarTindakan admin", () => {
+  const dasar = { jumlah_sumber: 3, jumlah_mahasiswa: 2 };
+  it("kosong bila tidak ada pekerjaan", () => {
+    expect(daftarTindakan({ ...dasar, beasiswa_per_status: { menunggu_validasi: 0 }, sumber_per_status: { berhasil: 3 } })).toEqual([]);
+  });
+  it("mengarahkan ke antrean dan sumber", () => {
+    const t = daftarTindakan({ ...dasar, beasiswa_per_status: { menunggu_validasi: 4 }, sumber_per_status: { gagal: 1, belum_pernah: 2 } });
+    expect(t.map((x) => x.href)).toEqual(["/admin/antrean", "/admin/sumber", "/admin/sumber"]);
+    expect(t[0].teks).toBe("4 beasiswa menunggu validasi");
+  });
+});

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:flutter/widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../features/admin/data/admin_repository.dart';
 import '../features/auth/data/auth_repository.dart';
 import '../features/auth/presentation/auth_controller.dart';
 import '../features/beasiswa/data/beasiswa_repository.dart';
@@ -56,6 +57,7 @@ void pasangDependensi({
     permanent: true,
   );
   Get.put(NavigasiController(), permanent: true);
+  Get.put(AdminRepository(Get.find<ApiClient>()), permanent: true);
   Get.put(PembukaTautan(bukaTautan), permanent: true);
 
   Get.put(AuthRepository(Get.find(), Get.find()), permanent: true);
