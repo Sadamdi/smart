@@ -8,6 +8,7 @@ import '../../../core/lokal/model_ai.dart';
 import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
+import '../../../core/widgets/teks_markdown.dart';
 import '../../../core/widgets/state_widgets.dart';
 import '../../../core/widgets/tombol_bulat.dart';
 import 'chat_controller.dart';
@@ -50,6 +51,7 @@ class _ChatPageState extends State<ChatPage> {
     required bool saya,
     TextStyle? gaya,
     List<({String id, String nama})> rujukan = const [],
+    String sumber = 'server',
   }) {
     return Align(
       alignment: saya ? Alignment.centerRight : Alignment.centerLeft,
@@ -68,18 +70,19 @@ class _ChatPageState extends State<ChatPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              teks,
-              style: (gaya ?? Theme.of(context).textTheme.bodyMedium)?.copyWith(
-                fontSize: 13,
-                height: 1.45,
-                color: saya ? Colors.white : null,
-              ),
-            ),
+            if (saya)
+              Text(
+                teks,
+                style: (gaya ?? Theme.of(context).textTheme.bodyMedium)
+                    ?.copyWith(fontSize: 14, height: 1.45, color: Colors.white),
+              )
+            else
+              TeksMarkdown(teks),
+            if (!saya) ...[const SizedBox(height: 8), _LencanaSumber(sumber)],
             if (rujukan.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
-                'Sumber: data beasiswa SMART',
+                'Sumber data beasiswa SMART',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 4),
@@ -129,6 +132,7 @@ class _ChatPageState extends State<ChatPage> {
           style: t.titleLarge?.copyWith(fontSize: 18),
         ),
         actions: [
+          const _PilihanAi(),
           IconButton(
             tooltip: 'Hapus riwayat',
             onPressed: _c.hapusRiwayat,
@@ -167,6 +171,7 @@ class _ChatPageState extends State<ChatPage> {
                       saya: false,
                       gaya: t.bodyMedium,
                       rujukan: p.rujukan,
+                      sumber: p.sumber,
                     ),
                   ],
                 ],
@@ -267,4 +272,73 @@ class _Saran {
     'Tenggat minggu ini',
     'Cocok untuk saya?',
   ];
+}
+
+/// Penanda asal jawaban: server, model AI di ponsel, atau data lokal.
+class _LencanaSumber extends StatelessWidget {
+  const _LencanaSumber(this.sumber);
+
+  final String sumber;
+
+  @override
+  Widget build(BuildContext context) {
+    final (ikon, teks) = switch (sumber) {
+      'ponsel' => (Icons.smartphone_rounded, 'Dijawab model AI di ponsel'),
+      'lokal' => (Icons.storage_rounded, 'Dijawab dari data di ponsel'),
+      _ => (Icons.cloud_outlined, 'Dijawab layanan AI server'),
+    };
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(ikon, size: 14, color: Warna.muted),
+        const SizedBox(width: 4),
+        Text(teks, style: Theme.of(context).textTheme.labelSmall),
+      ],
+    );
+  }
+}
+
+/// Pilihan di kepala halaman: jawab lewat server atau lewat model AI di ponsel (tampil bila model sudah terpasang).
+class _PilihanAi extends StatelessWidget {
+  const _PilihanAi();
+
+  @override
+  Widget build(BuildContext context) {
+    final mesin = Get.find<MesinLokal>();
+    final ai = Get.find<PengelolaModelAi>();
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        mesin.aiLokalAktif,
+        mesin.aktif,
+        ai.status,
+        ai.aktifId,
+      ]),
+      builder: (context, _) {
+        if (!ai.dipakai) return const SizedBox.shrink();
+        final lokal = mesin.aiLokalAktif.value || mesin.aktif.value;
+        return Tooltip(
+          message: lokal
+              ? 'Jawaban dari model AI di ponsel'
+              : 'Jawaban dari server',
+          child: FilterChip(
+            avatar: Icon(
+              lokal ? Icons.smartphone_rounded : Icons.cloud_outlined,
+              size: 16,
+              color: lokal ? Warna.putih : Warna.primary,
+            ),
+            label: Text(lokal ? 'Ponsel' : 'Server'),
+            selected: lokal,
+            showCheckmark: false,
+            selectedColor: Warna.primary,
+            labelStyle: TextStyle(
+              color: lokal ? Warna.putih : null,
+              fontWeight: FontWeight.w700,
+            ),
+            // Mode luring selalu memakai ponsel; di luar itu pengguna memilih sendiri.
+            onSelected: mesin.aktif.value ? null : (v) => mesin.aturAiLokal(v),
+          ),
+        );
+      },
+    );
+  }
 }
