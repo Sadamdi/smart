@@ -67,6 +67,7 @@ class MesinLokal {
   List<HasilLokal>? _hasil;
   DateTime? _hari;
   double _kekuatan = 0;
+  List<Map<String, dynamic>> _riwayatChat = [];
 
   /// Mode luring dipilih pengguna: semua pembacaan dan penulisan dilayani lokal.
   final aktif = ValueNotifier<bool>(false);
@@ -123,6 +124,10 @@ class MesinLokal {
     if (t is List) _tersimpan = {for (final x in t) '$x'};
     final d = await _baca('berkas.json');
     if (d is List) _berkas = {for (final x in d) '$x'};
+    final rc = await _baca('riwayat_chat.json');
+    if (rc is List) {
+      _riwayatChat = [for (final x in rc) Map<String, dynamic>.from(x as Map)];
+    }
     final a = await _baca('antrean.json');
     if (a is List) {
       _antrean = [for (final x in a) Map<String, dynamic>.from(x as Map)];
@@ -391,6 +396,8 @@ class MesinLokal {
         ], null);
       case '/chat/status':
         return Respons({'tersedia': true}, null);
+      case '/chat/riwayat':
+        return Respons(_riwayatChat, null);
       case '/me/kalender':
         return _kalender(q);
     }
@@ -569,12 +576,28 @@ class MesinLokal {
     }
     if (metode == 'POST' && jalur == '/chat' && body is Map) {
       if (adaModelAi()) return null;
-      return Respons(_jawabChat('${body['pesan'] ?? ''}'), null);
+      final j = _jawabChat('${body['pesan'] ?? ''}');
+      catatChat(j);
+      return Respons(j, null);
+    }
+    if (metode == 'DELETE' && jalur == '/chat/riwayat') {
+      _riwayatChat = [];
+      _tulis('riwayat_chat.json', _riwayatChat);
+      return Respons({}, null);
     }
     return null;
   }
 
   // ---------- chatbot lokal ----------
+
+  /// Menyimpan percakapan luring (50 terakhir) agar riwayat tampil walau tanpa server.
+  void catatChat(Map<String, dynamic> pesan) {
+    _riwayatChat = [..._riwayatChat, pesan];
+    if (_riwayatChat.length > 50) {
+      _riwayatChat = _riwayatChat.sublist(_riwayatChat.length - 50);
+    }
+    _tulis('riwayat_chat.json', _riwayatChat);
+  }
 
   /// Tautan laman resmi beasiswa yang namanya sama dengan [nama], dari paket lokal.
   String? tautanResmi(String nama) {

@@ -58,11 +58,19 @@ class ChatRepository {
     try {
       final jawaban = await ai.jawab(pesan, lokal.konteksChat(pesan));
       if (jawaban.isEmpty) return null;
+      final isi =
+          '$jawaban\n\n(Dijawab model AI di ponsel. Estimasi hanya perkiraan, bukan jaminan diterima.)';
+      lokal.catatChat({
+        'id': 'lokal-${DateTime.now().microsecondsSinceEpoch}',
+        'pesan': pesan,
+        'jawaban': isi,
+        'waktu': DateTime.now().toIso8601String(),
+        'rujukan': const <Map<String, dynamic>>[],
+      });
       return PesanChat(
         id: 'lokal-${DateTime.now().microsecondsSinceEpoch}',
         pesan: pesan,
-        jawaban:
-            '$jawaban\n\n(Dijawab model AI di ponsel. Estimasi hanya perkiraan, bukan jaminan diterima.)',
+        jawaban: isi,
       );
     } on Object {
       return null;
