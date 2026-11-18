@@ -75,6 +75,30 @@ class _MemoriPageState extends State<MemoriPage> {
     }
   }
 
+  /// Mengubah saklar langsung di layar (tanpa menunggu server), lalu menyelaraskan; dikembalikan bila gagal.
+  Future<void> _ubahAktif(ButirMemori b, bool v) async {
+    final d = _daftar;
+    if (d == null) return;
+    setState(() {
+      _daftar = [
+        for (final x in d)
+          if (x.id == b.id)
+            ButirMemori(id: x.id, jenis: x.jenis, isi: x.isi, aktif: v)
+          else
+            x,
+      ];
+    });
+    try {
+      await _api.patch('/me/memori/${b.id}', body: {'aktif': v});
+      await _muat();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _daftar = d);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(pesanGalat(e))));
+    }
+  }
+
   Future<void> _sunting(ButirMemori b) async {
     final c = TextEditingController(text: b.isi);
     final baru = await showDialog<String>(
@@ -220,6 +244,7 @@ class _MemoriPageState extends State<MemoriPage> {
               onPressed: _hapusSemua,
               child: const Text('Hapus semua'),
             ),
+          const SizedBox(width: 12),
         ],
       ),
       body: RefreshIndicator(
@@ -319,12 +344,7 @@ class _MemoriPageState extends State<MemoriPage> {
                         ),
                         Switch(
                           value: b.aktif,
-                          onChanged: (v) => _jalankan(
-                            () => _api.patch(
-                              '/me/memori/${b.id}',
-                              body: {'aktif': v},
-                            ),
-                          ),
+                          onChanged: (v) => _ubahAktif(b, v),
                         ),
                         IconButton(
                           tooltip: 'Hapus',
