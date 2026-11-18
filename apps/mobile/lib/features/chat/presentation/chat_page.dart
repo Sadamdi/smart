@@ -10,7 +10,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/teks_markdown.dart';
 import '../../../core/widgets/state_widgets.dart';
-import '../../../core/widgets/tombol_bulat.dart';
 import 'chat_controller.dart';
 
 class ChatPage extends StatefulWidget {
@@ -166,6 +165,60 @@ class _ChatPageState extends State<ChatPage> {
     borderRadius: BorderRadius.circular(26),
     borderSide: BorderSide(color: c, width: w),
   );
+
+  void _info(String t) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t)));
+
+  Future<void> _menu(String k) async {
+    try {
+      switch (k) {
+        case 'memori':
+          context.push('/memori');
+        case 'cadang':
+          _info(await _c.cadangkan());
+        case 'pulih':
+          _info(await _c.pulihkan());
+        case 'hapus':
+          await _c.hapusRiwayat();
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Riwayat dihapus'),
+              action: SnackBarAction(
+                label: 'Urungkan',
+                onPressed: () async => _info(await _c.urungkanHapus()),
+              ),
+            ),
+          );
+        case 'statistik':
+          final d = await _c.statistik();
+          if (!mounted) return;
+          final top = [
+            for (final b in (d['beasiswa_teratas'] as List? ?? []))
+              '${(b as Map)['nama']} (${b['jumlah']})',
+          ];
+          final isi =
+              '${d['jumlah']} pertanyaan, ${d['tujuh_hari']} dalam 7 hari terakhir.\n'
+              'Rata-rata jawaban ${d['rata_panjang_jawaban']} karakter.'
+              '${top.isEmpty ? '' : '\n\nPaling sering dirujuk:\n${top.join('\n')}'}';
+          await showDialog<void>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Isi chatbot'),
+              content: Text(isi),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Tutup'),
+                ),
+              ],
+            ),
+          );
+      }
+    } catch (e) {
+      _info(pesanGalat(e));
+    }
+  }
 
   @override
   Widget build(BuildContext context) => Obx(() => _bangun(context));
@@ -378,60 +431,6 @@ class _LencanaSumber extends StatelessWidget {
   const _LencanaSumber(this.sumber);
 
   final String sumber;
-
-  void _info(String t) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t)));
-
-  Future<void> _menu(String k) async {
-    try {
-      switch (k) {
-        case 'memori':
-          context.push('/memori');
-        case 'cadang':
-          _info(await _c.cadangkan());
-        case 'pulih':
-          _info(await _c.pulihkan());
-        case 'hapus':
-          await _c.hapusRiwayat();
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Riwayat dihapus'),
-              action: SnackBarAction(
-                label: 'Urungkan',
-                onPressed: () async => _info(await _c.urungkanHapus()),
-              ),
-            ),
-          );
-        case 'statistik':
-          final d = await _c.statistik();
-          if (!mounted) return;
-          final top = [
-            for (final b in (d['beasiswa_teratas'] as List? ?? []))
-              '${(b as Map)['nama']} (${b['jumlah']})',
-          ];
-          final isi =
-              '${d['jumlah']} pertanyaan, ${d['tujuh_hari']} dalam 7 hari terakhir.\n'
-              'Rata-rata jawaban ${d['rata_panjang_jawaban']} karakter.'
-              '${top.isEmpty ? '' : '\n\nPaling sering dirujuk:\n${top.join('\n')}'}';
-          await showDialog<void>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Isi chatbot'),
-              content: Text(isi),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Tutup'),
-                ),
-              ],
-            ),
-          );
-      }
-    } catch (e) {
-      _info(pesanGalat(e));
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

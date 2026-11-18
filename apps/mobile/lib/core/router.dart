@@ -107,7 +107,9 @@ GoRouter buatRouter(SegarkanRouter segarkan) {
             ],
           ),
           StatefulShellBranch(
-            routes: [GoRoute(path: '/chat', builder: (_, _) => const ChatPage())],
+            routes: [
+              GoRoute(path: '/chat', builder: (_, _) => const ChatPage()),
+            ],
           ),
           StatefulShellBranch(
             routes: [

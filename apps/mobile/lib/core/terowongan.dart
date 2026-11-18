@@ -9,7 +9,7 @@ import 'package:dio/dio.dart';
 /// Kunci publik X25519 server (bukan rahasia) dan id-nya. Diberikan lewat --dart-define bila kunci diganti.
 const terowonganKunciPublik = String.fromEnvironment(
   'SECURE_PUBLIC_KEY',
-  defaultValue: 'yVsoEQ/daXSwaVlf6kWLUT2YbG+0ZPSecmVy5wYZuh0=',
+  defaultValue: '/bSwF/ax8NjzkEH0Q5Arj3dUVc97LOVuO2/8p3K0cV8=',
 );
 const terowonganKid = String.fromEnvironment(
   'SECURE_KEY_ID',
@@ -157,7 +157,7 @@ class Terowongan {
         if (e.value != null && '${e.value}'.isNotEmpty) e.key: '${e.value}',
     };
     final dalam = Uri(
-      path: '${uriDasar.path.replaceAll(RegExp(r'/+$'), '')}$jalurApi',
+      path: '${_awalanApi(uriDasar.path)}$jalurApi',
       queryParameters: qs.isEmpty ? null : qs,
     );
     final url = dalam.hasQuery ? '${dalam.path}?${dalam.query}' : dalam.path;
@@ -188,10 +188,8 @@ class Terowongan {
       'm': metode.toUpperCase(),
       'u': url,
       'h': header,
-      if (biner != null)
-        'bx': base64.encode(biner)
-      else if (teks != null)
-        'b': teks,
+      'bx': ?(biner == null ? null : base64.encode(biner)),
+      'b': ?(biner == null ? teks : null),
     });
     final tersegel = await segel(
       sesi.badan,
@@ -266,6 +264,13 @@ class Terowongan {
     return HasilTerowongan(status, {
       'content-type': 'application/json',
     }, mentah);
+  }
+
+  /// Jalur API di server: alamat dasar bisa berawalan proksi (mis. /backend/api/v1), tetapi server hanya mengenal /api/v1.
+  static String _awalanApi(String pathDasar) {
+    final i = pathDasar.indexOf('/api/v1');
+    final p = i >= 0 ? pathDasar.substring(i) : pathDasar;
+    return p.replaceAll(RegExp(r'/+$'), '');
   }
 
   /// Memperbaiki jam hanya bila ponsel benar-benar meleset (abaikan jitter jaringan).

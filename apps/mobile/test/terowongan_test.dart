@@ -245,4 +245,26 @@ void main() {
     expect(panggilan, 2);
     expect(t.selisihDetik, greaterThan(3000));
   });
+
+  test('alamat dasar berawalan proksi (/backend/api/v1): jalur dalam amplop tetap /api/v1', () async {
+    final srv = _ServerTerowongan((m, u, h, isi) => Balasan.ok({'u': u}));
+    final s = ServerPalsu({'POST /secure': srv.tangani});
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: 'https://smart-web-three.vercel.app/backend/api/v1',
+        validateStatus: (_) => true,
+      ),
+    )..httpClientAdapter = s;
+    final t = Terowongan(
+      dio: dio,
+      kid: 'k1',
+      kunciPublikServer: base64.decode(_serverPub),
+    );
+    final h = await t.kirim('GET', '/me', query: {'a': '1'});
+    expect(jsonDecode(h!.teks)['data']['u'], '/api/v1/me?a=1');
+    expect(
+      s.permintaan.single.uri.toString(),
+      'https://smart-web-three.vercel.app/backend/api/v1/secure',
+    );
+  });
 }
