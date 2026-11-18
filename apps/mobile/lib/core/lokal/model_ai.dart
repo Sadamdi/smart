@@ -369,35 +369,49 @@ class PengelolaModelAi {
   ModelAi? get aktif =>
       katalogModelAi.where((m) => m.id == aktifId.value).firstOrNull;
 
-  /// Menjawab [pesan] dengan model aktif; [konteks] berisi data beasiswa dan profil dari mesin luring.
-  /// Satu jawaban pada satu waktu, dengan batas waktu 5 menit agar ponsel tidak tergantung.
-  Future<String> jawab(String pesan, String konteks) async {
+  /// Menjawab [pesan] per potongan teks (token) dari model aktif; [konteks] berisi data beasiswa dan profil lokal.
+  /// Satu jawaban pada satu waktu, batas 5 menit. Membatalkan langganan menghentikan pembuatan jawaban di model.
+  Stream<String> jawabAlir(String pesan, String konteks) async* {
     if (_sedangMenjawab) {
       throw StateError('Model masih menjawab pertanyaan sebelumnya');
     }
     _sedangMenjawab = true;
+    InferenceChat? chat;
     try {
       await (_sedangMemuat ?? _muatModel());
       if (_model == null) throw StateError('Model belum termuat');
-      final chat = await _model!.openChat(
+      chat = await _model!.openChat(
         systemInstruction: instruksiSistem(konteks),
       );
-      try {
-        await chat.addQueryChunk(Message.text(text: pesan, isUser: true));
-        final jawaban = StringBuffer();
-        await for (final r in chat.generateChatResponseAsync().timeout(
-          const Duration(seconds: 90),
-        )) {
-          if (r is TextResponse) jawaban.write(r.token);
-        }
-        return jawaban.toString().trim();
-      } finally {
-        await chat.close();
+      await chat.addQueryChunk(Message.text(text: pesan, isUser: true));
+      await for (final r in chat.generateChatResponseAsync().timeout(
+        const Duration(minutes: 5),
+      )) {
+        if (r is TextResponse && r.token.isNotEmpty) yield r.token;
       }
     } finally {
+      try {
+        await chat?.stopGeneration();
+      } on Object {
+        // sudah selesai
+      }
+      try {
+        await chat?.close();
+      } on Object {
+        // sudah tertutup
+      }
       _sedangMenjawab = false;
       _jadwalkanLepas();
     }
+  }
+
+  /// Menjawab sekaligus (tanpa aliran): menggabungkan semua token. Dipakai tombol "Jelaskan dengan AI".
+  Future<String> jawab(String pesan, String konteks) async {
+    final b = StringBuffer();
+    await for (final t in jawabAlir(pesan, konteks)) {
+      b.write(t);
+    }
+    return b.toString().trim();
   }
 
   static String instruksiSistem(String konteks) =>

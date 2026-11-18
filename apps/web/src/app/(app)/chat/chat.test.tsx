@@ -7,14 +7,20 @@ import ChatbotAI from "./page";
 vi.mock("next/link", () => ({ default: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a> }));
 
 function balas(status: number, body: unknown) {
-  return { status, json: async () => body };
+  return { status, ok: status < 400, json: async () => body };
 }
-function pasang(opsi: { tersedia: boolean; kirim: ReturnType<typeof balas> }) {
+/** Respons SSE palsu: potongan teks lalu peristiwa selesai (atau galat). */
+function sse(peristiwa: { e: string; d: unknown }[]) {
+  const enc = new TextEncoder();
+  const isi = peristiwa.map((p) => "event: " + p.e + "\ndata: " + JSON.stringify(p.d) + "\n\n").join("");
+  return { status: 200, ok: true, json: async () => ({}), body: new ReadableStream({ start(c) { c.enqueue(enc.encode(isi)); c.close(); } }) };
+}
+function pasang(opsi: { tersedia: boolean; kirim: ReturnType<typeof balas> | ReturnType<typeof sse> }) {
   const f = vi.fn(async (url: string, init?: RequestInit) => {
     const u = String(url);
     if (u.endsWith("/chat/status")) return balas(200, { success: true, data: { tersedia: opsi.tersedia } });
     if (u.endsWith("/chat/riwayat")) return balas(200, { success: true, data: [] });
-    if (u.endsWith("/chat") && init?.method === "POST") return opsi.kirim;
+    if (u.endsWith("/chat/stream") && init?.method === "POST") return opsi.kirim;
     return balas(404, { success: false, error: { code: "NOT_FOUND", message: "x" } });
   });
   vi.stubGlobal("fetch", f);
@@ -42,13 +48,17 @@ describe("Chatbot AI", () => {
   it("menampilkan jawaban dan rujukan", async () => {
     pasang({
       tersedia: true,
-      kirim: balas(200, { success: true, data: { id: "1", pesan: "Tenggat?", jawaban: "Tenggat 1 Desember.", waktu: "2026-11-03T00:00:00", rujukan: [{ id: "b1", nama: "Beasiswa Uji", tautan_resmi: "https://x.id" }] } }),
+      kirim: sse([
+        { e: "token", d: { t: "Tenggat " } },
+        { e: "token", d: { t: "1 **Desember**." } },
+        { e: "selesai", d: { id: "1", pesan: "Tenggat?", jawaban: "Tenggat 1 **Desember**.", waktu: "2026-11-03T00:00:00", rujukan: [{ id: "b1", nama: "Beasiswa Uji", tautan_resmi: "https://x.id" }] } },
+      ]),
     });
     tampil();
     expect(await screen.findByText("Layanan AI tersedia")).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Pesan"), { target: { value: "Tenggat?" } });
     fireEvent.click(screen.getByRole("button", { name: "Kirim" }));
-    expect(await screen.findByText(/Tenggat 1 Desember/)).toBeInTheDocument();
+    expect(await screen.findByText("Desember")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Beasiswa Uji" })).toHaveAttribute("href", "/beasiswa/b1");
   });
 

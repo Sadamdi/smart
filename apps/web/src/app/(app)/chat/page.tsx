@@ -1,13 +1,13 @@
 "use client";
 import { useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, SendHorizonal, Trash2 } from "lucide-react";
+import { MessageCircle, SendHorizonal, Square, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { GelembungChat } from "@/components/GelembungChat";
 import { TeksMarkdown } from "@/components/TeksMarkdown";
 import { GalatState, MemuatState, pesanGalat } from "@/components/state";
 import { JudulHalaman, Kartu, Masukan, Tombol } from "@/components/ui";
-import { kirim } from "@/lib/api";
+import { ApiError, alirSse, kirim } from "@/lib/api";
 import { useAksi, useRiwayatChat, useStatusChat } from "@/lib/hooks";
 import type { Chat } from "@/lib/types";
 
@@ -21,6 +21,8 @@ export default function ChatbotAI() {
   const [pesan, setPesan] = useState("");
   const [menunggu, setMenunggu] = useState<string | null>(null);
   const [galat, setGalat] = useState<unknown>(null);
+  const [sementara, setSementara] = useState("");
+  const batal = useRef<AbortController | null>(null);
   const dasar = useRef<HTMLDivElement>(null);
 
   const hapus = useAksi(() => kirim("/chat/riwayat", "DELETE"), ["chat", "riwayat"]);
@@ -30,22 +32,50 @@ export default function ChatbotAI() {
     dasar.current?.scrollIntoView?.({ block: "end" });
   }, [daftar.length, menunggu]);
 
+  /** Mengirim pesan dan menampilkan jawaban bertahap (per potongan); dapat dihentikan, jawaban yang dibatalkan tidak disimpan. */
   async function kirimPesan(e: React.FormEvent) {
     e.preventDefault();
     const isi = pesan.trim();
     if (!isi || menunggu) return;
     setGalat(null);
     setMenunggu(isi);
+    setSementara("");
     setPesan("");
+    const kontrol = new AbortController();
+    batal.current = kontrol;
+    let teks = "";
+    let rangka = 0;
     try {
-      const r = await kirim<Chat>("/chat", "POST", { pesan: isi });
-      qc.setQueryData<Chat[]>(["chat", "riwayat"], (lama) => [...(lama ?? []), r.data]);
+      for await (const k of alirSse("/chat/stream", { pesan: isi }, kontrol.signal)) {
+        const j = JSON.parse(k.data) as Record<string, unknown>;
+        if (k.peristiwa === "token") {
+          teks += String(j.t ?? "");
+          if (!rangka) {
+            rangka = requestAnimationFrame(() => {
+              rangka = 0;
+              setSementara(teks);
+            });
+          }
+        } else if (k.peristiwa === "selesai") {
+          qc.setQueryData<Chat[]>(["chat", "riwayat"], (lama) => [...(lama ?? []), j as unknown as Chat]);
+        } else if (k.peristiwa === "galat") {
+          throw new ApiError("AI", String(j.pesan ?? "Layanan AI sedang tidak tersedia"), 503);
+        }
+      }
+      if (kontrol.signal.aborted) setPesan(isi);
     } catch (x) {
       setGalat(x);
       setPesan(isi);
     } finally {
+      if (rangka) cancelAnimationFrame(rangka);
+      batal.current = null;
       setMenunggu(null);
+      setSementara("");
     }
+  }
+
+  function hentikan() {
+    batal.current?.abort();
   }
 
   const tersedia = status.data?.tersedia;
@@ -128,7 +158,7 @@ export default function ChatbotAI() {
           {menunggu && (
             <div className="space-y-2">
               <GelembungChat dari="pengguna">{menunggu}</GelembungChat>
-              <GelembungChat dari="asisten">Sedang menyusun jawaban...</GelembungChat>
+              <GelembungChat dari="asisten">{sementara ? <TeksMarkdown teks={sementara} /> : "Menyusun jawaban..."}</GelembungChat>
             </div>
           )}
           <div ref={dasar} />
@@ -142,9 +172,15 @@ export default function ChatbotAI() {
         )}
         <form onSubmit={kirimPesan} className="flex gap-2 border-t border-c4/60 p-4">
           <Masukan aria-label="Pesan" placeholder="Tulis pertanyaan" maxLength={PESAN_MAKS} value={pesan} onChange={(e) => setPesan(e.target.value)} disabled={tersedia === false} />
-          <Tombol type="submit" aria-label="Kirim" disabled={!pesan.trim() || Boolean(menunggu) || tersedia === false}>
-            <SendHorizonal className="h-4 w-4" aria-hidden />
-          </Tombol>
+          {menunggu ? (
+            <Tombol type="button" aria-label="Hentikan" onClick={hentikan}>
+              <Square className="h-4 w-4" aria-hidden />
+            </Tombol>
+          ) : (
+            <Tombol type="submit" aria-label="Kirim" disabled={!pesan.trim() || tersedia === false}>
+              <SendHorizonal className="h-4 w-4" aria-hidden />
+            </Tombol>
+          )}
         </form>
       </Kartu>
       <p className="mt-3 text-xs text-muted">Nama dan tanggal lahir tidak dikirim ke layanan AI. Jawaban chatbot bukan jaminan diterima pada beasiswa mana pun.</p>

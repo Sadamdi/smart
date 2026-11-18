@@ -94,3 +94,54 @@ export async function unduhBerkas(path: string): Promise<Blob> {
   if (!res.ok) throw new ApiError("NOT_FOUND", "Berkas asli tidak tersimpan di server.", res.status);
   return res.blob();
 }
+
+/** Aliran SSE (POST): menghasilkan pasangan peristiwa dan data. [signal] membatalkan dan memutus koneksi sehingga server berhenti. */
+export async function* alirSse(path: string, body: unknown, signal?: AbortSignal): AsyncGenerator<{ peristiwa: string; data: string }> {
+  const buka = () =>
+    fetch(`${API_URL}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "text/event-stream", Authorization: `Bearer ${tokenStore.akses() ?? ""}` },
+      body: JSON.stringify(body),
+      signal,
+    });
+  let res: Response;
+  try {
+    res = await buka();
+    if (res.status === 401 && (await segarkanToken())) res = await buka();
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") return;
+    throw new ApiError("NETWORK", "Tidak dapat terhubung ke server. Periksa koneksi lalu coba lagi.", 0);
+  }
+  if (!res.ok || !res.body) {
+    const b = (await res.json().catch(() => null)) as ApiResponse<unknown> | null;
+    const e = b && b.success === false ? b.error : { code: "INTERNAL", message: "Terjadi kesalahan pada server." };
+    throw new ApiError(e.code, e.message, res.status);
+  }
+  const pembaca = res.body.getReader();
+  const dekoder = new TextDecoder();
+  let sisa = "";
+  try {
+    for (;;) {
+      const { done, value } = await pembaca.read();
+      if (done) break;
+      sisa += dekoder.decode(value, { stream: true });
+      let i: number;
+      while ((i = sisa.indexOf("\n\n")) >= 0) {
+        const blok = sisa.slice(0, i);
+        sisa = sisa.slice(i + 2);
+        let peristiwa = "message";
+        let data = "";
+        for (const baris of blok.split("\n")) {
+          if (baris.startsWith("event:")) peristiwa = baris.slice(6).trim();
+          else if (baris.startsWith("data:")) data += baris.slice(5).trim();
+        }
+        yield { peristiwa, data };
+      }
+    }
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") return;
+    throw new ApiError("NETWORK", "Koneksi terputus saat menerima jawaban.", 0);
+  } finally {
+    pembaca.cancel().catch(() => undefined);
+  }
+}
