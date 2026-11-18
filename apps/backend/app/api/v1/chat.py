@@ -1,14 +1,17 @@
+import json
 import uuid
 from datetime import date, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import pengguna_saat_ini
 from app.core.config import Settings, get_settings
+from app.core.errors import UpstreamUnavailable
 from app.db import get_session
 from app.models import Beasiswa, Pengguna
 from app.schemas.common import Amplop, Kosong
@@ -67,6 +70,38 @@ def kirim(data: ChatIn, sesi: SesiDep, p: SaatIni, settings: SettingsDep) -> Amp
     c = layanan.kirim(sesi, p, data.pesan, settings, date.today())
     sesi.commit()
     return Amplop(data=_out(sesi, c))
+
+
+def _sse(peristiwa: str, data: dict) -> str:
+    return f"event: {peristiwa}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+@router.post("/stream", summary="Kirim pesan dan terima jawaban per potongan (SSE)")
+def kirim_stream(data: ChatIn, sesi: SesiDep, p: SaatIni, settings: SettingsDep) -> StreamingResponse:
+    """Peristiwa: `token` ({t}), `selesai` (ChatOut), atau `galat` ({pesan}). Klien yang memutus koneksi membatalkan
+    jawaban; jawaban yang dibatalkan tidak disimpan ke riwayat."""
+    pesan, prompt, rujukan = layanan.siapkan(sesi, p, data.pesan, settings, date.today())
+
+    def alir():
+        potongan: list[str] = []
+        try:
+            for t in llm.tanya_stream(settings, layanan.SISTEM, prompt):
+                potongan.append(t)
+                yield _sse("token", {"t": t})
+        except UpstreamUnavailable as e:
+            yield _sse("galat", {"pesan": str(e)})
+            return
+        jawaban = "".join(potongan).strip()
+        if not jawaban:
+            yield _sse("galat", {"pesan": "Layanan AI tidak memberi jawaban, coba lagi"})
+            return
+        c = layanan.simpan(sesi, p, pesan, jawaban, rujukan)
+        sesi.commit()
+        yield _sse("selesai", json.loads(_out(sesi, c).model_dump_json()))
+
+    return StreamingResponse(
+        alir(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+    )
 
 
 @router.get("/riwayat", summary="Riwayat percakapan", response_model=Amplop[list[ChatOut]])

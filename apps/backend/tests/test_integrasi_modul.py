@@ -406,3 +406,33 @@ def test_sinkron_paket_beasiswa_untuk_mode_luring(klien_db, sesi):
     jenis = [j for j, _ in item["syarat"]]
     assert "ipk_minimum" in jenis and "jenjang" in jenis  # jenjang beasiswa ikut menjadi syarat efektif
     assert item["luar_negeri"] is False and item["tautan_resmi"].startswith("https://uji.example/")
+
+
+def test_chat_stream_mengirim_potongan_lalu_menyimpan_riwayat(klien_db, sesi, monkeypatch):
+    h = _akun(klien_db)
+    s = _sumber(sesi)
+    _beasiswa(sesi, s, "Beasiswa Aliran Uji", HARI + timedelta(days=20))
+    monkeypatch.setattr("app.services.llm.tersedia", lambda *_: True)
+    monkeypatch.setattr("app.services.llm.tanya_stream", lambda *a, **k: iter(["Halo ", "dari ", "**AI**"]))
+    r = klien_db.post(f"{B}/chat/stream", headers=h, json={"pesan": "info Aliran Uji"})
+    assert r.status_code == 200 and r.headers["content-type"].startswith("text/event-stream")
+    isi = r.text
+    assert isi.count("event: token") == 3 and "event: selesai" in isi and "**AI**" in isi
+    riwayat = klien_db.get(f"{B}/chat/riwayat", headers=h).json()["data"]
+    assert riwayat[-1]["jawaban"] == "Halo dari **AI**"
+    assert klien_db.post(f"{B}/chat/stream", json={"pesan": "x"}).status_code == 401
+
+
+def test_chat_stream_galat_layanan_tidak_menyimpan(klien_db, monkeypatch):
+    from app.core.errors import UpstreamUnavailable
+
+    h = _akun(klien_db)
+
+    def rusak(*a, **k):
+        raise UpstreamUnavailable("Layanan AI sedang tidak tersedia, coba lagi nanti")
+        yield  # pragma: no cover
+
+    monkeypatch.setattr("app.services.llm.tanya_stream", rusak)
+    r = klien_db.post(f"{B}/chat/stream", headers=h, json={"pesan": "halo"})
+    assert "event: galat" in r.text and "event: selesai" not in r.text
+    assert klien_db.get(f"{B}/chat/riwayat", headers=h).json()["data"] == []

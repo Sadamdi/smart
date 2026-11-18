@@ -233,6 +233,89 @@ class ApiClient {
     }
   }
 
+  /// Membuka aliran SSE (POST) dan menghasilkan pasangan (peristiwa, data). Membatalkan langganan atau [batal] memutus
+  /// koneksi sehingga server menghentikan jawaban. Token disegarkan satu kali bila 401.
+  Stream<(String, String)> alirSse(
+    String jalur,
+    Object? body, {
+    CancelToken? batal,
+  }) async* {
+    Future<Response<ResponseBody>> buka(String? token) =>
+        dio.post<ResponseBody>(
+          jalur,
+          data: body,
+          cancelToken: batal,
+          options: Options(
+            responseType: ResponseType.stream,
+            receiveTimeout: const Duration(minutes: 5),
+            headers: {
+              'Accept': 'text/event-stream',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+          ),
+        );
+    Response<ResponseBody> res;
+    try {
+      res = await buka((await storage.baca())?.akses);
+      if (res.statusCode == 401 && await _segarkan()) {
+        res = await buka((await storage.baca())?.akses);
+      }
+    } on DioException catch (e) {
+      if (CancelToken.isCancel(e)) return;
+      throw ApiException(
+        'NETWORK',
+        'Tidak dapat terhubung ke server. Periksa koneksi internet lalu coba lagi.',
+        0,
+      );
+    }
+    if (res.statusCode != 200) {
+      final teks = await utf8.decodeStream(res.data!.stream);
+      Map<String, dynamic>? b;
+      try {
+        b = jsonDecode(teks) as Map<String, dynamic>;
+      } on Object {
+        b = null;
+      }
+      ambilData<dynamic>(b, res.statusCode ?? 0);
+      throw ApiException(
+        'INTERNAL',
+        'Terjadi kesalahan pada server.',
+        res.statusCode ?? 0,
+      );
+    }
+    var sisa = '';
+    try {
+      await for (final potongan in res.data!.stream.cast<List<int>>().transform(
+        utf8.decoder,
+      )) {
+        sisa += potongan;
+        int i;
+        while ((i = sisa.indexOf('\n\n')) >= 0) {
+          final blok = sisa.substring(0, i);
+          sisa = sisa.substring(i + 2);
+          var peristiwa = 'message';
+          final data = StringBuffer();
+          for (final baris in blok.split('\n')) {
+            if (baris.startsWith('event:')) {
+              peristiwa = baris.substring(6).trim();
+            }
+            if (baris.startsWith('data:')) {
+              data.write(baris.substring(5).trim());
+            }
+          }
+          yield (peristiwa, data.toString());
+        }
+      }
+    } on DioException catch (e) {
+      if (CancelToken.isCancel(e)) return;
+      throw ApiException(
+        'NETWORK',
+        'Koneksi terputus saat menerima jawaban.',
+        0,
+      );
+    }
+  }
+
   /// Mengunduh berkas biner (mis. dokumen asli) ke [simpanKe], dengan token dan satu kali penyegaran.
   Future<void> unduh(String jalur, String simpanKe) async {
     Future<Response<dynamic>> coba(String? token) => dio.download(
