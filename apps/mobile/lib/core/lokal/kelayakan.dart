@@ -35,6 +35,25 @@ class ProfilKelayakan {
     this.jenjangTuju = const [],
   });
 
+  /// Salinan dengan sebagian nilai diganti (dipakai simulasi "bagaimana jika").
+  ProfilKelayakan salin({double? ipk, int? semester, String? jenjang}) =>
+      ProfilKelayakan(
+        jenjang: jenjang ?? this.jenjang,
+        semester: semester ?? this.semester,
+        ipk: ipk ?? this.ipk,
+        jenisKampus: jenisKampus,
+        kotaDomisili: kotaDomisili,
+        negaraDomisili: negaraDomisili,
+        provinsiDomisili: provinsiDomisili,
+        daerahAsal: daerahAsal,
+        tanggalLahir: tanggalLahir,
+        penghasilanOrangTua: penghasilanOrangTua,
+        skorBahasa: skorBahasa,
+        kewarganegaraan: kewarganegaraan,
+        berkasDiunggah: berkasDiunggah,
+        jenjangTuju: jenjangTuju,
+      );
+
   final String? jenjang;
   final int? semester;
   final double? ipk;
@@ -68,7 +87,16 @@ class HasilSyarat {
 }
 
 class HasilKelayakan {
-  HasilKelayakan(this.kategori, this.skor, this.alasan, this.catatan);
+  HasilKelayakan(
+    this.kategori,
+    this.skor,
+    this.alasan,
+    this.catatan, [
+    this.rincian = const [],
+  ]);
+
+  /// Penilaian tiap syarat (null bila syarat hanya informasi), sejajar dengan daftar syarat masukan.
+  final List<HasilSyarat?> rincian;
 
   final String kategori;
   final double skor;
@@ -680,14 +708,16 @@ HasilKelayakan nilaiKelayakan(
   DateTime hariIni,
 ) {
   final hasil = <HasilSyarat>[];
+  final rincian = <HasilSyarat?>[];
   for (final s in syarat) {
     final h = periksaSyarat(t, s.$1, s.$2, p, hariIni);
+    rincian.add(h);
     if (h != null) hasil.add(h);
   }
   if (hasil.isEmpty) {
     return HasilKelayakan(hampir, 0.4, [], [
       'Syarat belum tercatat, periksa laman resmi',
-    ]);
+    ], rincian);
   }
   final alasan = [
     for (final h in hasil)
@@ -706,7 +736,7 @@ HasilKelayakan nilaiKelayakan(
       for (final h in gagal)
         if (h.kekurangan?.isNotEmpty ?? false) h.kekurangan!,
       ...kurang,
-    ]);
+    ], rincian);
   }
   if (hasil.every((h) => h.status == _ok)) {
     final kuat = hasil.where((h) => !_lemah.contains(h.jenis)).toList();
@@ -714,14 +744,14 @@ HasilKelayakan nilaiKelayakan(
     if (kuat.isEmpty) {
       return HasilKelayakan(hampir, batasSkor, alasan, [
         'Hanya jenjang yang tercatat, periksa syarat lain di laman resmi',
-      ]);
+      ], rincian);
     }
     if (kuat.length < syaratKuatMinimum) {
       return HasilKelayakan(hampir, batasSkor, alasan, [
         'Syarat terukur masih sedikit, periksa syarat lain di laman resmi',
-      ]);
+      ], rincian);
     }
-    return HasilKelayakan(memenuhi, skor, alasan, []);
+    return HasilKelayakan(memenuhi, skor, alasan, [], rincian);
   }
-  return HasilKelayakan(hampir, skor, alasan, kurang);
+  return HasilKelayakan(hampir, skor, alasan, kurang, rincian);
 }

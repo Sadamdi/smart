@@ -170,3 +170,55 @@ bool luarNegeri(String? negara) {
   final n = (negara ?? '').trim().toLowerCase();
   return n.isNotEmpty && !n.contains('indonesia');
 }
+
+const labelTingkat = {
+  'sangat_ketat':
+      'sangat ketat (program sejenis menerima sekitar 2 persen pelamar)',
+  'ketat': 'ketat (program sejenis menerima sekitar 15 persen pelamar)',
+  'sedang': 'sedang (perkiraan, belum ada data seleksi program sejenis)',
+  'longgar':
+      'longgar (perkiraan, program berbasis bantuan biaya atau kuota besar)',
+};
+
+/// Kalimat penjelas asal angka estimasi untuk halaman Detail (sama dengan alasan_peluang di server).
+List<String> alasanPeluang(
+  String? kategori,
+  String? tingkat,
+  double kekuatan,
+  bool dariStatistik, [
+  bool dataTipis = false,
+]) {
+  final k = <String>[
+    switch (kategori) {
+      'memenuhi' => 'Syarat yang tercatat sudah kamu penuhi.',
+      'hampir_memenuhi' =>
+        'Sebagian syarat belum terpenuhi, sehingga peluang diturunkan.',
+      'belum_memenuhi' =>
+        'Ada syarat yang belum terpenuhi, sehingga peluang diturunkan banyak.',
+      _ => '',
+    },
+  ];
+  if (dariStatistik) {
+    k.add(
+      'Persaingan memakai rasio penerimaan yang dipublikasikan (lihat sumber data).',
+    );
+  } else if (tingkat != null) {
+    k.add('Persaingan program ini diperkirakan ${labelTingkat[tingkat]}.');
+  }
+  if (dataTipis) {
+    k.add(
+      'Syarat yang tercatat masih sedikit, jadi estimasi diredam. Cek laman resmi untuk syarat lengkap.',
+    );
+  }
+  k.add(
+    kekuatan >= 0.65
+        ? 'Profilmu kuat (IPK, prestasi, organisasi, atau sertifikat banyak).'
+        : kekuatan >= 0.35
+        ? 'Profilmu cukup; menambah prestasi, organisasi, dan sertifikat menaikkan estimasi.'
+        : 'Profilmu masih sedikit terisi; lengkapi prestasi, organisasi, dan sertifikat agar estimasi lebih tepat.',
+  );
+  return [
+    for (final x in k)
+      if (x.isNotEmpty) x,
+  ];
+}
