@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import admin, aktivitas, auth, beasiswa, chat, dokumen, health, me, memori, referensi, rekomendasi
 from app.core.config import get_settings
 from app.core.errors import pasang_penangan_galat
+from app.core.terowongan import TerowonganMiddleware
 
 API_PREFIX = "/api/v1"
 
@@ -71,6 +72,7 @@ def buat_app() -> FastAPI:
         allow_headers=["*"],
     )
     pasang_penangan_galat(app)
+    app.add_middleware(TerowonganMiddleware)
     app.include_router(health.router, prefix=API_PREFIX)
     app.include_router(auth.router, prefix=API_PREFIX)
     app.include_router(me.router, prefix=API_PREFIX)
