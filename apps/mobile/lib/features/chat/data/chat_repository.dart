@@ -120,7 +120,7 @@ class ChatRepository {
   /// Urutan: model AI di ponsel (mode luring atau dipilih pengguna), lalu server, lalu model ponsel bila jaringan putus.
   Stream<KejadianChat> kirimAlir(String pesan, {CancelToken? batal}) async* {
     final lokal = Get.find<MesinLokal>();
-    final pakaiModel = lokal.aktif.value || lokal.aiLokalAktif.value;
+    final pakaiModel = lokal.aktif.value || lokal.aiLokalAktif;
     if (pakaiModel && _modelSiap) {
       try {
         yield* _alirModel(pesan);
@@ -153,7 +153,8 @@ class ChatRepository {
         }
       }
     } on ApiException catch (e) {
-      if (e.galatJaringan && _modelSiap) {
+      // Otomatis: jaringan putus berarti model di ponsel. Mode Server murni tidak berpindah.
+      if (e.galatJaringan && _modelSiap && lokal.modeAi.value != 'server') {
         yield* _alirModel(pesan);
         return;
       }

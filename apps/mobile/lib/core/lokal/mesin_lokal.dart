@@ -72,8 +72,11 @@ class MesinLokal {
   /// Mode luring dipilih pengguna: semua pembacaan dan penulisan dilayani lokal.
   final aktif = ValueNotifier<bool>(false);
 
-  /// Pengguna memilih memakai model AI di ponsel walau mode luring mati (jawaban chatbot tanpa server).
-  final aiLokalAktif = ValueNotifier<bool>(false);
+  /// Sumber jawaban chatbot: otomatis (server bila ada jaringan, model di ponsel bila tidak), ponsel (selalu model di
+  /// ponsel, walau ada internet), atau server. Mode luring selalu memakai ponsel.
+  final modeAi = ValueNotifier<String>('otomatis');
+
+  bool get aiLokalAktif => modeAi.value == 'ponsel';
 
   /// Jumlah perubahan yang menunggu dikirim ke server.
   final menunggu = ValueNotifier<int>(0);
@@ -138,7 +141,9 @@ class MesinLokal {
     final s = await _baca('status.json');
     if (s is Map) {
       aktif.value = (s['aktif'] ?? false) as bool;
-      aiLokalAktif.value = (s['ai_lokal'] ?? false) as bool;
+      modeAi.value =
+          (s['mode_ai'] as String?) ??
+          ((s['ai_lokal'] ?? false) as bool ? 'ponsel' : 'otomatis');
       final ts = s['sinkron'] as String?;
       terakhirSinkron.value = ts == null ? null : DateTime.tryParse(ts);
     }
@@ -151,14 +156,14 @@ class MesinLokal {
     await _simpanStatus();
   }
 
-  Future<void> aturAiLokal(bool nilai) async {
-    aiLokalAktif.value = nilai;
+  Future<void> aturModeAi(String nilai) async {
+    modeAi.value = nilai;
     await _simpanStatus();
   }
 
   Future<void> _simpanStatus() => _tulis('status.json', {
     'aktif': aktif.value,
-    'ai_lokal': aiLokalAktif.value,
+    'mode_ai': modeAi.value,
     'sinkron': terakhirSinkron.value?.toIso8601String(),
   });
 

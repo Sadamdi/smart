@@ -220,6 +220,7 @@ class _ChatPageState extends State<ChatPage> {
                   _gelembung(
                     'Halo! Tanyakan syarat, tenggat, atau berkas beasiswa. Jawaban saya berdasarkan data di SMART.',
                     saya: false,
+                    sumber: '',
                     gaya: t.bodyMedium,
                   ),
                   for (final p in daftar) ...[
@@ -354,47 +355,125 @@ class _LencanaSumber extends StatelessWidget {
   }
 }
 
-/// Pilihan di kepala halaman: jawab lewat server atau lewat model AI di ponsel (tampil bila model sudah terpasang).
+/// Pilihan sumber jawaban di kepala halaman: Otomatis, Ponsel, atau Server (panel penjelasan saat ditekan).
 class _PilihanAi extends StatelessWidget {
   const _PilihanAi();
+
+  static const _label = {
+    'otomatis': ('Otomatis', Icons.auto_awesome_rounded),
+    'ponsel': ('Di ponsel', Icons.smartphone_rounded),
+    'server': ('Server', Icons.cloud_outlined),
+  };
 
   @override
   Widget build(BuildContext context) {
     final mesin = Get.find<MesinLokal>();
-    final ai = Get.find<PengelolaModelAi>();
     return ListenableBuilder(
-      listenable: Listenable.merge([
-        mesin.aiLokalAktif,
-        mesin.aktif,
-        ai.status,
-        ai.aktifId,
-      ]),
+      listenable: Listenable.merge([mesin.modeAi, mesin.aktif]),
       builder: (context, _) {
-        if (!ai.dipakai) return const SizedBox.shrink();
-        final lokal = mesin.aiLokalAktif.value || mesin.aktif.value;
-        return Tooltip(
-          message: lokal
-              ? 'Jawaban dari model AI di ponsel'
-              : 'Jawaban dari server',
-          child: FilterChip(
-            avatar: Icon(
-              lokal ? Icons.smartphone_rounded : Icons.cloud_outlined,
-              size: 16,
-              color: lokal ? Warna.putih : Warna.primary,
-            ),
-            label: Text(lokal ? 'Ponsel' : 'Server'),
-            selected: lokal,
-            showCheckmark: false,
-            selectedColor: Warna.primary,
-            labelStyle: TextStyle(
-              color: lokal ? Warna.putih : null,
-              fontWeight: FontWeight.w700,
-            ),
-            // Mode luring selalu memakai ponsel; di luar itu pengguna memilih sendiri.
-            onSelected: mesin.aktif.value ? null : (v) => mesin.aturAiLokal(v),
+        // Mode luring tidak menghubungi server, jadi jawaban selalu dari ponsel.
+        final kunci = mesin.aktif.value ? 'ponsel' : mesin.modeAi.value;
+        final (teks, ikon) = _label[kunci]!;
+        return Padding(
+          padding: const EdgeInsets.only(right: 4),
+          child: ActionChip(
+            avatar: Icon(ikon, size: 16, color: Warna.primary),
+            label: Text(teks),
+            labelStyle: const TextStyle(fontWeight: FontWeight.w700),
+            visualDensity: VisualDensity.compact,
+            onPressed: () => _buka(context, mesin),
           ),
         );
       },
+    );
+  }
+
+  void _buka(BuildContext context, MesinLokal mesin) {
+    final ai = Get.find<PengelolaModelAi>();
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: ListenableBuilder(
+          listenable: Listenable.merge([
+            mesin.modeAi,
+            mesin.aktif,
+            ai.status,
+            ai.aktifId,
+          ]),
+          builder: (ctx, _) {
+            final t = Theme.of(ctx).textTheme;
+            final terpasang = ai.dipakai;
+            Widget opsi(
+              String k,
+              String judul,
+              String isi, {
+              bool aktifkan = true,
+            }) {
+              final dipilih = mesin.modeAi.value == k && !mesin.aktif.value;
+              return ListTile(
+                enabled: aktifkan && !mesin.aktif.value,
+                leading: Icon(
+                  _label[k]!.$2,
+                  color: dipilih ? Warna.primary : null,
+                ),
+                title: Text(
+                  judul,
+                  style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                subtitle: Text(isi, style: t.bodySmall),
+                trailing: dipilih
+                    ? Icon(Icons.check_circle, color: Warna.primary)
+                    : null,
+                onTap: () {
+                  mesin.aturModeAi(k);
+                  Navigator.pop(ctx);
+                },
+              );
+            }
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Jawaban AI dari mana?', style: t.titleMedium),
+                  ),
+                ),
+                if (mesin.aktif.value)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                    child: Text(
+                      'Mode luring sedang aktif, jadi jawaban selalu dari ponsel dan tidak menghubungi server SMART.',
+                      style: t.bodySmall,
+                    ),
+                  ),
+                opsi(
+                  'otomatis',
+                  'Otomatis (disarankan)',
+                  'Server saat ada jaringan, otomatis pindah ke model di ponsel saat jaringan putus.',
+                ),
+                opsi(
+                  'ponsel',
+                  'Di ponsel',
+                  terpasang
+                      ? 'Selalu memakai model AI di ponsel walau ada internet. Data tidak keluar dari ponsel.'
+                      : 'Butuh model AI terpasang. Unduh di Pengaturan, Chatbot AI luring.',
+                  aktifkan: terpasang,
+                ),
+                opsi(
+                  'server',
+                  'Server',
+                  'Selalu memakai layanan AI server. Jawaban lebih lengkap, butuh jaringan.',
+                ),
+                const SizedBox(height: 8),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 }
