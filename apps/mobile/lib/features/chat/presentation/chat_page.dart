@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/cache_lokal.dart';
+import '../../../core/lokal/mesin_lokal.dart';
+import '../../../core/lokal/model_ai.dart';
 import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
@@ -24,6 +27,11 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     _c.buka();
+    // Model AI luring dimuat di latar belakang hanya bila mode luring aktif atau jaringan putus, bukan saat aplikasi dibuka.
+    if (Get.find<MesinLokal>().aktif.value ||
+        Get.find<CacheLokal>().luring.value) {
+      Get.find<PengelolaModelAi>().siapkanDiLatarBelakang();
+    }
   }
 
   @override

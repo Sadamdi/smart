@@ -9,7 +9,7 @@ from sqlalchemy import and_, case, delete, func, insert, or_, select, text
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models import Beasiswa, DokumenPengguna, Pengguna, Persyaratan, Rekomendasi
+from app.models import Beasiswa, BerkasWajib, DokumenPengguna, Pengguna, Persyaratan, Rekomendasi
 from app.rekomendasi.embedding import PengemasHash, teks_profil
 from app.rekomendasi.kelayakan import ProfilKelayakan, dengan_jenjang_beasiswa
 from app.rekomendasi.konfigurasi import VERSI_MODEL
@@ -270,6 +270,9 @@ def sinkron(sesi: Session, hari_ini: date) -> list[dict]:
     hasil: list[dict] = []
     if not masukan:
         return hasil
+    berkas: dict[uuid.UUID, list[dict]] = defaultdict(list)
+    for w in sesi.scalars(select(BerkasWajib).where(BerkasWajib.beasiswa_id.in_(list(masukan)))):
+        berkas[w.beasiswa_id].append({"id": str(w.id), "nama_berkas": w.nama_berkas})
     for b in sesi.scalars(select(Beasiswa).where(Beasiswa.id.in_(list(masukan)))):
         m = masukan[b.id]
         luar = luar_negeri(b.negara)
@@ -285,6 +288,9 @@ def sinkron(sesi: Session, hari_ini: date) -> list[dict]:
                 "tenggat": b.tenggat.isoformat() if b.tenggat else None,
                 "tautan_resmi": b.tautan_resmi,
                 "manfaat": b.manfaat,
+                "tanggal_diperiksa": b.tanggal_diperiksa.isoformat() if b.tanggal_diperiksa else None,
+                "berkas_wajib": berkas.get(b.id, []),
+                "statistik": entri,
                 "syarat": [[j, bt] for j, bt in m.syarat],
                 "luar_negeri": luar,
                 "dasar_statistik": dasar,

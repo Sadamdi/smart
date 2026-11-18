@@ -1,4 +1,8 @@
+import 'package:get/get.dart' hide Response;
+
 import '../../../core/api_client.dart';
+import '../../../core/lokal/mesin_lokal.dart';
+import '../../../core/lokal/model_ai.dart';
 
 class PesanChat {
   const PesanChat({
@@ -47,9 +51,49 @@ class ChatRepository {
     ];
   }
 
+  Future<PesanChat?> _lewatModelLokal(String pesan) async {
+    final lokal = Get.find<MesinLokal>();
+    final ai = Get.find<PengelolaModelAi>();
+    if (!lokal.siap || !ai.dipakai) return null;
+    try {
+      final jawaban = await ai.jawab(pesan, lokal.konteksChat(pesan));
+      if (jawaban.isEmpty) return null;
+      final isi =
+          '$jawaban\n\n(Dijawab model AI di ponsel. Estimasi hanya perkiraan, bukan jaminan diterima.)';
+      lokal.catatChat({
+        'id': 'lokal-${DateTime.now().microsecondsSinceEpoch}',
+        'pesan': pesan,
+        'jawaban': isi,
+        'waktu': DateTime.now().toIso8601String(),
+        'rujukan': const <Map<String, dynamic>>[],
+      });
+      return PesanChat(
+        id: 'lokal-${DateTime.now().microsecondsSinceEpoch}',
+        pesan: pesan,
+        jawaban: isi,
+      );
+    } on Object {
+      return null;
+    }
+  }
+
   Future<PesanChat> kirim(String pesan) async {
-    final r = await _api.post('/chat', body: {'pesan': pesan});
-    return PesanChat.fromJson(r.data as Map<String, dynamic>);
+    final lokal = Get.find<MesinLokal>();
+    // Mode luring: model AI di ponsel lebih dulu; bila tidak ada atau gagal, jawaban berbasis data lokal.
+    if (lokal.aktif.value) {
+      final p = await _lewatModelLokal(pesan);
+      if (p != null) return p;
+    }
+    try {
+      final r = await _api.post('/chat', body: {'pesan': pesan});
+      return PesanChat.fromJson(r.data as Map<String, dynamic>);
+    } on ApiException catch (e) {
+      if (e.galatJaringan) {
+        final p = await _lewatModelLokal(pesan);
+        if (p != null) return p;
+      }
+      rethrow;
+    }
   }
 
   Future<void> hapusRiwayat() => _api.delete('/chat/riwayat');

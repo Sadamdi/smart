@@ -24,6 +24,7 @@ import '../features/rekomendasi/presentation/rekomendasi_controller.dart';
 import 'api_client.dart';
 import 'cache_lokal.dart';
 import 'lokal/mesin_lokal.dart';
+import 'lokal/model_ai.dart';
 import 'tema_controller.dart';
 import 'token_storage.dart';
 
@@ -54,6 +55,8 @@ void pasangDependensi({
   Get.put<Dio>(dio ?? buatDio(), permanent: true);
   Get.put<CacheLokal>(cache ?? CacheLokal(), permanent: true);
   Get.put<MesinLokal>(mesin ?? MesinLokal(), permanent: true);
+  Get.put<PengelolaModelAi>(PengelolaModelAi(), permanent: true);
+  Get.find<MesinLokal>().adaModelAi = Get.find<PengelolaModelAi>().siapDipakai;
   Get.put<ApiClient>(
     ApiClient(
       dio: Get.find<Dio>(),

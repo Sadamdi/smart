@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/api_client.dart';
 import '../../../core/dependensi.dart';
@@ -104,6 +105,19 @@ class _KartuModeLuringState extends State<KartuModeLuring> {
                 ),
                 value: _m.aktif.value,
                 onChanged: _m.sedangSinkron.value ? null : _ganti,
+              ),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                title: Text(
+                  'Chatbot AI luring',
+                  style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                subtitle: Text(
+                  'Unduh model AI kecil agar chatbot menjawab tanpa jaringan',
+                  style: t.bodySmall?.copyWith(fontSize: 11),
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push('/pengaturan/model-ai'),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),

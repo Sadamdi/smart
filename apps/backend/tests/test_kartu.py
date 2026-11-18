@@ -30,3 +30,14 @@ def test_metrik_tanpa_syarat_terukur_tidak_diberi_angka():
 def test_metrik_dibatasi_0_sampai_100():
     assert metrik(1.2, ["a"], [])["skor_kelayakan"] == 100
     assert metrik(0.0, [], ["gagal"])["skor_kelayakan"] == 0
+
+
+def test_metrik_tidak_menghitung_kalimat_minat_dan_penjelasan_urutan_sebagai_syarat():
+    from app.services.kartu import metrik
+
+    m = metrik(
+        1.0,
+        ["Jenjang S1 sesuai", "Minat dan program studi mirip dengan fokus beasiswa", "Urutan dipengaruhi oleh skor"],
+        [],
+    )
+    assert (m["syarat_terpenuhi"], m["syarat_total"]) == (1, 1)

@@ -13,6 +13,7 @@ import '../../../core/widgets/tombol_bulat.dart';
 import '../../kalender/presentation/kalender_controller.dart';
 import '../../rekomendasi/domain/rekomendasi.dart';
 import '../domain/beasiswa.dart';
+import 'tombol_jelaskan_ai.dart';
 import 'detail_controller.dart';
 import 'simpan_aksi.dart';
 import 'tersimpan_controller.dart';
@@ -193,6 +194,7 @@ class _Isi extends StatelessWidget {
             kelayakan: detail.ringkas.kelayakan!,
             alasan: detail.alasanPeluang,
           ),
+          TombolJelaskanAi(nama: detail.ringkas.nama),
         ],
         if (detail.ringkas.kelayakan != null) ...[
           const SizedBox(height: 12),

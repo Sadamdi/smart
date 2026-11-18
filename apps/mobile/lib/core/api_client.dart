@@ -95,6 +95,21 @@ class ApiClient {
     if (l != null && l.aktif.value) {
       final r = l.layaniGet(jalur, query);
       if (r != null) return r;
+      // Mode luring aktif: tidak menghubungi server SMART. Pakai salinan terakhir bila ada.
+      final kunci = '$jalur?${jsonEncode(query ?? const {})}';
+      final salinan = await cache?.baca(kunci);
+      if (salinan != null && !_jalurAuth.contains(jalur)) {
+        final meta = salinan['meta'];
+        return Respons(
+          salinan['data'],
+          meta is Map<String, dynamic> ? meta : null,
+        );
+      }
+      throw ApiException(
+        'LURING',
+        'Mode luring aktif. Data ini belum tersedia di ponsel; matikan mode luring untuk memuatnya.',
+        0,
+      );
     }
     try {
       return await _getJaringan(jalur, query);
@@ -148,6 +163,16 @@ class ApiClient {
     if (l != null && l.aktif.value && body is! FormData) {
       final r = l.layaniTulis(metode, jalur, body);
       if (r != null) return r;
+    }
+    if (l != null &&
+        l.aktif.value &&
+        !_jalurAuth.contains(jalur) &&
+        jalur != '/chat') {
+      throw ApiException(
+        'LURING',
+        'Mode luring aktif. Fitur ini butuh server; matikan mode luring untuk memakainya.',
+        0,
+      );
     }
     try {
       return await _kirim(metode, jalur, body: body);
