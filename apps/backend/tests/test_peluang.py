@@ -112,7 +112,9 @@ def test_berkas_dihapus_setelah_dibaca_dan_hasil_tetap(tmp_path):
             return []
 
     class _P2:
-        id = "11111111-1111-1111-1111-111111111111"
+        import uuid
+
+        id = uuid.UUID("11111111-1111-1111-1111-111111111111")
         nama = "Nabila Putri"
 
     st = Settings(upload_dir=str(tmp_path), upload_simpan_berkas=False)
