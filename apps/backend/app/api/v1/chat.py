@@ -27,6 +27,8 @@ SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 class ChatIn(BaseModel):
     pesan: str = Field(min_length=1, max_length=layanan.PESAN_MAKS)
+    # Dokumen yang sudah diunggah lewat /me/dokumen dan dilampirkan pada pertanyaan ini.
+    dokumen_ids: list[uuid.UUID] = Field(default=[], max_length=layanan.DOKUMEN_MAKS)
 
 
 class RujukanOut(BaseModel):
@@ -67,7 +69,7 @@ def status(settings: SettingsDep, _: SaatIni) -> Amplop[StatusOut]:
 
 @router.post("", summary="Kirim pesan ke chatbot", response_model=Amplop[ChatOut])
 def kirim(data: ChatIn, sesi: SesiDep, p: SaatIni, settings: SettingsDep) -> Amplop[ChatOut]:
-    c = layanan.kirim(sesi, p, data.pesan, settings, date.today())
+    c = layanan.kirim(sesi, p, data.pesan, settings, date.today(), data.dokumen_ids)
     sesi.commit()
     return Amplop(data=_out(sesi, c))
 
@@ -80,7 +82,7 @@ def _sse(peristiwa: str, data: dict) -> str:
 def kirim_stream(data: ChatIn, sesi: SesiDep, p: SaatIni, settings: SettingsDep) -> StreamingResponse:
     """Peristiwa: `token` ({t}), `selesai` (ChatOut), atau `galat` ({pesan}). Klien yang memutus koneksi membatalkan
     jawaban; jawaban yang dibatalkan tidak disimpan ke riwayat."""
-    pesan, prompt, rujukan = layanan.siapkan(sesi, p, data.pesan, settings, date.today())
+    pesan, prompt, rujukan, sumber = layanan.siapkan(sesi, p, data.pesan, settings, date.today(), data.dokumen_ids)
 
     def alir():
         potongan: list[str] = []
@@ -97,7 +99,9 @@ def kirim_stream(data: ChatIn, sesi: SesiDep, p: SaatIni, settings: SettingsDep)
             return
         c = layanan.simpan(sesi, p, pesan, jawaban, rujukan)
         sesi.commit()
-        yield _sse("selesai", json.loads(_out(sesi, c).model_dump_json()))
+        akhir = json.loads(_out(sesi, c).model_dump_json())
+        akhir["sumber_data"] = sumber
+        yield _sse("selesai", akhir)
 
     return StreamingResponse(
         alir(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
@@ -107,6 +111,50 @@ def kirim_stream(data: ChatIn, sesi: SesiDep, p: SaatIni, settings: SettingsDep)
 @router.get("/riwayat", summary="Riwayat percakapan", response_model=Amplop[list[ChatOut]])
 def riwayat(sesi: SesiDep, p: SaatIni) -> Amplop[list[ChatOut]]:
     return Amplop(data=[_out(sesi, c) for c in layanan.riwayat(sesi, p)])
+
+
+class StatistikChatOut(BaseModel):
+    jumlah: int
+    tujuh_hari: int
+    pertama: datetime | None
+    terakhir: datetime | None
+    rata_panjang_jawaban: int
+    beasiswa_teratas: list[dict]
+
+
+class ButirRiwayat(BaseModel):
+    pesan: str = Field(max_length=layanan.PESAN_MAKS)
+    jawaban: str | None = None
+    waktu: str | None = None
+
+
+class ImporIn(BaseModel):
+    butir: list[ButirRiwayat] = Field(max_length=500)
+
+
+@router.get("/statistik", summary="Statistik isi dan pemakaian chatbot", response_model=Amplop[StatistikChatOut])
+def statistik(sesi: SesiDep, p: SaatIni) -> Amplop[StatistikChatOut]:
+    d = layanan.statistik(sesi, p)
+    return Amplop(data=StatistikChatOut(**{k: d[k] for k in StatistikChatOut.model_fields}))
+
+
+@router.get("/ekspor", summary="Cadangan riwayat percakapan (JSON)", response_model=Amplop[list[ButirRiwayat]])
+def ekspor(sesi: SesiDep, p: SaatIni) -> Amplop[list[ButirRiwayat]]:
+    return Amplop(data=[ButirRiwayat(**b) for b in layanan.ekspor(sesi, p)])
+
+
+@router.post("/impor", summary="Pulihkan riwayat dari cadangan", response_model=Amplop[dict])
+def impor(data: ImporIn, sesi: SesiDep, p: SaatIni) -> Amplop[dict]:
+    n = layanan.impor(sesi, p, [b.model_dump() for b in data.butir])
+    sesi.commit()
+    return Amplop(data={"dipulihkan": n})
+
+
+@router.delete("/riwayat/{percakapan_id}", summary="Hapus satu percakapan", response_model=Amplop[Kosong])
+def hapus_satu(percakapan_id: uuid.UUID, sesi: SesiDep, p: SaatIni) -> Amplop[Kosong]:
+    layanan.hapus_satu(sesi, p, percakapan_id)
+    sesi.commit()
+    return Amplop(data=Kosong())
 
 
 @router.delete("/riwayat", summary="Hapus riwayat percakapan", response_model=Amplop[Kosong])

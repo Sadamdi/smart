@@ -252,7 +252,8 @@ class _ChatPageState extends State<ChatPage> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
-                for (final q in _Saran.daftar)
+                for (final q
+                    in _c.lampiran.isNotEmpty ? _Saran.lampiran : _Saran.daftar)
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChipFilter(
@@ -267,11 +268,47 @@ class _ChatPageState extends State<ChatPage> {
               ],
             ),
           ),
+          if (_c.lampiran.isNotEmpty || _c.mengunggah.value)
+            SizedBox(
+              height: 40,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  for (final l in _c.lampiran)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: InputChip(
+                        avatar: const Icon(
+                          Icons.description_outlined,
+                          size: 16,
+                        ),
+                        label: Text(l.nama, overflow: TextOverflow.ellipsis),
+                        onDeleted: () => _c.lepas(l),
+                      ),
+                    ),
+                  if (_c.mengunggah.value)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 8),
+                      child: Chip(label: Text('Membaca dokumen')),
+                    ),
+                ],
+              ),
+            ),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: Row(
                 children: [
+                  IconButton(
+                    tooltip: 'Lampirkan CV atau dokumen',
+                    onPressed:
+                        kirim ||
+                            _c.lampiran.length >= ChatController.lampiranMaks
+                        ? null
+                        : _c.lampirkan,
+                    icon: Icon(Icons.attach_file_rounded, color: Warna.primary),
+                  ),
                   Expanded(
                     child: TextField(
                       controller: _isi,
@@ -323,6 +360,12 @@ class _ChatPageState extends State<ChatPage> {
 }
 
 class _Saran {
+  static const lampiran = [
+    'Analisis CV saya, apa kekurangannya?',
+    'Beasiswa apa yang paling cocok dengan dokumen ini?',
+    'Apa yang perlu saya perbaiki?',
+  ];
+
   static const daftar = [
     'Syarat IPK',
     'Berkas apa saja?',

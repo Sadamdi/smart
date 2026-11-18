@@ -118,10 +118,22 @@ class ChatRepository {
 
   /// Mengirim pesan dan mengalirkan jawaban per potongan. Membatalkan langganan (atau [batal]) menghentikan jawaban.
   /// Urutan: model AI di ponsel (mode luring atau dipilih pengguna), lalu server, lalu model ponsel bila jaringan putus.
-  Stream<KejadianChat> kirimAlir(String pesan, {CancelToken? batal}) async* {
+  Stream<KejadianChat> kirimAlir(
+    String pesan, {
+    CancelToken? batal,
+    List<String> dokumenIds = const [],
+  }) async* {
     final lokal = Get.find<MesinLokal>();
     final pakaiModel = lokal.aktif.value || lokal.aiLokalAktif;
-    if (pakaiModel && _modelSiap) {
+    if (dokumenIds.isNotEmpty && lokal.aktif.value) {
+      throw ApiException(
+        'LURING',
+        'Lampiran dibaca oleh server, jadi butuh jaringan. Matikan mode luring lalu kirim lagi.',
+        0,
+      );
+    }
+    // Pertanyaan berlampiran dijawab server (dokumen dibaca di sana); model ponsel hanya bila jaringan putus.
+    if (pakaiModel && _modelSiap && dokumenIds.isEmpty) {
       try {
         yield* _alirModel(pesan);
         return;

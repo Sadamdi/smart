@@ -113,6 +113,7 @@ def test_berkas_dihapus_setelah_dibaca_dan_hasil_tetap(tmp_path):
 
     class _P2:
         id = "11111111-1111-1111-1111-111111111111"
+        nama = "Nabila Putri"
 
     st = Settings(upload_dir=str(tmp_path), upload_simpan_berkas=False)
     d = dokumen.simpan(

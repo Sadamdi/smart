@@ -73,6 +73,8 @@ class Pengguna(IdMixin, WaktuMixin, Base):
     vektor_profil = mapped_column(Vector(DIMENSI_VEKTOR))
     # dinaikkan saat logout atau ganti kata sandi sehingga semua token lama tidak berlaku lagi
     versi_token: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    # saklar utama memori: bila mati, chatbot tidak memakai memori sama sekali
+    memori_aktif: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
     preferensi_notifikasi: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=text('\'{"email": true, "push": true}\'::jsonb')
     )
@@ -249,6 +251,29 @@ class Percakapan(IdMixin, WaktuMixin, Base):
     waktu: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
 
 
+class MemoriPengguna(IdMixin, WaktuMixin, Base):
+    """Fakta tentang pengguna yang dipelajari dari dokumen (CV, sertifikat, penghargaan) dan percakapan; dipakai chatbot
+    dan rekomendasi. Pengguna dapat melihat dan menghapusnya."""
+
+    __tablename__ = "memori_pengguna"
+    __table_args__ = (
+        CheckConstraint(
+            "jenis in ('keahlian','prestasi','organisasi','sertifikat','pengalaman','minat','kepribadian','lainnya')",
+            name="jenis",
+        ),
+        CheckConstraint("char_length(isi) <= 500", name="isi_maks"),
+        Index("ix_memori_pengguna_pengguna_id", "pengguna_id"),
+    )
+
+    pengguna_id: Mapped[uuid.UUID] = _fk("pengguna")
+    jenis: Mapped[str] = mapped_column(Text, nullable=False)
+    isi: Mapped[str] = mapped_column(Text, nullable=False)
+    # asal fakta: id dokumen atau "chat"
+    sumber: Mapped[str | None] = mapped_column(Text)
+    # dapat dimatikan per butir: butir nonaktif tidak dipakai chatbot (lebih cepat, tetapi kurang personal)
+    aktif: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+
+
 class TugasPribadi(IdMixin, WaktuMixin, Base):
     __tablename__ = "tugas_pribadi"
     __table_args__ = (Index("ix_tugas_pribadi_pengguna_tanggal", "pengguna_id", "tanggal"),)
@@ -297,6 +322,7 @@ TABEL_SMART = [
     "interaksi",
     "notifikasi",
     "percakapan",
+    "memori_pengguna",
     "tugas_pribadi",
     "perangkat_push",
     "pengaturan",
