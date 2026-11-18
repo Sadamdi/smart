@@ -37,8 +37,65 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   void dispose() {
+    _gulir.dispose();
     _isi.dispose();
     super.dispose();
+  }
+
+  final _gulir = ScrollController();
+
+  /// Gelembung jawaban yang sedang mengalir; kosong = model sedang menyiapkan jawaban.
+  Widget _gelembungAlir(String teks) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_gulir.hasClients) {
+        _gulir.jumpTo(_gulir.position.maxScrollExtent);
+      }
+    });
+    if (teks.isEmpty) {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: Warna.kartu,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Warna.container4),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Menyiapkan jawaban',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * 0.82,
+        ),
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Warna.kartu,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Warna.container4),
+        ),
+        child: TeksMarkdown(teks),
+      ),
+    );
   }
 
   Future<void> _kirimPesan() async {
@@ -157,6 +214,7 @@ class _ChatPageState extends State<ChatPage> {
               loading: () => const MemuatState(),
               error: (e, _) => Center(child: Text(pesanGalat(e))),
               data: (daftar) => ListView(
+                controller: _gulir,
                 padding: const EdgeInsets.all(16),
                 children: [
                   _gelembung(
@@ -173,6 +231,10 @@ class _ChatPageState extends State<ChatPage> {
                       rujukan: p.rujukan,
                       sumber: p.sumber,
                     ),
+                  ],
+                  if (_c.pesanSementara.value != null) ...[
+                    _gelembung(_c.pesanSementara.value!, saya: true),
+                    _gelembungAlir(_c.jawabanSementara.value),
                   ],
                 ],
               ),
@@ -230,7 +292,7 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                   const SizedBox(width: 8),
                   IconButton.filled(
-                    tooltip: 'Kirim',
+                    tooltip: kirim ? 'Hentikan jawaban' : 'Kirim',
                     style: IconButton.styleFrom(
                       backgroundColor: Warna.primary,
                       foregroundColor: Warna.putih,
@@ -239,14 +301,8 @@ class _ChatPageState extends State<ChatPage> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    onPressed: kirim ? null : _kirimPesan,
-                    icon: kirim
-                        ? const SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.send),
+                    onPressed: kirim ? _c.batalkan : _kirimPesan,
+                    icon: Icon(kirim ? Icons.stop_rounded : Icons.send),
                   ),
                 ],
               ),

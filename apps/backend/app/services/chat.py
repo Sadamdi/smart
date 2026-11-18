@@ -58,7 +58,8 @@ def susun_data(sesi: Session, p: Pengguna, pesan: str, hari_ini: date) -> tuple[
     return "\n".join(baris), rujukan
 
 
-def kirim(sesi: Session, p: Pengguna, pesan: str, settings: Settings, hari_ini: date) -> Percakapan:
+def siapkan(sesi: Session, p: Pengguna, pesan: str, settings: Settings, hari_ini: date) -> tuple[str, str, list[uuid.UUID]]:
+    """Validasi, batas harian, dan penyusunan data. Mengembalikan (pesan bersih, prompt pengguna, rujukan)."""
     pesan = pesan.strip()
     if not pesan or len(pesan) > PESAN_MAKS:
         raise ValidationFailed(f"Pesan wajib diisi dan maksimal {PESAN_MAKS} karakter")
@@ -75,11 +76,19 @@ def kirim(sesi: Session, p: Pengguna, pesan: str, settings: Settings, hari_ini: 
     if (hari_ini_dipakai or 0) >= settings.ai_batas_harian:
         raise RateLimited("Batas pesan harian tercapai, coba lagi besok")
     data, rujukan = susun_data(sesi, p, pesan, hari_ini)
-    jawaban = llm.tanya(settings, SISTEM, f"DATA:\n{data}\n\nPERTANYAAN:\n{pesan}")
+    return pesan, f"DATA:\n{data}\n\nPERTANYAAN:\n{pesan}", rujukan
+
+
+def simpan(sesi: Session, p: Pengguna, pesan: str, jawaban: str, rujukan: list[uuid.UUID]) -> Percakapan:
     c = Percakapan(pengguna_id=p.id, pesan=pesan, jawaban=jawaban, rujukan_beasiswa_id=rujukan)
     sesi.add(c)
     sesi.flush()
     return c
+
+
+def kirim(sesi: Session, p: Pengguna, pesan: str, settings: Settings, hari_ini: date) -> Percakapan:
+    pesan, prompt, rujukan = siapkan(sesi, p, pesan, settings, hari_ini)
+    return simpan(sesi, p, pesan, llm.tanya(settings, SISTEM, prompt), rujukan)
 
 
 def riwayat(sesi: Session, p: Pengguna, batas: int = 50) -> list[Percakapan]:

@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
 import 'package:get/get.dart' hide Response;
 
 import '../../../core/api_client.dart';
@@ -38,6 +41,21 @@ class PesanChat {
   );
 }
 
+/// Peristiwa jawaban chatbot yang mengalir: potongan teks, selesai, atau galat (dilempar sebagai exception).
+sealed class KejadianChat {}
+
+class TokenChat extends KejadianChat {
+  TokenChat(this.t);
+
+  final String t;
+}
+
+class SelesaiChat extends KejadianChat {
+  SelesaiChat(this.pesan);
+
+  final PesanChat pesan;
+}
+
 class ChatRepository {
   ChatRepository(this._api);
 
@@ -56,58 +74,100 @@ class ChatRepository {
     ];
   }
 
-  Future<PesanChat?> _lewatModelLokal(String pesan) async {
+  bool get _modelSiap =>
+      Get.find<MesinLokal>().siap && Get.find<PengelolaModelAi>().dipakai;
+
+  /// Jawaban model AI di ponsel sebagai aliran token; di akhir disimpan ke riwayat lokal dan dikirim [SelesaiChat].
+  Stream<KejadianChat> _alirModel(String pesan) async* {
     final lokal = Get.find<MesinLokal>();
     final ai = Get.find<PengelolaModelAi>();
-    if (!lokal.siap || !ai.dipakai) return null;
-    try {
-      final jawaban = await ai.jawab(pesan, lokal.konteksChat(pesan));
-      if (jawaban.isEmpty) return null;
-      final rujukan = [
-        for (final x in lokal.sumberTerakhir.take(4))
-          {'id': x['id'], 'nama': x['nama'], 'tautan_resmi': x['tautan_resmi']},
-      ];
-      final isi =
-          '$jawaban\n\n(Dijawab model AI di ponsel. Estimasi hanya perkiraan, bukan jaminan diterima.)';
-      lokal.catatChat({
-        'id': 'lokal-${DateTime.now().microsecondsSinceEpoch}',
-        'pesan': pesan,
-        'jawaban': isi,
-        'waktu': DateTime.now().toIso8601String(),
-        'rujukan': rujukan,
-        'sumber': 'ponsel',
-      });
-      return PesanChat(
-        id: 'lokal-${DateTime.now().microsecondsSinceEpoch}',
+    final jawaban = StringBuffer();
+    await for (final t in ai.jawabAlir(pesan, lokal.konteksChat(pesan))) {
+      jawaban.write(t);
+      yield TokenChat(t);
+    }
+    final isi = jawaban.toString().trim();
+    if (isi.isEmpty) throw StateError('Model tidak memberi jawaban');
+    final rujukan = [
+      for (final x in lokal.sumberTerakhir.take(4))
+        {'id': x['id'], 'nama': x['nama'], 'tautan_resmi': x['tautan_resmi']},
+    ];
+    final akhir =
+        '$isi\n\n(Dijawab model AI di ponsel. Estimasi hanya perkiraan, bukan jaminan diterima.)';
+    final id = 'lokal-${DateTime.now().microsecondsSinceEpoch}';
+    lokal.catatChat({
+      'id': id,
+      'pesan': pesan,
+      'jawaban': akhir,
+      'waktu': DateTime.now().toIso8601String(),
+      'rujukan': rujukan,
+      'sumber': 'ponsel',
+    });
+    yield SelesaiChat(
+      PesanChat(
+        id: id,
         pesan: pesan,
-        jawaban: isi,
+        jawaban: akhir,
         sumber: 'ponsel',
         rujukan: [
           for (final r in rujukan) (id: '${r['id']}', nama: '${r['nama']}'),
         ],
-      );
-    } on Object {
-      return null;
-    }
+      ),
+    );
   }
 
-  Future<PesanChat> kirim(String pesan) async {
+  /// Mengirim pesan dan mengalirkan jawaban per potongan. Membatalkan langganan (atau [batal]) menghentikan jawaban.
+  /// Urutan: model AI di ponsel (mode luring atau dipilih pengguna), lalu server, lalu model ponsel bila jaringan putus.
+  Stream<KejadianChat> kirimAlir(String pesan, {CancelToken? batal}) async* {
     final lokal = Get.find<MesinLokal>();
-    // Mode luring: model AI di ponsel lebih dulu; bila tidak ada atau gagal, jawaban berbasis data lokal.
-    if (lokal.aktif.value || lokal.aiLokalAktif.value) {
-      final p = await _lewatModelLokal(pesan);
-      if (p != null) return p;
+    final pakaiModel = lokal.aktif.value || lokal.aiLokalAktif.value;
+    if (pakaiModel && _modelSiap) {
+      try {
+        yield* _alirModel(pesan);
+        return;
+      } on Object {
+        if (!lokal.aktif.value) {
+          // model gagal dimuat: lanjut ke server bila online
+        } else {
+          rethrow;
+        }
+      }
+    }
+    if (lokal.aktif.value) {
+      // tanpa model: jawaban berbasis data lokal (aturan)
+      final r = await _api.post('/chat', body: {'pesan': pesan});
+      yield SelesaiChat(PesanChat.fromJson(r.data as Map<String, dynamic>));
+      return;
     }
     try {
-      final r = await _api.post('/chat', body: {'pesan': pesan});
-      return PesanChat.fromJson(r.data as Map<String, dynamic>);
+      await for (final (ev, data) in _api.alirSse('/chat/stream', {
+        'pesan': pesan,
+      }, batal: batal)) {
+        final j = jsonDecode(data) as Map<String, dynamic>;
+        if (ev == 'token') {
+          yield TokenChat(j['t'] as String);
+        } else if (ev == 'selesai') {
+          yield SelesaiChat(PesanChat.fromJson(j));
+        } else if (ev == 'galat') {
+          throw ApiException('AI', '${j['pesan']}', 503);
+        }
+      }
     } on ApiException catch (e) {
-      if (e.galatJaringan) {
-        final p = await _lewatModelLokal(pesan);
-        if (p != null) return p;
+      if (e.galatJaringan && _modelSiap) {
+        yield* _alirModel(pesan);
+        return;
       }
       rethrow;
     }
+  }
+
+  /// Versi sekali jadi (tanpa aliran), dipertahankan untuk pemanggil lama.
+  Future<PesanChat> kirim(String pesan) async {
+    PesanChat? akhir;
+    await for (final k in kirimAlir(pesan)) {
+      if (k is SelesaiChat) akhir = k.pesan;
+    }
+    return akhir ?? (throw StateError('Tidak ada jawaban'));
   }
 
   Future<void> hapusRiwayat() => _api.delete('/chat/riwayat');
