@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -20,13 +21,54 @@ class _TombolJelaskanAiState extends State<TombolJelaskanAi> {
   final _mesin = Get.find<MesinLokal>();
   bool _sibuk = false;
 
+  /// Mengunduh laman resmi beasiswa (bukan server SMART) dan menyaring teksnya. Gagal atau tanpa internet: kosong.
+  Future<String?> _ambilLamanResmi() async {
+    final url = _mesin.tautanResmi(widget.nama);
+    if (url == null) return null;
+    try {
+      final r = await Dio().get<String>(
+        url,
+        options: Options(
+          responseType: ResponseType.plain,
+          receiveTimeout: const Duration(seconds: 8),
+          sendTimeout: const Duration(seconds: 8),
+          validateStatus: (s) => s != null && s < 400,
+        ),
+      );
+      var teks = r.data ?? '';
+      teks = teks
+          .replaceAll(
+            RegExp(
+              r'<(script|style)[^>]*>.*?</\1>',
+              dotAll: true,
+              caseSensitive: false,
+            ),
+            ' ',
+          )
+          .replaceAll(RegExp(r'<[^>]+>'), ' ')
+          .replaceAll(RegExp(r'&nbsp;|&amp;'), ' ')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+      return teks.length > 2500 ? teks.substring(0, 2500) : teks;
+    } on Object {
+      return null;
+    }
+  }
+
   Future<void> _jelaskan() async {
     setState(() => _sibuk = true);
     String hasil;
     try {
       final pertanyaan =
           'Jelaskan singkat mengapa beasiswa ${widget.nama} cocok atau belum cocok untukku, lalu sebutkan 3 hal yang perlu kusiapkan.';
-      hasil = await _ai.jawab(pertanyaan, _mesin.konteksChat(widget.nama));
+      var konteks = _mesin.konteksChat(widget.nama);
+      // Bila ada internet, ambil isi laman resmi sekarang supaya syarat dan tenggat terbaru ikut dipertimbangkan.
+      final laman = await _ambilLamanResmi();
+      if (laman != null && laman.isNotEmpty) {
+        konteks =
+            '$konteks\nIsi laman resmi (diambil sekarang, ringkas):\n$laman';
+      }
+      hasil = await _ai.jawab(pertanyaan, konteks);
       if (hasil.isEmpty) hasil = 'Model belum memberi jawaban. Coba lagi.';
     } on Object catch (e) {
       hasil = 'Model AI belum bisa dipakai sekarang: $e';

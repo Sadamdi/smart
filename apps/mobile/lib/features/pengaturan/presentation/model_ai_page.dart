@@ -260,15 +260,23 @@ class _KartuModel extends StatelessWidget {
           const SizedBox(height: 6),
           Text(m.catatan, style: t.bodySmall),
           const SizedBox(height: 8),
-          Text('Spesifikasi', style: t.labelLarge),
-          const SizedBox(height: 2),
-          Text('Parameter: ${m.parameter}', style: t.bodySmall),
-          Text('Konteks: ${m.konteks}', style: t.bodySmall),
-          Text('Kecepatan: ${m.kecepatan}', style: t.bodySmall),
-          Text('Bahasa Indonesia: ${m.mutuIndonesia}', style: t.bodySmall),
-          Text('Kemampuan: ${m.kemampuan.join(', ')}', style: t.bodySmall),
           const SizedBox(height: 4),
-          Text('Untuk SMART: ${m.untukSmart}', style: t.bodySmall),
+          _BarisSpek(Icons.memory_rounded, 'Parameter', m.parameter),
+          _BarisSpek(Icons.article_outlined, 'Konteks', m.konteks),
+          _BarisSpek(Icons.speed_rounded, 'Kecepatan', m.kecepatan),
+          _BarisSpek(
+            Icons.translate_rounded,
+            'Bahasa Indonesia',
+            m.mutuIndonesia,
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [for (final k in m.kemampuan) _ChipKemampuan(k)],
+          ),
+          const SizedBox(height: 8),
+          _BarisSpek(Icons.auto_awesome_outlined, 'Untuk SMART', m.untukSmart),
           const SizedBox(height: 6),
           Text(
             label,
@@ -307,6 +315,79 @@ class _KartuModel extends StatelessWidget {
               onPressed: cocok == Kecocokan.takDidukung ? null : onUnduh,
               child: Text('Unduh $ukuran'),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BarisSpek extends StatelessWidget {
+  const _BarisSpek(this.ikon, this.label, this.nilai);
+
+  final IconData ikon;
+  final String label;
+  final String nilai;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(ikon, size: 18, color: Warna.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '$label: ',
+                    style: t.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  TextSpan(text: nilai, style: t.bodySmall),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChipKemampuan extends StatelessWidget {
+  const _ChipKemampuan(this.nama);
+
+  final String nama;
+
+  IconData get _ikon => switch (nama) {
+    'Pemanggilan fungsi' => Icons.functions_rounded,
+    'Mode berpikir' => Icons.psychology_outlined,
+    'Membaca gambar' => Icons.image_outlined,
+    'Mendengar suara' => Icons.mic_none_rounded,
+    _ => Icons.chat_bubble_outline_rounded,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Warna.container2,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(_ikon, size: 14, color: Warna.primary),
+          const SizedBox(width: 4),
+          Text(
+            nama,
+            style: t.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
         ],
       ),
     );

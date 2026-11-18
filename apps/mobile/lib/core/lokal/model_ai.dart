@@ -370,7 +370,7 @@ class PengelolaModelAi {
       katalogModelAi.where((m) => m.id == aktifId.value).firstOrNull;
 
   /// Menjawab [pesan] dengan model aktif; [konteks] berisi data beasiswa dan profil dari mesin luring.
-  /// Satu jawaban pada satu waktu, dengan batas waktu agar ponsel tidak tergantung.
+  /// Satu jawaban pada satu waktu, dengan batas waktu 5 menit agar ponsel tidak tergantung.
   Future<String> jawab(String pesan, String konteks) async {
     if (_sedangMenjawab) {
       throw StateError('Model masih menjawab pertanyaan sebelumnya');

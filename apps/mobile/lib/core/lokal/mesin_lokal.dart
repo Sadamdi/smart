@@ -576,6 +576,14 @@ class MesinLokal {
 
   // ---------- chatbot lokal ----------
 
+  /// Tautan laman resmi beasiswa yang namanya sama dengan [nama], dari paket lokal.
+  String? tautanResmi(String nama) {
+    for (final b in _beasiswa) {
+      if (b['nama'] == nama) return b['tautan_resmi'] as String?;
+    }
+    return null;
+  }
+
   /// Ringkasan data untuk model AI: profil singkat dan beasiswa yang relevan dengan [pesan].
   String konteksChat(String pesan) {
     final t = pesan.toLowerCase();
