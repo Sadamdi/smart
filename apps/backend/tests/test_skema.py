@@ -1,4 +1,4 @@
-"""Pemeriksaan skema tanpa basis data: model, migrasi, dan dokumen harus sama (14 tabel)."""
+"""Pemeriksaan skema tanpa basis data: model, migrasi, dan dokumen harus sama (15 tabel)."""
 
 import os
 import re
@@ -10,9 +10,9 @@ from app.models import TABEL_SMART, Base
 BACKEND = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def test_model_memuat_14_tabel_sesuai_dokumen():
+def test_model_memuat_15_tabel():
     assert set(Base.metadata.tables) == set(TABEL_SMART)
-    assert len(TABEL_SMART) == 14
+    assert len(TABEL_SMART) == 15
 
 
 def test_kolom_inti_ada():

@@ -101,7 +101,7 @@ class _DetailPageState extends State<DetailPage> {
                       Tooltip(
                         message: 'Tanya chatbot AI',
                         child: OutlinedButton(
-                          onPressed: () => context.push('/chat'),
+                          onPressed: () => context.go('/chat'),
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size(52, 48),
                             padding: EdgeInsets.zero,

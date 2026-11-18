@@ -1,10 +1,12 @@
+import mimetypes
 import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Literal
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 from pydantic import BaseModel, ConfigDict, model_validator
 from sqlalchemy.orm import Session
 
@@ -86,12 +88,23 @@ def detail(dokumen_id: uuid.UUID, sesi: SesiDep, p: SaatIni) -> Amplop[DokumenOu
     return Amplop(data=DokumenOut.model_validate(layanan.ambil(sesi, p, dokumen_id)))
 
 
-@router.get("/{dokumen_id}/berkas", summary="Unduh atau lihat berkas asli", response_class=FileResponse)
-def berkas_asli(dokumen_id: uuid.UUID, sesi: SesiDep, p: SaatIni) -> FileResponse:
+@router.get("/{dokumen_id}/berkas", summary="Unduh atau lihat berkas asli", response_class=Response)
+def berkas_asli(dokumen_id: uuid.UUID, sesi: SesiDep, p: SaatIni, settings: SettingsDep) -> Response:
     d = layanan.ambil(sesi, p, dokumen_id)
     if not d.lokasi_penyimpanan or not Path(d.lokasi_penyimpanan).exists():
         raise NotFound("Berkas asli tidak tersimpan di server")
-    return FileResponse(d.lokasi_penyimpanan, filename=d.nama_berkas, content_disposition_type="inline")
+    isi = layanan.isi_berkas(settings, d)
+    if isi is None:
+        raise NotFound("Berkas asli tidak tersimpan di server")
+    jenis, _ = mimetypes.guess_type(d.nama_berkas)
+    return Response(
+        isi,
+        media_type=jenis or "application/octet-stream",
+        headers={
+            "Content-Disposition": f"inline; filename*=UTF-8''{quote(d.nama_berkas)}",
+            "Cache-Control": "private, no-store",
+        },
+    )
 
 
 @router.put("/{dokumen_id}/hasil-baca", summary="Koreksi hasil baca", response_model=Amplop[DokumenOut])

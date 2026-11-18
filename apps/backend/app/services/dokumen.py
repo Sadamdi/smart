@@ -8,16 +8,20 @@ import uuid
 import zipfile
 from pathlib import Path
 
+from cryptography.exceptions import InvalidTag
 from pypdf import PdfReader
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings
+from app.core.enkripsi import dekripsi, enkripsi
 from app.core.errors import NotFound, UpstreamUnavailable, ValidationFailed
 from app.models import DokumenPengguna, Pengguna
 from app.schemas.pengguna import Organisasi, Pengalaman, Prestasi, Sertifikat
 from app.services import llm
+from app.services.privasi import samarkan
 
+SUFIKS_TEKS = ".teks"
 TIPE_DIIZINKAN = {".pdf", ".docx", ".txt", ".png", ".jpg", ".jpeg"}
 TEKS_MAKS = 20000
 ROMAWI = {
@@ -246,15 +250,21 @@ def simpan(sesi: Session, p: Pengguna, jenis: str, nama: str, isi: bytes, settin
     folder = Path(settings.upload_dir) / str(p.id)
     folder.mkdir(parents=True, exist_ok=True)
     lokasi = folder / f"{uuid.uuid4().hex}{ext}"
-    lokasi.write_bytes(isi)
+    lokasi.write_bytes(
+        enkripsi(settings, isi, p.id.bytes)
+    )  # terenkripsi di disk; didekripsi hanya untuk pemilik dan chatbot
     d = DokumenPengguna(pengguna_id=p.id, jenis=jenis, nama_berkas=Path(nama).name[:200], lokasi_penyimpanan=str(lokasi))
+    teks_dokumen = ""
     try:
         teks = ekstrak_teks(nama, isi) or baca_gambar(settings, nama, isi)
+        teks_dokumen = teks
         if teks.strip():
             aturan = baca_dengan_aturan(teks)
-            hasil = baca_dengan_ai(settings, teks) | aturan if len(teks) >= 40 else aturan
+            hasil = baca_dengan_ai(settings, samarkan(teks, p.nama)) | aturan if len(teks) >= 40 else aturan
             d.hasil_baca = hasil | {"ringkasan_teks": teks[:600]}
             d.status_baca = "selesai"
+            if settings.upload_simpan_berkas:
+                Path(str(lokasi) + SUFIKS_TEKS).write_bytes(enkripsi(settings, teks.encode("utf8"), p.id.bytes))
         else:
             d.status_baca = "gagal"
     except ValueError:
@@ -266,6 +276,14 @@ def simpan(sesi: Session, p: Pengguna, jenis: str, nama: str, isi: bytes, settin
         d.lokasi_penyimpanan = ""
     sesi.add(d)
     sesi.flush()
+    if d.status_baca == "selesai" and teks_dokumen:
+        # Fakta dari dokumen masuk ke memori pengguna (chatbot dan rekomendasi). Gagal tidak menggagalkan unggahan.
+        try:
+            from app.services import memori
+
+            memori.catat_dari_dokumen(sesi, p, d.id, teks_dokumen, d.hasil_baca, settings)
+        except Exception:  # noqa: BLE001, S110 - memori hanya pelengkap
+            pass
     return d
 
 
@@ -318,5 +336,30 @@ def hapus(sesi: Session, p: Pengguna, dokumen_id: uuid.UUID) -> None:
     d = ambil(sesi, p, dokumen_id)
     if d.lokasi_penyimpanan:
         Path(d.lokasi_penyimpanan).unlink(missing_ok=True)
+        Path(d.lokasi_penyimpanan + SUFIKS_TEKS).unlink(missing_ok=True)
     sesi.delete(d)
     sesi.flush()
+
+
+def teks_penuh(settings: Settings, d: DokumenPengguna) -> str:
+    """Teks lengkap dokumen (didekripsi) untuk dipakai chatbot; kosong bila tidak tersimpan."""
+    if not d.lokasi_penyimpanan:
+        return ""
+    sampingan = Path(d.lokasi_penyimpanan + SUFIKS_TEKS)
+    try:
+        if sampingan.exists():
+            return dekripsi(settings, sampingan.read_bytes(), d.pengguna_id.bytes).decode("utf8", "ignore")
+        asli = Path(d.lokasi_penyimpanan)
+        if asli.exists():
+            return ekstrak_teks(d.nama_berkas, dekripsi(settings, asli.read_bytes(), d.pengguna_id.bytes))
+    except (OSError, ValueError, InvalidTag):
+        return ""
+    return ""
+
+
+def isi_berkas(settings: Settings, d: DokumenPengguna) -> bytes | None:
+    """Isi berkas asli yang sudah didekripsi, atau None bila tidak tersimpan."""
+    asli = Path(d.lokasi_penyimpanan) if d.lokasi_penyimpanan else None
+    if asli is None or not asli.exists():
+        return None
+    return dekripsi(settings, asli.read_bytes(), d.pengguna_id.bytes)
