@@ -54,6 +54,9 @@ class MesinLokal {
   /// Sinkron otomatis di latar belakang (dimatikan pada tes).
   final bool otomatis;
 
+  /// Bila benar, chatbot luring dijawab model AI di ponsel (bukan jawaban berbasis aturan).
+  bool Function() adaModelAi = () => false;
+
   Directory? _folder;
   TabelWilayah? _tabel;
   List<Map<String, dynamic>> _beasiswa = [];
@@ -63,6 +66,7 @@ class MesinLokal {
   List<Map<String, dynamic>> _antrean = [];
   List<HasilLokal>? _hasil;
   DateTime? _hari;
+  double _kekuatan = 0;
 
   /// Mode luring dipilih pengguna: semua pembacaan dan penulisan dilayani lokal.
   final aktif = ValueNotifier<bool>(false);
@@ -280,6 +284,7 @@ class MesinLokal {
           ? null
           : profil.skorBahasa,
     );
+    _kekuatan = kuat;
     final hasil = <HasilLokal>[];
     for (final b in _beasiswa) {
       final tg = b['tenggat'] == null
@@ -386,8 +391,110 @@ class MesinLokal {
         ], null);
       case '/chat/status':
         return Respons({'tersedia': true}, null);
+      case '/me/kalender':
+        return _kalender(q);
     }
+    final d = RegExp(r'^/beasiswa/([^/]+)$').firstMatch(jalur);
+    if (d != null) return _detail(d.group(1)!);
     return null;
+  }
+
+  static const _dapatDikejar = {
+    'ipk_minimum',
+    'sertifikat_bahasa',
+    'semester_minimum',
+    'berkas_pendukung',
+  };
+
+  /// Detail beasiswa dari paket lokal, dinilai terhadap profil di ponsel.
+  Respons? _detail(String id) {
+    final x = hitung().where((e) => e.b['id'] == id).firstOrNull;
+    if (x == null) return null;
+    final syarat = (x.b['syarat'] as List? ?? const []);
+    final dasar = (x.b['dasar_statistik'] as num?)?.toDouble();
+    final tingkat = dasar != null
+        ? null
+        : tingkatPersaingan(
+            '${x.b['nama']}',
+            x.b['penyelenggara'] as String?,
+            (x.b['luar_negeri'] ?? false) as bool,
+          );
+    return Respons({
+      ...x.ringkas,
+      ...x.kartu,
+      'manfaat': x.b['manfaat'],
+      'tanggal_diperiksa': x.b['tanggal_diperiksa'],
+      'persyaratan': [
+        for (var i = 0; i < syarat.length; i++)
+          {
+            'jenis': (syarat[i] as List)[0],
+            'nilai_batas': syarat[i][1],
+            'dapat_dikejar': _dapatDikejar.contains((syarat[i] as List)[0]),
+            'status': i < x.h.rincian.length ? x.h.rincian[i]?.status : null,
+            'catatan': i < x.h.rincian.length
+                ? (x.h.rincian[i]?.status == 'terpenuhi'
+                      ? x.h.rincian[i]?.alasan
+                      : x.h.rincian[i]?.kekurangan)
+                : null,
+          },
+      ],
+      'berkas_wajib': x.b['berkas_wajib'] ?? const [],
+      'alasan': x.h.alasan,
+      'catatan_kekurangan': x.h.catatan,
+      'alasan_peluang': x.estimasi == null
+          ? const <String>[]
+          : alasanPeluang(
+              x.h.kategori,
+              tingkat,
+              _kekuatan,
+              dasar != null,
+              x.m.total < syaratCukup,
+            ),
+      'dasar_peluang': dasar != null ? 'statistik' : 'perkiraan',
+      'statistik_seleksi': x.b['statistik'] ?? const [],
+      'tingkat_persaingan': tingkat,
+    }, null);
+  }
+
+  String _iso(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  /// Kalender: tenggat beasiswa tersimpan dan rekomendasi (memenuhi atau hampir) pada rentang yang diminta.
+  Respons _kalender(Map<String, dynamic> q) {
+    final sekarang = DateTime.now();
+    final hariIni = DateTime(sekarang.year, sekarang.month, sekarang.day);
+    final dari = DateTime.tryParse('${q['dari'] ?? ''}') ?? hariIni;
+    final sampai =
+        DateTime.tryParse('${q['sampai'] ?? ''}') ??
+        hariIni.add(const Duration(days: 120));
+    final acara = <Map<String, dynamic>>[];
+    var rekom = 0;
+    for (final x in hitung()) {
+      final tg = x.tenggat;
+      if (tg == null || tg.isBefore(dari) || tg.isAfter(sampai)) continue;
+      final simpan = _tersimpan.contains(x.b['id']);
+      if (simpan) {
+        acara.add({
+          'jenis': 'tenggat',
+          'tanggal': _iso(tg),
+          'judul': x.b['nama'],
+          'ref_id': x.b['id'],
+          'selesai': false,
+        });
+      } else if (x.h.kategori != belum && !tg.isBefore(hariIni) && rekom < 60) {
+        rekom++;
+        acara.add({
+          'jenis': 'rekomendasi',
+          'tanggal': _iso(tg),
+          'judul': x.b['nama'],
+          'ref_id': x.b['id'],
+          'selesai': false,
+          'kategori': x.h.kategori,
+        });
+      }
+    }
+    acara.sort((a, b) => '${a['tanggal']}'.compareTo('${b['tanggal']}'));
+    return Respons(acara, null);
   }
 
   Respons _jelajah(Map<String, dynamic> q) {
@@ -461,12 +568,70 @@ class MesinLokal {
       return layaniGet('/rekomendasi', const {});
     }
     if (metode == 'POST' && jalur == '/chat' && body is Map) {
+      if (adaModelAi()) return null;
       return Respons(_jawabChat('${body['pesan'] ?? ''}'), null);
     }
     return null;
   }
 
   // ---------- chatbot lokal ----------
+
+  /// Ringkasan data untuk model AI: profil singkat dan beasiswa yang relevan dengan [pesan].
+  String konteksChat(String pesan) {
+    final t = pesan.toLowerCase();
+    final semua = hitung();
+    final p = _profil ?? const {};
+    final buf = StringBuffer(
+      'Profil: jenjang ${p['jenjang'] ?? '-'}, semester ${p['semester'] ?? '-'}, IPK ${p['ipk'] ?? '-'}, kota ${p['kota_domisili'] ?? '-'}.\n',
+    );
+    final disebut = semua
+        .where((x) {
+          final kata = ('${x.b['nama']}')
+              .toLowerCase()
+              .split(RegExp(r'\s+'))
+              .where(
+                (k) =>
+                    k.length > 3 &&
+                    !{'beasiswa', 'program', 'untuk', 'tahun'}.contains(k),
+              )
+              .take(2)
+              .toList();
+          return kata.isNotEmpty && kata.every(t.contains);
+        })
+        .take(2)
+        .toList();
+    final pilih = <HasilLokal>[...disebut];
+    final urut =
+        semua.where((x) => x.h.kategori != belum && !pilih.contains(x)).toList()
+          ..sort((a, b) => (b.estimasi ?? -1).compareTo(a.estimasi ?? -1));
+    if (RegExp(r'tenggat|deadline|kapan').hasMatch(t)) {
+      final dekat =
+          semua
+              .where(
+                (x) =>
+                    x.tenggat != null &&
+                    x.h.kategori != belum &&
+                    !pilih.contains(x),
+              )
+              .toList()
+            ..sort((a, b) => a.tenggat!.compareTo(b.tenggat!));
+      pilih.addAll(dekat.take(4));
+    }
+    pilih.addAll(urut.take(6 - pilih.length.clamp(0, 5)));
+    buf.writeln('Beasiswa:');
+    for (final x in pilih) {
+      final syarat = [
+        for (final s in (x.b['syarat'] as List? ?? const []).take(
+          disebut.contains(x) ? 12 : 4,
+        ))
+          '${(s as List)[0]} ${jsonEncode(s[1])}',
+      ];
+      buf.writeln(
+        '- ${x.b['nama']} | ${x.b['penyelenggara'] ?? 'penyelenggara belum tercatat'} | tenggat ${_tgl(x.b['tenggat'] as String?)} | kategori ${x.h.kategori.replaceAll('_', ' ')} | estimasi peluang ${x.estimasi ?? 'belum ada'} persen (perkiraan) | syarat: ${syarat.join('; ')}',
+      );
+    }
+    return buf.toString();
+  }
 
   String _tgl(String? iso) {
     if (iso == null) return 'belum diumumkan';
