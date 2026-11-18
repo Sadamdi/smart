@@ -179,21 +179,20 @@ class _ChatPageState extends State<ChatPage> {
 
     return Scaffold(
       appBar: AppBar(
-        leadingWidth: 56,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 12),
-          child: TombolBulat.kembali(context),
-        ),
-        title: Text(
-          'Chatbot Beasiswa',
-          style: t.titleLarge?.copyWith(fontSize: 18),
-        ),
+        automaticallyImplyLeading: false,
+        title: Text('Asisten AI', style: t.titleLarge?.copyWith(fontSize: 18)),
         actions: [
           const _PilihanAi(),
-          IconButton(
-            tooltip: 'Hapus riwayat',
-            onPressed: _c.hapusRiwayat,
-            icon: Icon(Icons.delete_outline, color: Warna.muted),
+          PopupMenuButton<String>(
+            tooltip: 'Menu chat',
+            onSelected: _menu,
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'statistik', child: Text('Statistik chat')),
+              PopupMenuItem(value: 'memori', child: Text('Memori AI')),
+              PopupMenuItem(value: 'cadang', child: Text('Cadangkan riwayat')),
+              PopupMenuItem(value: 'pulih', child: Text('Pulihkan riwayat')),
+              PopupMenuItem(value: 'hapus', child: Text('Hapus riwayat')),
+            ],
           ),
         ],
       ),
@@ -379,6 +378,60 @@ class _LencanaSumber extends StatelessWidget {
   const _LencanaSumber(this.sumber);
 
   final String sumber;
+
+  void _info(String t) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t)));
+
+  Future<void> _menu(String k) async {
+    try {
+      switch (k) {
+        case 'memori':
+          context.push('/memori');
+        case 'cadang':
+          _info(await _c.cadangkan());
+        case 'pulih':
+          _info(await _c.pulihkan());
+        case 'hapus':
+          await _c.hapusRiwayat();
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Riwayat dihapus'),
+              action: SnackBarAction(
+                label: 'Urungkan',
+                onPressed: () async => _info(await _c.urungkanHapus()),
+              ),
+            ),
+          );
+        case 'statistik':
+          final d = await _c.statistik();
+          if (!mounted) return;
+          final top = [
+            for (final b in (d['beasiswa_teratas'] as List? ?? []))
+              '${(b as Map)['nama']} (${b['jumlah']})',
+          ];
+          final isi =
+              '${d['jumlah']} pertanyaan, ${d['tujuh_hari']} dalam 7 hari terakhir.\n'
+              'Rata-rata jawaban ${d['rata_panjang_jawaban']} karakter.'
+              '${top.isEmpty ? '' : '\n\nPaling sering dirujuk:\n${top.join('\n')}'}';
+          await showDialog<void>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Isi chatbot'),
+              content: Text(isi),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Tutup'),
+                ),
+              ],
+            ),
+          );
+      }
+    } catch (e) {
+      _info(pesanGalat(e));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 
 import 'cache_lokal.dart';
 import 'lokal/mesin_lokal.dart';
+import 'terowongan.dart';
 import 'token_storage.dart';
 
 /// Galat dari server dengan bentuk baku { success: false, error: { code, message } }.
@@ -72,7 +74,11 @@ class ApiClient {
     this.onSesiBerakhir,
     this.cache,
     this.lokal,
+    this.terowongan,
   });
+
+  /// Terowongan terenkripsi di atas TLS; null bila tidak dipakai (tes) dan mati sendiri bila server belum mendukung.
+  final Terowongan? terowongan;
 
   /// Cache data terakhir untuk mode luring (baca saja); null bila tidak dipakai.
   final CacheLokal? cache;
@@ -321,13 +327,27 @@ class ApiClient {
 
   /// Mengunduh berkas biner (mis. dokumen asli) ke [simpanKe], dengan token dan satu kali penyegaran.
   Future<void> unduh(String jalur, String simpanKe) async {
-    Future<Response<dynamic>> coba(String? token) => dio.download(
-      jalur,
-      simpanKe,
-      options: Options(
-        headers: {if (token != null) 'Authorization': 'Bearer $token'},
-      ),
-    );
+    final t = terowongan;
+    Future<Response<dynamic>> coba(String? token) async {
+      if (t != null && t.aktif) {
+        final h = await t.kirim('GET', jalur, token: token);
+        if (h != null) {
+          if (h.status == 200) await File(simpanKe).writeAsBytes(h.badan);
+          return Response<dynamic>(
+            requestOptions: RequestOptions(path: jalur),
+            statusCode: h.status,
+          );
+        }
+      }
+      return dio.download(
+        jalur,
+        simpanKe,
+        options: Options(
+          headers: {if (token != null) 'Authorization': 'Bearer $token'},
+        ),
+      );
+    }
+
     try {
       var res = await coba((await storage.baca())?.akses);
       if (res.statusCode == 401 && await _segarkan()) {
@@ -356,7 +376,32 @@ class ApiClient {
     Object? body,
     String? token,
   ) async {
+    final t = terowongan;
     try {
+      if (t != null && t.aktif) {
+        final h = await t.kirim(
+          metode,
+          jalur,
+          query: query,
+          body: body,
+          token: token,
+        );
+        if (h != null) {
+          dynamic data;
+          if (h.badan.isNotEmpty) {
+            try {
+              data = h.json ? jsonDecode(h.teks) : h.teks;
+            } on FormatException {
+              data = h.teks;
+            }
+          }
+          return Response<dynamic>(
+            requestOptions: RequestOptions(path: jalur),
+            statusCode: h.status,
+            data: data,
+          );
+        }
+      }
       return await dio.request<dynamic>(
         jalur,
         data: body,

@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
@@ -154,10 +157,60 @@ class ChatController extends GetxController {
     _bersihkanAliran();
   }
 
+  /// Cadangan sesaat dari riwayat yang baru dihapus, agar dapat diurungkan.
+  final cadanganHapus = Rxn<List<dynamic>>();
+
   Future<void> hapusRiwayat() async {
     await batalkan();
+    try {
+      cadanganHapus.value = await _repo.ekspor();
+    } catch (_) {
+      cadanganHapus.value = null;
+    }
     await _repo.hapusRiwayat();
     await riwayat.muat();
+  }
+
+  Future<String> urungkanHapus() async {
+    final c = cadanganHapus.value;
+    if (c == null || c.isEmpty) return 'Tidak ada yang dipulihkan';
+    final n = await _repo.impor(c);
+    cadanganHapus.value = null;
+    await riwayat.muat();
+    return '$n percakapan dipulihkan';
+  }
+
+  Future<Map<String, dynamic>> statistik() => _repo.statistik();
+
+  /// Menyimpan cadangan riwayat sebagai berkas JSON ke lokasi pilihan pengguna.
+  Future<String> cadangkan() async {
+    final butir = await _repo.ekspor();
+    if (butir.isEmpty) return 'Belum ada riwayat untuk dicadangkan';
+    final uri = await FilePicker.saveFile(
+      fileName: 'cadangan-chat-smart.json',
+      bytes: Uint8List.fromList(utf8.encode(jsonEncode(butir))),
+      mimeType: 'application/json',
+    );
+    return uri == null ? 'Dibatalkan' : 'Cadangan disimpan';
+  }
+
+  /// Memulihkan riwayat dari berkas cadangan JSON (butir yang sama tidak digandakan).
+  Future<String> pulihkan() async {
+    final hasil = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['json'],
+    );
+    final berkas = hasil.isEmpty ? null : hasil.first;
+    if (berkas?.path == null) return 'Dibatalkan';
+    try {
+      final butir = jsonDecode(await File(berkas!.path!).readAsString());
+      if (butir is! List) return 'Berkas cadangan tidak valid';
+      final n = await _repo.impor(butir);
+      await riwayat.muat();
+      return '$n percakapan dipulihkan';
+    } catch (_) {
+      return 'Berkas cadangan tidak valid';
+    }
   }
 
   void bersihkan() {
