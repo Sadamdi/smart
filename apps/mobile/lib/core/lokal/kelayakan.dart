@@ -35,6 +35,25 @@ class ProfilKelayakan {
     this.jenjangTuju = const [],
   });
 
+  /// Salinan dengan sebagian nilai diganti (dipakai simulasi "bagaimana jika").
+  ProfilKelayakan salin({double? ipk, int? semester, String? jenjang}) =>
+      ProfilKelayakan(
+        jenjang: jenjang ?? this.jenjang,
+        semester: semester ?? this.semester,
+        ipk: ipk ?? this.ipk,
+        jenisKampus: jenisKampus,
+        kotaDomisili: kotaDomisili,
+        negaraDomisili: negaraDomisili,
+        provinsiDomisili: provinsiDomisili,
+        daerahAsal: daerahAsal,
+        tanggalLahir: tanggalLahir,
+        penghasilanOrangTua: penghasilanOrangTua,
+        skorBahasa: skorBahasa,
+        kewarganegaraan: kewarganegaraan,
+        berkasDiunggah: berkasDiunggah,
+        jenjangTuju: jenjangTuju,
+      );
+
   final String? jenjang;
   final int? semester;
   final double? ipk;

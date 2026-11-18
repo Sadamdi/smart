@@ -4,6 +4,7 @@ import { MessageCircle, SendHorizonal, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { GelembungChat } from "@/components/GelembungChat";
+import { TeksMarkdown } from "@/components/TeksMarkdown";
 import { GalatState, MemuatState, pesanGalat } from "@/components/state";
 import { JudulHalaman, Kartu, Masukan, Tombol } from "@/components/ui";
 import { kirim } from "@/lib/api";
@@ -106,7 +107,7 @@ export default function ChatbotAI() {
               <GelembungChat dari="pengguna">{c.pesan}</GelembungChat>
               {c.jawaban && (
                 <GelembungChat dari="asisten">
-                  {c.jawaban}
+                  <TeksMarkdown teks={c.jawaban} />
                   {c.rujukan.length > 0 && (
                     <span className="mt-2 block border-t border-c4 pt-2 text-xs">
                       Rujukan:{" "}

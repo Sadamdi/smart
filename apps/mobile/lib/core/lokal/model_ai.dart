@@ -402,6 +402,9 @@ class PengelolaModelAi {
 
   static String instruksiSistem(String konteks) =>
       'Kamu adalah asisten SMART, pemandu beasiswa untuk mahasiswa Indonesia. Jawab dalam bahasa Indonesia yang singkat dan jelas. '
-      'Gunakan hanya data di bawah ini; jika tidak ada di data, katakan belum tercatat dan sarankan memeriksa laman resmi. '
+      'Gunakan format markdown agar mudah dibaca: **tebal** untuk nama beasiswa dan angka penting, daftar berpoin untuk syarat, '
+      'tabel bila membandingkan, dan judul pendek bila jawabannya panjang. '
+      'Gunakan hanya data di bawah ini, termasuk bagian HASIL ALAT bila ada; jika tidak ada di data, katakan belum tercatat dan sarankan '
+      'memeriksa laman resmi. Sebutkan nama beasiswa yang kamu pakai sebagai sumber. '
       'Jangan pernah menyatakan seseorang pasti diterima; angka peluang hanya perkiraan.\n\nDATA:\n$konteks';
 }

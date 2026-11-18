@@ -918,6 +918,7 @@ def bagian_identitas():
         ("Ilustrasi gaya pastel", BL.svg_teks(), 1176, 792),
         ("Kartu skor: Beranda, Detail, Jelajah web", BK.svg_teks(), 1480, 1380),
         ("Pembaruan 18 November: bar bawah, kalender, dokumen, profil lanjutan", BI.svg_pembaruan()[0], 1680, 880),
+        ("Chatbot AI: markdown, sumber, pilihan server atau ponsel, model luring", BI.svg_chat()[0], 1260, 880),
     ]
     x, y = 0, 2400
     for nama, teks, w, h in bagian:

@@ -242,3 +242,65 @@ def svg_pembaruan():
 
 def chip_kecil(x, y, label):
     return kotak(x, y, 60, 20, 10, K.MINT) + t(x + 30, y + 14, label, 10.5, 700, K.MINT_T, "middle")
+
+
+def svg_chat():
+    W, H = 1260, 880
+    o = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d" width="%d" height="%d">' % (W, H, W, H), kotak(0, 0, W, H, 0, "#F3F6FB")]
+    o.append(t(40, 48, "Chatbot AI: jawaban beraturan, sumber, dan pilihan server atau ponsel", 24, 800, NAVY))
+    # 1. Chat dengan markdown
+    x, y = 40, 120
+    o += _hp(x, y, "Chat: markdown, lencana sumber, rujukan")
+    o.append(t(x + 20, y + 40, "Chatbot Beasiswa", 18, 800, NAVY))
+    o.append(kotak(x + 220, y + 20, 110, 32, 16, BLUE) + t(x + 275, y + 41, "Ponsel", 13, 700, "#FFFFFF", "middle"))
+    o.append(kotak(x + 50, y + 70, 290, 40, 18, BLUE) + t(x + 64, y + 95, "Beasiswa apa yang cocok untukku?", 13, 600, "#FFFFFF"))
+    o.append(kotak(x + 16, y + 126, 320, 330, 20, "#FFFFFF", stroke="#E1E9F6", sw=1))
+    o.append(t(x + 32, y + 156, "Rekomendasi untukmu", 16, 800, NAVY))
+    for i, (n, d) in enumerate((("Program Bantuan Pendidikan", "estimasi 49%, memenuhi"), ("KIP Kuliah Jalur SNBP", "estimasi 39%, memenuhi"), ("Beasiswa Prestasi Nusantara", "estimasi 21%, hampir"))):
+        yy = y + 180 + i * 52
+        o.append('<circle cx="%d" cy="%d" r="3" fill="%s"/>' % (x + 38, yy - 4, BLUE))
+        o.append(t(x + 50, yy, n, 13.5, 800, NAVY) + t(x + 50, yy + 18, d, 12, 500, K.MUTED))
+    o.append(kotak(x + 32, y + 346, 288, 54, 10, PALE))
+    o.append(t(x + 44, y + 368, "Estimasi hanya perkiraan, bukan jaminan.", 12, 600, DEEP))
+    o.append('<circle cx="%d" cy="%d" r="6" fill="none" stroke="%s" stroke-width="2"/>' % (x + 40, y + 430, K.MUTED))
+    o.append(t(x + 52, y + 435, "Dijawab model AI di ponsel", 11, 600, K.MUTED))
+    o.append(t(x + 32, y + 480, "Sumber data beasiswa SMART", 11, 600, K.MUTED))
+    for i, n in enumerate(("Program Bantuan...", "KIP Kuliah...")):
+        o.append(kotak(x + 32 + i * 150, y + 490, 140, 30, 15, "#FFFFFF", stroke=PALE, sw=1.5) + t(x + 102 + i * 150, y + 510, n, 12, 700, DEEP, "middle"))
+    o.append(kotak(x + 16, y + 640, 328, 52, 26, "#FFFFFF", stroke="#C9D6EC", sw=1.5) + t(x + 36, y + 672, "Tulis pertanyaanmu", 14, 500, K.MUTED))
+    # 2. Pilihan sumber
+    x = 450
+    o += _hp(x, y, "Pilih jawab lewat server atau ponsel")
+    o.append(t(x + 20, y + 40, "Chatbot Beasiswa", 18, 800, NAVY))
+    o.append(kotak(x + 220, y + 20, 110, 32, 16, "#FFFFFF", stroke=PALE, sw=1.5) + t(x + 275, y + 41, "Server", 13, 700, DEEP, "middle"))
+    o.append(kotak(x + 16, y + 90, 328, 150, 20, "#FFFFFF", stroke="#E1E9F6", sw=1))
+    o.append(t(x + 32, y + 122, "Server (layanan AI)", 15, 800, NAVY))
+    o.append(t(x + 32, y + 146, "Jawaban lengkap, butuh jaringan", 12.5, 500, K.MUTED))
+    o.append(t(x + 32, y + 180, "Ponsel (model AI)", 15, 800, NAVY))
+    o.append(t(x + 32, y + 204, "Tanpa server, algoritma dihitung di ponsel", 12.5, 500, K.MUTED))
+    o.append(kotak(x + 16, y + 260, 328, 120, 20, PALE))
+    o.append(t(x + 32, y + 292, "Alat yang dipakai AI di ponsel", 14, 800, NAVY))
+    for i, n in enumerate(("Simulasi: jika IPK 3,8", "Tenggat terdekat", "Banding dua beasiswa")):
+        o.append(t(x + 44, y + 318 + i * 20, n, 12.5, 600, DEEP))
+        o.append('<circle cx="%d" cy="%d" r="3" fill="%s"/>' % (x + 34, y + 314 + i * 20, "#F5B73B"))
+    # 3. Model AI luring
+    x = 860
+    o += _hp(x, y, "Model AI luring: spesifikasi dan saran")
+    o.append(t(x + 20, y + 40, "Chatbot AI luring", 18, 800, NAVY))
+    o.append(kotak(x + 16, y + 64, 328, 118, 18, "#FFFFFF", stroke="#E1E9F6", sw=1))
+    for i, ln in enumerate(("vivo I2501", "RAM 14,9 GB | 8 inti | 64-bit", "GPU Vulkan | 49,6 GB kosong", "Saran: Gemma 4 E2B")):
+        o.append(t(x + 30, y + 90 + i * 22, ln, 13 if i else 15, 800 if i in (0, 3) else 500, NAVY if i in (0, 3) else K.MUTED))
+    o.append(kotak(x + 16, y + 198, 328, 230, 18, "#FFFFFF", stroke=BLUE, sw=2))
+    o.append(t(x + 30, y + 228, "Gemma 4 E2B", 16, 800, NAVY))
+    o.append(kotak(x + 244, y + 212, 86, 24, 12, K.MINT) + t(x + 287, y + 229, "Disarankan", 11, 700, K.MINT_T, "middle"))
+    for i, ln in enumerate(("Parameter: 2 miliar efektif", "Konteks: hingga 32 ribu token", "Kecepatan: sedang", "Bahasa Indonesia: baik")):
+        o.append('<circle cx="%d" cy="%d" r="5" fill="%s"/>' % (x + 36, y + 256 + i * 24, PALE))
+        o.append(t(x + 50, y + 260 + i * 24, ln, 12.5, 600, NAVY))
+    xx = x + 30
+    for lab in ("Obrolan", "Fungsi", "Gambar", "Suara"):
+        c, w = K.chip(xx, y + 360, lab, PALE, DEEP)
+        o.append(c)
+        xx += w + 6
+    o.append(kotak(x + 30, y + 394, 300, 28, 14, BLUE) + t(x + 180, y + 413, "Sedang dipakai", 12.5, 700, "#FFFFFF", "middle"))
+    o.append("</svg>")
+    return "\n".join(o), W, H

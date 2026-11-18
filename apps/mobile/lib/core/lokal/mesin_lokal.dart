@@ -72,6 +72,9 @@ class MesinLokal {
   /// Mode luring dipilih pengguna: semua pembacaan dan penulisan dilayani lokal.
   final aktif = ValueNotifier<bool>(false);
 
+  /// Pengguna memilih memakai model AI di ponsel walau mode luring mati (jawaban chatbot tanpa server).
+  final aiLokalAktif = ValueNotifier<bool>(false);
+
   /// Jumlah perubahan yang menunggu dikirim ke server.
   final menunggu = ValueNotifier<int>(0);
   final terakhirSinkron = ValueNotifier<DateTime?>(null);
@@ -135,6 +138,7 @@ class MesinLokal {
     final s = await _baca('status.json');
     if (s is Map) {
       aktif.value = (s['aktif'] ?? false) as bool;
+      aiLokalAktif.value = (s['ai_lokal'] ?? false) as bool;
       final ts = s['sinkron'] as String?;
       terakhirSinkron.value = ts == null ? null : DateTime.tryParse(ts);
     }
@@ -147,8 +151,14 @@ class MesinLokal {
     await _simpanStatus();
   }
 
+  Future<void> aturAiLokal(bool nilai) async {
+    aiLokalAktif.value = nilai;
+    await _simpanStatus();
+  }
+
   Future<void> _simpanStatus() => _tulis('status.json', {
     'aktif': aktif.value,
+    'ai_lokal': aiLokalAktif.value,
     'sinkron': terakhirSinkron.value?.toIso8601String(),
   });
 
@@ -607,6 +617,45 @@ class MesinLokal {
     return null;
   }
 
+  /// Beasiswa yang dipakai pada konteks terakhir (untuk ditampilkan sebagai sumber jawaban).
+  List<Map<String, dynamic>> sumberTerakhir = const [];
+
+  /// Alat simulasi: hitung ulang rekomendasi bila IPK diganti, tanpa mengubah profil.
+  String _simulasiIpk(double ipk) {
+    final hari0 = DateTime.now();
+    final hari = DateTime(hari0.year, hari0.month, hari0.day);
+    final profil = _profilKelayakan().salin(ipk: ipk);
+    final hitungan = {memenuhi: 0, hampir: 0, belum: 0};
+    final baru = <(String, String, int?)>[];
+    final lama = {for (final x in hitung()) '${x.b['id']}': x.h.kategori};
+    for (final b in _beasiswa) {
+      final tg = b['tenggat'] == null
+          ? null
+          : DateTime.parse(b['tenggat'] as String);
+      if (tg != null && tg.isBefore(hari)) continue;
+      final syarat = <Syarat>[
+        for (final x in (b['syarat'] as List? ?? const []))
+          ((x as List)[0] as String, (x[1] as Map?)?.cast<String, dynamic>()),
+      ];
+      final h = nilaiKelayakan(_tabel!, syarat, profil, hari);
+      hitungan[h.kategori] = hitungan[h.kategori]! + 1;
+      if (lama['${b['id']}'] != null &&
+          lama['${b['id']}'] != memenuhi &&
+          h.kategori == memenuhi) {
+        baru.add(('${b['nama']}', h.kategori, null));
+      }
+    }
+    final buf = StringBuffer(
+      'HASIL ALAT SIMULASI (dihitung di ponsel): bila IPK $ipk, memenuhi ${hitungan[memenuhi]}, hampir memenuhi ${hitungan[hampir]}, belum memenuhi ${hitungan[belum]}.',
+    );
+    if (baru.isNotEmpty) {
+      buf.write(
+        ' Beasiswa yang baru menjadi memenuhi: ${baru.take(5).map((e) => e.$1).join('; ')}.',
+      );
+    }
+    return buf.toString();
+  }
+
   /// Ringkasan data untuk model AI: profil singkat dan beasiswa yang relevan dengan [pesan].
   String konteksChat(String pesan) {
     final t = pesan.toLowerCase();
@@ -660,6 +709,22 @@ class MesinLokal {
       buf.writeln(
         '- ${x.b['nama']} | ${x.b['penyelenggara'] ?? 'penyelenggara belum tercatat'} | tenggat ${_tgl(x.b['tenggat'] as String?)} | kategori ${x.h.kategori.replaceAll('_', ' ')} | estimasi peluang ${x.estimasi ?? 'belum ada'} persen (perkiraan) | syarat: ${syarat.join('; ')}',
       );
+    }
+    sumberTerakhir = [
+      for (final x in pilih)
+        {
+          'id': x.b['id'],
+          'nama': x.b['nama'],
+          'tautan_resmi': x.b['tautan_resmi'],
+        },
+    ];
+    final m = RegExp(
+      r'ipk\s*(?:menjadi|jadi|naik|=|di|ke)?\s*(\d)[.,](\d{1,2})',
+    ).firstMatch(t);
+    if (m != null &&
+        RegExp(r'jika|kalau|andai|seandainya|bagaimana').hasMatch(t)) {
+      final ipk = double.tryParse('${m.group(1)}.${m.group(2)}');
+      if (ipk != null && ipk >= 0 && ipk <= 4) buf.writeln(_simulasiIpk(ipk));
     }
     return buf.toString();
   }
@@ -760,6 +825,7 @@ class MesinLokal {
           '00000000-0000-4000-8000-${DateTime.now().millisecondsSinceEpoch.toRadixString(16).padLeft(12, '0')}',
       'pesan': pesan,
       'jawaban': jawab,
+      'sumber': 'lokal',
       'waktu': DateTime.now().toIso8601String(),
       'rujukan': [
         for (final x in rujukan)

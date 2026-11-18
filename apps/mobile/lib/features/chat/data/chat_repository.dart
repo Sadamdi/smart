@@ -10,7 +10,11 @@ class PesanChat {
     required this.pesan,
     this.jawaban,
     this.rujukan = const [],
+    this.sumber = 'server',
   });
+
+  /// Asal jawaban: server (layanan AI), ponsel (model AI di ponsel), atau data lokal (aturan tanpa model).
+  final String sumber;
 
   /// Beasiswa yang menjadi sumber jawaban: pasangan id dan nama.
   final List<({String id, String nama})> rujukan;
@@ -23,6 +27,7 @@ class PesanChat {
     id: j['id'] as String,
     pesan: j['pesan'] as String,
     jawaban: j['jawaban'] as String?,
+    sumber: (j['sumber'] as String?) ?? 'server',
     rujukan: [
       for (final x in (j['rujukan'] as List? ?? []))
         (
@@ -58,6 +63,10 @@ class ChatRepository {
     try {
       final jawaban = await ai.jawab(pesan, lokal.konteksChat(pesan));
       if (jawaban.isEmpty) return null;
+      final rujukan = [
+        for (final x in lokal.sumberTerakhir.take(4))
+          {'id': x['id'], 'nama': x['nama'], 'tautan_resmi': x['tautan_resmi']},
+      ];
       final isi =
           '$jawaban\n\n(Dijawab model AI di ponsel. Estimasi hanya perkiraan, bukan jaminan diterima.)';
       lokal.catatChat({
@@ -65,12 +74,17 @@ class ChatRepository {
         'pesan': pesan,
         'jawaban': isi,
         'waktu': DateTime.now().toIso8601String(),
-        'rujukan': const <Map<String, dynamic>>[],
+        'rujukan': rujukan,
+        'sumber': 'ponsel',
       });
       return PesanChat(
         id: 'lokal-${DateTime.now().microsecondsSinceEpoch}',
         pesan: pesan,
         jawaban: isi,
+        sumber: 'ponsel',
+        rujukan: [
+          for (final r in rujukan) (id: '${r['id']}', nama: '${r['nama']}'),
+        ],
       );
     } on Object {
       return null;
@@ -80,7 +94,7 @@ class ChatRepository {
   Future<PesanChat> kirim(String pesan) async {
     final lokal = Get.find<MesinLokal>();
     // Mode luring: model AI di ponsel lebih dulu; bila tidak ada atau gagal, jawaban berbasis data lokal.
-    if (lokal.aktif.value) {
+    if (lokal.aktif.value || lokal.aiLokalAktif.value) {
       final p = await _lewatModelLokal(pesan);
       if (p != null) return p;
     }
