@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:flutter/widgets.dart';
@@ -22,6 +24,7 @@ import '../features/profil/presentation/profil_controller.dart';
 import '../features/rekomendasi/data/rekomendasi_repository.dart';
 import '../features/rekomendasi/presentation/rekomendasi_controller.dart';
 import 'api_client.dart';
+import 'terowongan.dart';
 import 'cache_lokal.dart';
 import 'lokal/mesin_lokal.dart';
 import 'lokal/model_ai.dart';
@@ -63,6 +66,14 @@ void pasangDependensi({
       storage: Get.find<TokenStorage>(),
       cache: Get.find<CacheLokal>(),
       lokal: Get.find<MesinLokal>(),
+      // Terowongan hanya dipakai di aplikasi sungguhan (dio tidak disuntikkan) dan bila kunci publik server ada.
+      terowongan: dio == null && terowonganKunciPublik.isNotEmpty
+          ? Terowongan(
+              dio: Get.find<Dio>(),
+              kid: terowonganKid,
+              kunciPublikServer: base64.decode(terowonganKunciPublik),
+            )
+          : null,
       onSesiBerakhir: () => Get.find<AuthController>().sesiBerakhir(),
     ),
     permanent: true,

@@ -184,4 +184,15 @@ class ChatRepository {
   }
 
   Future<void> hapusRiwayat() => _api.delete('/chat/riwayat');
+
+  Future<Map<String, dynamic>> statistik() async =>
+      (await _api.get('/chat/statistik')).data as Map<String, dynamic>;
+
+  Future<List<dynamic>> ekspor() async =>
+      (await _api.get('/chat/ekspor')).data as List<dynamic>;
+
+  Future<int> impor(List<dynamic> butir) async {
+    final r = await _api.post('/chat/impor', body: {'butir': butir});
+    return (r.data as Map<String, dynamic>)['dipulihkan'] as int? ?? 0;
+  }
 }

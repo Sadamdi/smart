@@ -17,6 +17,12 @@ class Settings(BaseSettings):
 
     # Kunci enkripsi berkas dan teks dokumen di server (Fernet, 32 byte base64 urlsafe). Kosong: diturunkan dari jwt_secret.
     kunci_enkripsi: str = ""
+    # Terowongan terenkripsi aplikasi (X25519 + AES-256-GCM). Kunci privat mentah 32 byte base64; kosong: terowongan mati.
+    # Mode: optional (terima biasa dan terowongan), required (aplikasi lama wajib memperbarui).
+    terowongan_kunci_privat: str = ""
+    terowongan_kid: str = "k1"
+    terowongan_kunci_lama: str = ""  # "kid:base64,kid:base64" untuk kunci yang sudah dipensiunkan
+    terowongan_mode: Literal["optional", "required"] = "optional"
     jwt_secret: str = ""
     jwt_access_menit: int = 15
     jwt_refresh_hari: int = 30
