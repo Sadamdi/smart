@@ -9,6 +9,7 @@ import 'core/dependensi.dart';
 import 'core/router.dart';
 import 'core/tema_controller.dart';
 import 'core/theme/app_theme.dart';
+import 'core/cache_lokal.dart';
 import 'core/lokal/mesin_lokal.dart';
 import 'core/lokal/model_ai.dart';
 import 'core/update/pemeriksa_pembaruan.dart';
@@ -22,6 +23,7 @@ void main() {
   // Semua controller dan repository didaftarkan ke GetX sebelum aplikasi digambar.
   pasangDependensi();
   unawaited(Get.find<MesinLokal>().muat());
+  unawaited(_siapkanAiLatarBelakang());
   runApp(const SmartApp());
 }
 
@@ -92,4 +94,21 @@ class _SmartAppState extends State<SmartApp> with WidgetsBindingObserver {
       ),
     );
   }
+}
+
+/// Model AI luring dimuat di latar belakang (setelah antarmuka tampil) hanya bila aplikasi dibuka dalam mode luring
+/// atau saat jaringan terdeteksi putus. Bila tidak, model tidak dimuat sama sekali sehingga ringan.
+Future<void> _siapkanAiLatarBelakang() async {
+  await Future<void>.delayed(const Duration(seconds: 10));
+  final mesin = Get.find<MesinLokal>();
+  final cache = Get.find<CacheLokal>();
+  final ai = Get.find<PengelolaModelAi>();
+  await ai.muat();
+  void cobaMuat() {
+    if (mesin.aktif.value || cache.luring.value) ai.siapkanDiLatarBelakang();
+  }
+
+  cobaMuat();
+  cache.luring.addListener(cobaMuat);
+  mesin.aktif.addListener(cobaMuat);
 }
