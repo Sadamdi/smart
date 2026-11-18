@@ -15,6 +15,8 @@ class Settings(BaseSettings):
 
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
 
+    # Kunci enkripsi berkas dan teks dokumen di server (Fernet, 32 byte base64 urlsafe). Kosong: diturunkan dari jwt_secret.
+    kunci_enkripsi: str = ""
     jwt_secret: str = ""
     jwt_access_menit: int = 15
     jwt_refresh_hari: int = 30

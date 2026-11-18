@@ -15,6 +15,7 @@ import '../features/beasiswa/presentation/tersimpan_page.dart';
 import '../features/beranda/presentation/beranda_page.dart';
 import '../features/chat/presentation/chat_page.dart';
 import '../features/pengaturan/presentation/model_ai_page.dart';
+import '../features/memori/memori_page.dart';
 import 'cache_lokal.dart';
 import '../features/dokumen/presentation/dokumen_page.dart';
 import '../features/pengaturan/presentation/pengaturan_page.dart';
@@ -61,7 +62,7 @@ GoRouter buatRouter(SegarkanRouter segarkan) {
       GoRoute(path: '/notifikasi', builder: (_, _) => const NotifikasiPage()),
       GoRoute(path: '/tersimpan', builder: (_, _) => const TersimpanPage()),
       GoRoute(path: '/dokumen', builder: (_, _) => const DokumenPage()),
-      GoRoute(path: '/chat', builder: (_, _) => const ChatPage()),
+      GoRoute(path: '/memori', builder: (_, _) => const MemoriPage()),
       GoRoute(
         path: '/profil-lanjutan',
         builder: (_, _) => const ProfilLanjutanPage(),
@@ -104,6 +105,9 @@ GoRouter buatRouter(SegarkanRouter segarkan) {
                 builder: (_, _) => const KalenderPage(),
               ),
             ],
+          ),
+          StatefulShellBranch(
+            routes: [GoRoute(path: '/chat', builder: (_, _) => const ChatPage())],
           ),
           StatefulShellBranch(
             routes: [
@@ -200,7 +204,7 @@ class _Cangkang extends StatelessWidget {
             child: MediaQuery.withClampedTextScaling(
               maxScaleFactor: 1.0,
               child: NavigationBar(
-                selectedIndex: shell.currentIndex,
+                selectedIndex: shell.currentIndex.clamp(0, _menu.length - 1),
                 onDestinationSelected: (_) {},
                 destinations: [
                   for (final (i, m) in _menu.indexed)
@@ -208,13 +212,11 @@ class _Cangkang extends StatelessWidget {
                       ikon: m.$1,
                       ikonAktif: m.$2,
                       label: m.$3,
-                      aktif: i != 4 && shell.currentIndex == i,
-                      onTap: () => i == 4
-                          ? context.push('/chat')
-                          : shell.goBranch(
-                              i,
-                              initialLocation: i == shell.currentIndex,
-                            ),
+                      aktif: shell.currentIndex == i,
+                      onTap: () => shell.goBranch(
+                        i,
+                        initialLocation: i == shell.currentIndex,
+                      ),
                     ),
                 ],
               ),

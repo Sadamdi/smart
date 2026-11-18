@@ -155,6 +155,9 @@ class ApiClient {
   Future<Respons> put(String jalur, {Object? body}) =>
       _tulis('PUT', jalur, body);
 
+  Future<Respons> patch(String jalur, {Object? body}) =>
+      _tulis('PATCH', jalur, body);
+
   Future<Respons> delete(String jalur) => _tulis('DELETE', jalur, null);
 
   /// Penulisan: dilayani lokal saat mode luring (dan masuk antrean), atau saat jaringan putus bila datanya sudah ada.

@@ -2,6 +2,9 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, kirim } from "./api";
 import type {
+  ButirMemori,
+  StatistikMemori,
+  StatistikChat,
   Acara,
   AntreanItem,
   BeasiswaDetail,
@@ -119,3 +122,7 @@ export const aksiTugas = {
   },
   hapus: (id: string) => kirim(`/me/tugas/${id}`, "DELETE"),
 };
+
+export const useMemori = () => useQuery({ queryKey: ["memori", "daftar"], queryFn: () => ambil<ButirMemori[]>("/me/memori") });
+export const useStatistikMemori = () => useQuery({ queryKey: ["memori", "statistik"], queryFn: () => ambil<StatistikMemori>("/me/memori/statistik") });
+export const useStatistikChat = () => useQuery({ queryKey: ["chat", "statistik"], queryFn: () => ambil<StatistikChat>("/chat/statistik") });

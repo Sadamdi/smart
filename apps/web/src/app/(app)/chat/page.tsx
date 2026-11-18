@@ -1,14 +1,14 @@
 "use client";
 import { useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, SendHorizonal, Square, Trash2 } from "lucide-react";
+import { BarChart3, Download, MessageCircle, Paperclip, RotateCcw, SendHorizonal, Square, Trash2, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { GelembungChat } from "@/components/GelembungChat";
 import { TeksMarkdown } from "@/components/TeksMarkdown";
 import { GalatState, MemuatState, pesanGalat } from "@/components/state";
 import { JudulHalaman, Kartu, Masukan, Tombol } from "@/components/ui";
-import { ApiError, alirSse, kirim } from "@/lib/api";
-import { useAksi, useRiwayatChat, useStatusChat } from "@/lib/hooks";
+import { ApiError, alirSse, api, kirim } from "@/lib/api";
+import { useAksi, useRiwayatChat, useStatistikChat, useStatusChat } from "@/lib/hooks";
 import type { Chat } from "@/lib/types";
 
 const PESAN_MAKS = 2000;
@@ -25,7 +25,59 @@ export default function ChatbotAI() {
   const batal = useRef<AbortController | null>(null);
   const dasar = useRef<HTMLDivElement>(null);
 
-  const hapus = useAksi(() => kirim("/chat/riwayat", "DELETE"), ["chat", "riwayat"]);
+  const statistik = useStatistikChat();
+  const [lihatStat, setLihatStat] = useState(false);
+  const [lampiran, setLampiran] = useState<{ id: string; nama: string }[]>([]);
+  const [mengunggah, setMengunggah] = useState(false);
+  const [cadangan, setCadangan] = useState<unknown[] | null>(null);
+  const [info, setInfo] = useState("");
+  const berkasRef = useRef<HTMLInputElement>(null);
+  const pulihRef = useRef<HTMLInputElement>(null);
+  const segar = ["chat"];
+  const hapus = useAksi(async () => {
+    setCadangan((await api<unknown[]>("/chat/ekspor")).data);
+    return kirim("/chat/riwayat", "DELETE");
+  }, segar);
+  const pulihkan = useAksi((butir: unknown[]) => kirim<{ dipulihkan: number }>("/chat/impor", "POST", { butir }), segar);
+  const hapusSatu = useAksi((id: string) => kirim(`/chat/riwayat/${id}`, "DELETE"), segar);
+
+  async function lampirkan(f: File | undefined) {
+    if (!f || lampiran.length >= 3) return;
+    setMengunggah(true);
+    setGalat(null);
+    try {
+      const fd = new FormData();
+      fd.set("jenis", "cv");
+      fd.set("berkas", f);
+      const d = (await api<{ id: string; nama_berkas: string }>("/me/dokumen", { method: "POST", body: fd })).data;
+      setLampiran((l) => [...l, { id: d.id, nama: d.nama_berkas }]);
+    } catch (x) {
+      setGalat(x);
+    } finally {
+      setMengunggah(false);
+    }
+  }
+
+  async function unduhCadangan() {
+    const butir = (await api<unknown[]>("/chat/ekspor")).data;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(butir, null, 1)], { type: "application/json" }));
+    a.download = "cadangan-chat-smart.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  async function pulihDariBerkas(f: File | undefined) {
+    if (!f) return;
+    try {
+      const butir = JSON.parse(await f.text());
+      if (!Array.isArray(butir)) throw new Error("bukan daftar");
+      const r = await pulihkan.mutateAsync(butir);
+      setInfo(`${r.data.dipulihkan} percakapan dipulihkan`);
+    } catch {
+      setInfo("Berkas cadangan tidak valid");
+    }
+  }
   const daftar = [...(riwayat.data ?? [])].sort((a, b) => a.waktu.localeCompare(b.waktu));
 
   useEffect(() => {
@@ -46,7 +98,7 @@ export default function ChatbotAI() {
     let teks = "";
     let rangka = 0;
     try {
-      for await (const k of alirSse("/chat/stream", { pesan: isi }, kontrol.signal)) {
+      for await (const k of alirSse("/chat/stream", { pesan: isi, dokumen_ids: lampiran.map((l) => l.id) }, kontrol.signal)) {
         const j = JSON.parse(k.data) as Record<string, unknown>;
         if (k.peristiwa === "token") {
           teks += String(j.t ?? "");
@@ -57,6 +109,9 @@ export default function ChatbotAI() {
             });
           }
         } else if (k.peristiwa === "selesai") {
+          setLampiran([]);
+          void qc.invalidateQueries({ queryKey: ["chat", "statistik"] });
+          void qc.invalidateQueries({ queryKey: ["memori"] });
           qc.setQueryData<Chat[]>(["chat", "riwayat"], (lama) => [...(lama ?? []), j as unknown as Chat]);
         } else if (k.peristiwa === "galat") {
           throw new ApiError("AI", String(j.pesan ?? "Layanan AI sedang tidak tersedia"), 503);
@@ -86,13 +141,55 @@ export default function ChatbotAI() {
         judul="Chatbot AI"
         deskripsi="Tanyakan syarat, tenggat, atau berkas beasiswa. Jawaban memakai data beasiswa yang tercatat di SMART."
         aksi={
-          daftar.length > 0 ? (
-            <Tombol varian="hantu" onClick={() => hapus.mutate()} disabled={hapus.isPending}>
-              <Trash2 className="h-4 w-4" aria-hidden /> Hapus riwayat
+          <div className="flex flex-wrap gap-2">
+            <Tombol varian="hantu" onClick={() => setLihatStat((v) => !v)} aria-expanded={lihatStat}>
+              <BarChart3 className="h-4 w-4" aria-hidden /> Statistik
             </Tombol>
-          ) : undefined
+            <Tombol varian="hantu" onClick={unduhCadangan} disabled={daftar.length === 0}>
+              <Download className="h-4 w-4" aria-hidden /> Cadangkan
+            </Tombol>
+            <Tombol varian="hantu" onClick={() => pulihRef.current?.click()}>
+              <Upload className="h-4 w-4" aria-hidden /> Pulihkan
+            </Tombol>
+            {daftar.length > 0 && (
+              <Tombol varian="hantu" onClick={() => hapus.mutate()} disabled={hapus.isPending}>
+                <Trash2 className="h-4 w-4" aria-hidden /> Hapus riwayat
+              </Tombol>
+            )}
+          </div>
         }
       />
+      <input ref={pulihRef} type="file" accept="application/json,.json" hidden aria-label="Berkas cadangan" onChange={(e) => void pulihDariBerkas(e.target.files?.[0])} />
+      {cadangan && cadangan.length > 0 && daftar.length === 0 && (
+        <p className="mb-3 flex items-center gap-3 rounded-[14px] bg-c2 px-4 py-2 text-sm">
+          Riwayat dihapus.
+          <Tombol
+            varian="hantu"
+            onClick={() => {
+              pulihkan.mutate(cadangan);
+              setCadangan(null);
+            }}
+          >
+            <RotateCcw className="h-4 w-4" aria-hidden /> Urungkan
+          </Tombol>
+        </p>
+      )}
+      {info && (
+        <p role="status" className="mb-3 text-sm text-ink">
+          {info}
+        </p>
+      )}
+      {lihatStat && statistik.data && (
+        <Kartu className="mb-4 text-sm">
+          <p className="font-bold text-navy">Isi chatbot</p>
+          <p className="mt-1">
+            {statistik.data.jumlah} pertanyaan, {statistik.data.tujuh_hari} dalam 7 hari terakhir, rata-rata jawaban {statistik.data.rata_panjang_jawaban} karakter.
+          </p>
+          {statistik.data.beasiswa_teratas.length > 0 && (
+            <p className="mt-1">Paling sering dirujuk: {statistik.data.beasiswa_teratas.map((b) => `${b.nama} (${b.jumlah})`).join(", ")}</p>
+          )}
+        </Kartu>
+      )}
       <div role="status" className="mb-4 inline-flex items-center gap-2 rounded-full bg-c2 px-3 py-1.5 text-sm">
         <span className={`h-2.5 w-2.5 rounded-full ${status.isPending ? "bg-line" : tersedia ? "bg-ok" : "bg-danger"}`} aria-hidden />
         <span className="text-ink">
@@ -135,6 +232,9 @@ export default function ChatbotAI() {
           {daftar.map((c) => (
             <div key={c.id} className="space-y-2">
               <GelembungChat dari="pengguna">{c.pesan}</GelembungChat>
+              <button type="button" aria-label="Hapus percakapan ini" onClick={() => hapusSatu.mutate(c.id)} className="ml-auto block text-xs text-muted underline">
+                Hapus
+              </button>
               {c.jawaban && (
                 <GelembungChat dari="asisten">
                   <TeksMarkdown teks={c.jawaban} />
@@ -170,7 +270,33 @@ export default function ChatbotAI() {
               : pesanGalat(galat).pesan}
           </p>
         )}
+        {lampiran.length > 0 && (
+          <ul className="flex flex-wrap gap-2 px-4 pt-3">
+            {lampiran.map((l) => (
+              <li key={l.id} className="inline-flex items-center gap-1 rounded-full bg-c2 px-3 py-1 text-xs">
+                {l.nama}
+                <button type="button" aria-label={`Lepas ${l.nama}`} onClick={() => setLampiran((x) => x.filter((y) => y.id !== l.id))}>
+                  <X className="h-3 w-3" aria-hidden />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         <form onSubmit={kirimPesan} className="flex gap-2 border-t border-c4/60 p-4">
+          <input
+            ref={berkasRef}
+            type="file"
+            hidden
+            aria-label="Lampiran"
+            accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+            onChange={(e) => {
+              void lampirkan(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+          <Tombol type="button" varian="hantu" aria-label="Lampirkan berkas" disabled={mengunggah || lampiran.length >= 3 || tersedia === false} onClick={() => berkasRef.current?.click()}>
+            <Paperclip className="h-4 w-4" aria-hidden />
+          </Tombol>
           <Masukan aria-label="Pesan" placeholder="Tulis pertanyaan" maxLength={PESAN_MAKS} value={pesan} onChange={(e) => setPesan(e.target.value)} disabled={tersedia === false} />
           {menunggu ? (
             <Tombol type="button" aria-label="Hentikan" onClick={hentikan}>
@@ -183,7 +309,7 @@ export default function ChatbotAI() {
           )}
         </form>
       </Kartu>
-      <p className="mt-3 text-xs text-muted">Nama dan tanggal lahir tidak dikirim ke layanan AI. Jawaban chatbot bukan jaminan diterima pada beasiswa mana pun.</p>
+      <p className="mt-3 text-xs text-muted">Nama, surel, telepon, dan nomor identitas disamarkan sebelum dikirim ke layanan AI. Lampiran masuk ke Memori AI (atur di menu Memori AI). Jawaban chatbot bukan jaminan diterima pada beasiswa mana pun.</p>
     </div>
   );
 }

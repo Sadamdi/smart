@@ -167,3 +167,14 @@ export type Laporan = {
   divalidasi_ai?: number;
 };
 export type PengaturanAdmin = { auto_validasi_ai: boolean };
+
+export type ButirMemori = { id: string; jenis: string; isi: string; sumber?: string | null; aktif: boolean; dibuat_pada: string };
+export type StatistikMemori = { memori_aktif: boolean; jumlah: number; jumlah_dipakai: number; perkiraan_token: number; per_jenis: Record<string, number> };
+export type StatistikChat = {
+  jumlah: number;
+  tujuh_hari: number;
+  pertama: string | null;
+  terakhir: string | null;
+  rata_panjang_jawaban: number;
+  beasiswa_teratas: { id: string; nama: string; jumlah: number }[];
+};
