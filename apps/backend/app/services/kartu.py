@@ -5,6 +5,9 @@ Beasiswa tanpa syarat terukur (tidak ada syarat tercatat, atau hanya jenjang) ti
 """
 
 _CATATAN_BUKAN_SYARAT = ("Syarat belum tercatat", "Hanya jenjang yang tercatat", "Syarat terukur masih sedikit")
+# Kalimat tambahan pada alasan yang bukan syarat: kemiripan minat dan penjelasan pemeringkat. Tidak boleh ikut dihitung
+# sebagai syarat terpenuhi (sebelumnya menaikkan "syarat terpenuhi X dari Y" dan menghilangkan peredaman data tipis).
+_ALASAN_BUKAN_SYARAT = ("Minat dan program studi mirip", "Urutan dipengaruhi")
 
 
 def luar_negeri(negara: str | None) -> bool:
@@ -23,7 +26,7 @@ def sesuai_wilayah(negara: str | None, wilayah: str | None) -> bool:
 
 def metrik(skor_kelayakan, alasan: list[str] | None, catatan: list[str] | None) -> dict:
     """Mengembalikan skor_kelayakan (0 sampai 100 atau None), syarat_terpenuhi, dan syarat_total."""
-    alasan = alasan or []
+    alasan = [a for a in (alasan or []) if not a.startswith(_ALASAN_BUKAN_SYARAT)]
     catatan = catatan or []
     if any(c.startswith(_CATATAN_BUKAN_SYARAT) for c in catatan):
         return {"skor_kelayakan": None, "syarat_terpenuhi": 0, "syarat_total": 0}
