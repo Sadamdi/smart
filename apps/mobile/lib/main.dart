@@ -10,6 +10,7 @@ import 'core/router.dart';
 import 'core/tema_controller.dart';
 import 'core/theme/app_theme.dart';
 import 'core/lokal/mesin_lokal.dart';
+import 'core/lokal/model_ai.dart';
 import 'core/update/pemeriksa_pembaruan.dart';
 import 'core/widgets/layar_pembuka.dart';
 import 'features/auth/presentation/auth_controller.dart';
@@ -34,7 +35,7 @@ class SmartApp extends StatefulWidget {
   State<SmartApp> createState() => _SmartAppState();
 }
 
-class _SmartAppState extends State<SmartApp> {
+class _SmartAppState extends State<SmartApp> with WidgetsBindingObserver {
   final _segarkan = SegarkanRouter();
   late final GoRouter _router;
   late final Worker _pantau;
@@ -42,12 +43,20 @@ class _SmartAppState extends State<SmartApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _router = buatRouter(_segarkan);
     _pantau = ever(Get.find<AuthController>().state, (_) => _segarkan.ping());
   }
 
   @override
+  void didHaveMemoryPressure() {
+    // Sistem kekurangan memori: lepas model AI luring dari RAM.
+    unawaited(Get.find<PengelolaModelAi>().tekananMemori());
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pantau.dispose();
     _router.dispose();
     _segarkan.dispose();

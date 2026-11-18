@@ -93,14 +93,21 @@ class _ModelAiPageState extends State<ModelAiPage> {
   }
 
   Future<void> _unduh(ModelAi m, PerangkatInfo hp) async {
-    if (m.cocokUntuk(hp) == Kecocokan.berat) {
+    final kurangDisk =
+        hp.diskBebasMb > 0 &&
+        hp.diskBebasMb < m.ukuranByte / (1024 * 1024) * 1.3;
+    if (m.cocokUntuk(hp) == Kecocokan.berat || kurangDisk) {
+      final alasan = [
+        if (m.cocokUntuk(hp) == Kecocokan.berat)
+          '${m.nama} butuh RAM minimal sekitar ${_gb(m.ramMinGb)} GB, ponselmu ${_gb(hp.ramGb)} GB. Bisa sangat lambat, panas, atau aplikasi tertutup sendiri.',
+        if (kurangDisk)
+          'Ruang penyimpanan kosong ${_gb(hp.diskBebasMb / 1024)} GB, unduhan ${_gb(m.ukuranGb)} GB dan butuh sedikit ruang tambahan.',
+      ];
       final lanjut = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Model ini berat untuk ponselmu'),
-          content: Text(
-            '${m.nama} butuh RAM sekitar ${_gb(m.ramMinGb)} GB, ponselmu ${_gb(hp.ramGb)} GB. Bisa lambat atau berhenti sendiri. Tetap unduh?',
-          ),
+          title: const Text('Peringatan sebelum mengunduh'),
+          content: Text('${alasan.join('\n\n')}\n\nTetap unduh?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
@@ -146,10 +153,14 @@ class _KartuPerangkat extends StatelessWidget {
                   style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  'RAM ${(hp!.ramGb).toStringAsFixed(1)} GB, ${hp!.arm64 ? '64-bit' : '32-bit'}, Android SDK ${hp!.sdk}, prosesor ${hp!.soc}',
-                  style: t.bodySmall,
-                ),
+                for (final baris in [
+                  'RAM: ${hp!.ramGb.toStringAsFixed(1)} GB (kosong sekitar ${(hp!.ramBebasMb / 1024).toStringAsFixed(1)} GB)',
+                  'Prosesor: ${hp!.soc} (${hp!.papan}), ${hp!.inti} inti, ${hp!.arm64 ? '64-bit' : '32-bit'}',
+                  'GPU: ${hp!.vulkan ? 'mendukung Vulkan, percepatan GPU tersedia' : 'tanpa Vulkan, memakai prosesor'}',
+                  'Penyimpanan kosong: ${(hp!.diskBebasMb / 1024).toStringAsFixed(1)} GB',
+                  'Android: SDK ${hp!.sdk}',
+                ])
+                  Text(baris, style: t.bodySmall),
                 const SizedBox(height: 8),
                 Text(
                   !hp!.didukung
@@ -248,6 +259,16 @@ class _KartuModel extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(m.catatan, style: t.bodySmall),
+          const SizedBox(height: 8),
+          Text('Spesifikasi', style: t.labelLarge),
+          const SizedBox(height: 2),
+          Text('Parameter: ${m.parameter}', style: t.bodySmall),
+          Text('Konteks: ${m.konteks}', style: t.bodySmall),
+          Text('Kecepatan: ${m.kecepatan}', style: t.bodySmall),
+          Text('Bahasa Indonesia: ${m.mutuIndonesia}', style: t.bodySmall),
+          Text('Kemampuan: ${m.kemampuan.join(', ')}', style: t.bodySmall),
+          const SizedBox(height: 4),
+          Text('Untuk SMART: ${m.untukSmart}', style: t.bodySmall),
           const SizedBox(height: 6),
           Text(
             label,

@@ -217,4 +217,41 @@ void main() {
     expect(k.where((e) => e['jenis'] == 'tenggat'), hasLength(1));
     expect(k.where((e) => e['jenis'] == 'rekomendasi'), isNotEmpty);
   });
+
+  test('mode luring aktif tidak menghubungi server untuk data yang tidak ada di ponsel', () async {
+    final m = await _siap(tmp);
+    await m.aturAktif(true);
+    var dipanggil = 0;
+    final s = ServerPalsu({
+      'GET /me/dokumen': (_) {
+        dipanggil++;
+        return Balasan.ok([]);
+      },
+      'POST /me/tugas': (_) {
+        dipanggil++;
+        return Balasan.ok({});
+      },
+    });
+    final dio = Dio(
+      BaseOptions(baseUrl: 'http://x/api/v1', validateStatus: (_) => true),
+    )..httpClientAdapter = s;
+    final c = ApiClient(
+      dio: dio,
+      storage: MemoryTokenStorage(
+        const PasanganToken(akses: 't', penyegar: 'r'),
+      ),
+      lokal: m,
+    );
+    await expectLater(
+      c.get('/me/dokumen'),
+      throwsA(isA<ApiException>().having((e) => e.code, 'code', 'LURING')),
+    );
+    await expectLater(
+      c.post('/me/tugas', body: {'judul': 'x'}),
+      throwsA(isA<ApiException>()),
+    );
+    expect(dipanggil, 0);
+    // Yang ada di ponsel tetap dilayani.
+    expect((c.get('/rekomendasi/ringkasan')), completes);
+  });
 }

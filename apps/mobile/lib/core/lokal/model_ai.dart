@@ -4,6 +4,7 @@
 library;
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
@@ -18,6 +19,11 @@ class PerangkatInfo {
     required this.arm64,
     required this.sdk,
     required this.soc,
+    this.papan = '',
+    this.inti = 0,
+    this.ramBebasMb = 0,
+    this.diskBebasMb = 0,
+    this.vulkan = false,
   });
 
   final String nama;
@@ -25,6 +31,11 @@ class PerangkatInfo {
   final bool arm64;
   final int sdk;
   final String soc;
+  final String papan;
+  final int inti;
+  final int ramBebasMb;
+  final int diskBebasMb;
+  final bool vulkan;
 
   double get ramGb => ramMb / 1024;
 
@@ -40,6 +51,13 @@ class PerangkatInfo {
         arm64: a.supportedAbis.contains('arm64-v8a'),
         sdk: a.version.sdkInt,
         soc: a.hardware,
+        papan: a.board,
+        inti: Platform.numberOfProcessors,
+        ramBebasMb: a.availableRamSize,
+        diskBebasMb: a.freeDiskSize ~/ (1024 * 1024),
+        vulkan: a.systemFeatures.any(
+          (f) => f.startsWith('android.hardware.vulkan.version'),
+        ),
       );
     } on Object {
       return const PerangkatInfo(
@@ -66,7 +84,28 @@ class ModelAi {
     required this.ramMinGb,
     required this.catatan,
     required this.varian,
+    required this.parameter,
+    required this.konteks,
+    required this.kecepatan,
+    required this.mutuIndonesia,
+    required this.untukSmart,
   });
+
+  /// Spesifikasi yang ditampilkan ke pengguna.
+  final String parameter;
+  final String konteks;
+  final String kecepatan;
+  final String mutuIndonesia;
+  final String untukSmart;
+
+  /// Kemampuan model menurut katalog paket (gambar, suara, pemanggilan fungsi, mode berpikir).
+  List<String> get kemampuan => [
+    'Obrolan teks',
+    if (varian.supportsFunctionCalls) 'Pemanggilan fungsi',
+    if (varian.supportsThinking) 'Mode berpikir',
+    if (varian.supportsImage) 'Membaca gambar',
+    if (varian.supportsAudio) 'Mendengar suara',
+  ];
 
   final String id;
   final String nama;
@@ -104,6 +143,12 @@ final List<ModelAi> katalogModelAi = [
     ramMinGb: 3,
     catatan: 'Paling cepat dan hemat. Cocok untuk pertanyaan singkat; bahasa Indonesia sederhana.',
     varian: LiteRtLmModels.qwen3_0_6b.dynamicInt4,
+    parameter: '0,6 miliar',
+    konteks: '4.096 token',
+    kecepatan: 'Sangat cepat',
+    mutuIndonesia:
+        'Cukup untuk kalimat sederhana; sering salah pada pertanyaan rumit.',
+    untukSmart: 'Menjawab pertanyaan singkat: tenggat, syarat utama, dan beasiswa yang cocok dari data di ponsel.',
   ),
   ModelAi(
     id: 'qwen2.5-1.5b',
@@ -112,6 +157,11 @@ final List<ModelAi> katalogModelAi = [
     ramMinGb: 6,
     catatan: 'Seimbang antara kecepatan dan mutu jawaban. Pilihan awal yang baik untuk kebanyakan ponsel.',
     varian: LiteRtLmModels.qwen2_5_1_5bInstruct.q8Ekv4096,
+    parameter: '1,5 miliar',
+    konteks: '4.096 token',
+    kecepatan: 'Cepat',
+    mutuIndonesia: 'Baik untuk obrolan sehari-hari dalam bahasa Indonesia.',
+    untukSmart: 'Menjelaskan syarat dan alasan rekomendasi, membandingkan dua beasiswa dengan singkat.',
   ),
   ModelAi(
     id: 'gemma4-e2b',
@@ -120,6 +170,11 @@ final List<ModelAi> katalogModelAi = [
     ramMinGb: 8,
     catatan: 'Jawaban lebih rapi dan paham konteks panjang. Butuh RAM 8 GB atau lebih.',
     varian: LiteRtLmModels.gemma4E2bIt.generic,
+    parameter: '2 miliar efektif',
+    konteks: 'hingga 32 ribu token',
+    kecepatan: 'Sedang',
+    mutuIndonesia: 'Baik; jawaban rapi dan paham konteks panjang.',
+    untukSmart: 'Menjelaskan alasan rekomendasi, merangkum syarat, dan membantu menyusun rencana pendaftaran.',
   ),
   ModelAi(
     id: 'smollm3-3b',
@@ -128,6 +183,11 @@ final List<ModelAi> katalogModelAi = [
     ramMinGb: 8,
     catatan: 'Model 3 miliar parameter, lebih teliti tetapi lebih lambat.',
     varian: LiteRtLmModels.smollm3_3b.q4Block32Ekv4096,
+    parameter: '3 miliar',
+    konteks: '4.096 token',
+    kecepatan: 'Agak lambat',
+    mutuIndonesia: 'Cukup; lebih kuat berbahasa Inggris dibanding Indonesia.',
+    untukSmart: 'Penalaran lebih teliti pada pertanyaan syarat bertingkat, tetapi lebih lambat.',
   ),
   ModelAi(
     id: 'gemma4-e4b',
@@ -136,23 +196,29 @@ final List<ModelAi> katalogModelAi = [
     ramMinGb: 12,
     catatan: 'Mutu tertinggi di daftar ini. Hanya untuk ponsel kelas atas (RAM 12 GB atau lebih) dan unduhan besar.',
     varian: LiteRtLmModels.gemma4E4bIt.generic,
+    parameter: '4 miliar efektif',
+    konteks: 'hingga 32 ribu token',
+    kecepatan: 'Lambat',
+    mutuIndonesia: 'Sangat baik di antara pilihan ini.',
+    untukSmart: 'Jawaban paling lengkap untuk perencanaan studi dan perbandingan banyak beasiswa.',
   ),
 ];
 
-/// Model yang disarankan untuk perangkat ini: yang paling mampu dengan status disarankan, bila ada.
+/// Urutan pilihan saran, dari yang paling pas untuk proyek ini: jawaban bahasa Indonesia yang rapi dengan beban wajar.
+const _urutanSaran = ['gemma4-e2b', 'qwen2.5-1.5b', 'qwen3-0.6b'];
+
+/// Model yang disarankan untuk perangkat ini: yang pertama pada [_urutanSaran] dengan status disarankan; bila tidak ada,
+/// yang masih muat di RAM; bila RAM sangat kecil, tidak ada saran.
 ModelAi? modelDisarankan(PerangkatInfo p) {
-  ModelAi? terbaik;
-  for (final m in katalogModelAi) {
-    if (m.cocokUntuk(p) == Kecocokan.disarankan) terbaik = m;
+  for (final id in _urutanSaran) {
+    final m = katalogModelAi.firstWhere((e) => e.id == id);
+    if (m.cocokUntuk(p) == Kecocokan.disarankan) return m;
   }
-  if (terbaik != null && terbaik.kelas == Kelas.berat) {
-    // Unduhan terbesar tidak dijadikan saran otomatis; pilih yang sedang.
-    terbaik = katalogModelAi.lastWhere(
-      (m) => m.kelas != Kelas.berat && m.cocokUntuk(p) == Kecocokan.disarankan,
-      orElse: () => terbaik!,
-    );
+  for (final id in _urutanSaran) {
+    final m = katalogModelAi.firstWhere((e) => e.id == id);
+    if (m.cocokUntuk(p) == Kecocokan.bisa) return m;
   }
-  return terbaik;
+  return null;
 }
 
 enum StatusModel { belum, mengunduh, terpasang }
@@ -168,6 +234,12 @@ class PengelolaModelAi {
   bool _siap = false;
   InferenceModel? _model;
   String? _modelDimuat;
+  Timer? _timerLepas;
+  Future<void>? _sedangMemuat;
+  bool _sedangMenjawab = false;
+
+  /// Model dilepas dari memori bila tidak dipakai selama ini, agar ponsel tidak terbebani.
+  static const _diamMaks = Duration(minutes: 3);
 
   bool siapDipakai() => dipakai;
 
@@ -240,7 +312,51 @@ class PengelolaModelAi {
   void _setStatus(String id, StatusModel s) =>
       status.value = {...status.value, id: s};
 
+  /// Tekanan memori dari sistem: lepas model segera (dipanggil dari pengamat siklus aplikasi).
+  Future<void> tekananMemori() async {
+    if (!_sedangMenjawab) await _lepas();
+  }
+
+  /// Memuat model aktif di latar belakang (dipanggil saat halaman chatbot dibuka, bukan saat aplikasi dibuka).
+  void siapkanDiLatarBelakang() {
+    if (!dipakai || _modelDimuat == aktifId.value || _sedangMemuat != null) {
+      return;
+    }
+    _sedangMemuat = _muatModel()
+        .whenComplete(() => _sedangMemuat = null)
+        .catchError((Object _) {});
+  }
+
+  Future<void> _muatModel() async {
+    final m = aktif;
+    if (m == null || !await _inisialisasi() || _modelDimuat == m.id) return;
+    // Jangan memaksa memuat bila RAM kosong jauh di bawah kebutuhan: cegah aplikasi tertutup sendiri.
+    final hp = perangkat.value;
+    if (hp != null &&
+        hp.ramBebasMb > 0 &&
+        hp.ramBebasMb < m.ramMinGb * 1024 * 0.25) {
+      throw StateError(
+        'RAM kosong terlalu kecil untuk memuat model. Tutup aplikasi lain lalu coba lagi.',
+      );
+    }
+    await _lepas();
+    await FlutterEdgeAi.installModelFromCatalog(m.varian).install();
+    _model = await FlutterEdgeAi.getActiveModel(
+      defaults: m.varian.runtimeDefaults,
+      maxTokens: 2048,
+    );
+    _modelDimuat = m.id;
+  }
+
+  void _jadwalkanLepas() {
+    _timerLepas?.cancel();
+    _timerLepas = Timer(_diamMaks, () {
+      if (!_sedangMenjawab) _lepas();
+    });
+  }
+
   Future<void> _lepas() async {
+    _timerLepas?.cancel();
     try {
       await _model?.close();
     } on Object {
@@ -254,33 +370,33 @@ class PengelolaModelAi {
       katalogModelAi.where((m) => m.id == aktifId.value).firstOrNull;
 
   /// Menjawab [pesan] dengan model aktif; [konteks] berisi data beasiswa dan profil dari mesin luring.
+  /// Satu jawaban pada satu waktu, dengan batas waktu agar ponsel tidak tergantung.
   Future<String> jawab(String pesan, String konteks) async {
-    final m = aktif;
-    if (m == null || !await _inisialisasi()) {
-      throw StateError('Belum ada model AI terpasang');
+    if (_sedangMenjawab) {
+      throw StateError('Model masih menjawab pertanyaan sebelumnya');
     }
-    if (_modelDimuat != m.id) {
-      await _lepas();
-      await FlutterEdgeAi.installModelFromCatalog(m.varian)
-          .install(); // memastikan model ini aktif (berkas sudah ada)
-      _model = await FlutterEdgeAi.getActiveModel(
-        defaults: m.varian.runtimeDefaults,
-        maxTokens: 2048,
-      );
-      _modelDimuat = m.id;
-    }
-    final chat = await _model!.openChat(
-      systemInstruction: instruksiSistem(konteks),
-    );
+    _sedangMenjawab = true;
     try {
-      await chat.addQueryChunk(Message.text(text: pesan, isUser: true));
-      final jawaban = StringBuffer();
-      await for (final r in chat.generateChatResponseAsync()) {
-        if (r is TextResponse) jawaban.write(r.token);
+      await (_sedangMemuat ?? _muatModel());
+      if (_model == null) throw StateError('Model belum termuat');
+      final chat = await _model!.openChat(
+        systemInstruction: instruksiSistem(konteks),
+      );
+      try {
+        await chat.addQueryChunk(Message.text(text: pesan, isUser: true));
+        final jawaban = StringBuffer();
+        await for (final r in chat.generateChatResponseAsync().timeout(
+          const Duration(seconds: 90),
+        )) {
+          if (r is TextResponse) jawaban.write(r.token);
+        }
+        return jawaban.toString().trim();
+      } finally {
+        await chat.close();
       }
-      return jawaban.toString().trim();
     } finally {
-      await chat.close();
+      _sedangMenjawab = false;
+      _jadwalkanLepas();
     }
   }
 
