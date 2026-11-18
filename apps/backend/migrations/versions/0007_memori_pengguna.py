@@ -21,7 +21,9 @@ def upgrade() -> None:
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
         sa.Column("dibuat_pada", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("diubah_pada", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("pengguna_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("pengguna.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "pengguna_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("pengguna.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("jenis", sa.Text(), nullable=False),
         sa.Column("isi", sa.Text(), nullable=False),
         sa.Column("sumber", sa.Text()),
