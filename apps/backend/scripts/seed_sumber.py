@@ -132,9 +132,23 @@ SUMBER_AWAL = [
     ("Kemahasiswaan IPB", "https://kemahasiswaan.ipb.ac.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
     ("Sampoerna Foundation", "https://www.sampoernafoundation.org/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
     # Tambahan 23 November 2026: sumber luar negeri dan daerah (semua laman publik, diuji dapat diakses):
-    ("DAAD Jerman", "https://www.daad.de/en/study-and-research-in-germany/scholarships/", "pantau_otomatis", "Jerman", "30 5 * * *", True),
+    (
+        "DAAD Jerman",
+        "https://www.daad.de/en/study-and-research-in-germany/scholarships/",
+        "pantau_otomatis",
+        "Jerman",
+        "30 5 * * *",
+        True,
+    ),
     ("AMINEF Fulbright Indonesia", "https://www.aminef.or.id/", "pantau_otomatis", "Amerika Serikat", "30 5 * * *", True),
-    ("Study in Japan (MEXT dan JASSO)", "https://www.studyinjapan.go.jp/en/planning/scholarships/", "pantau_otomatis", "Jepang", "30 5 * * *", True),
+    (
+        "Study in Japan (MEXT dan JASSO)",
+        "https://www.studyinjapan.go.jp/en/planning/scholarships/",
+        "pantau_otomatis",
+        "Jepang",
+        "30 5 * * *",
+        True,
+    ),
     (
         "Erasmus+ untuk mahasiswa",
         "https://erasmus-plus.ec.europa.eu/opportunities/opportunities-for-individuals/students",
@@ -145,9 +159,30 @@ SUMBER_AWAL = [
     ),
     ("Stipendium Hungaricum", "https://stipendiumhungaricum.hu/", "pantau_otomatis", "Hungaria", "30 5 * * *", True),
     ("Gates Cambridge", "https://gatescambridge.org/", "pantau_otomatis", "Inggris", "30 5 * * *", True),
-    ("Commonwealth Scholarships UK", "https://cscuk.fcdo.gov.uk/scholarships/", "pantau_otomatis", "Inggris", "30 5 * * *", True),
-    ("Swedish Institute Scholarships", "https://si.se/en/apply/scholarships/", "pantau_otomatis", "Swedia", "30 5 * * *", True),
-    ("Beasiswa Pemprov Kalimantan Timur", "https://beasiswa.kaltimprov.go.id/", "pantau_otomatis", "Indonesia", "30 5 * * *", True),
+    (
+        "Commonwealth Scholarships UK",
+        "https://cscuk.fcdo.gov.uk/scholarships/",
+        "pantau_otomatis",
+        "Inggris",
+        "30 5 * * *",
+        True,
+    ),
+    (
+        "Swedish Institute Scholarships",
+        "https://si.se/en/apply/scholarships/",
+        "pantau_otomatis",
+        "Swedia",
+        "30 5 * * *",
+        True,
+    ),
+    (
+        "Beasiswa Pemprov Kalimantan Timur",
+        "https://beasiswa.kaltimprov.go.id/",
+        "pantau_otomatis",
+        "Indonesia",
+        "30 5 * * *",
+        True,
+    ),
 ]
 
 
