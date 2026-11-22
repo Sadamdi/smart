@@ -189,3 +189,47 @@ def catat_dari_dokumen(
     sumber = str(dokumen_id)
     fakta = fakta_dari_hasil_baca(hasil_baca or {}) + ekstrak_minat_dan_kepribadian(settings, teks, p.nama)
     return sum(1 for jenis, isi in fakta if tambah(sesi, p, jenis, isi, sumber))
+
+
+_PENANDA_DIRI = ("saya", "aku", "gue", "ku ", "pengalaman", "prestasi", "juara", "ketua", "magang", "relawan", "minat")
+
+
+def ekstrak_dari_percakapan(settings: Settings, pesan: str, nama: str | None) -> list[tuple[str, str]]:
+    """Fakta tentang pengguna yang ia sebut sendiri di percakapan (hanya dari kalimat pengguna, bukan jawaban AI).
+
+    Dilewati bila pesan terlalu pendek atau tidak berisi pernyataan tentang diri sendiri, agar tidak memanggil AI
+    tiap pertanyaan. Gagal berarti kosong.
+    """
+    t = pesan.strip()
+    if not llm.tersedia(settings) or len(t) < 25 or not any(k in t.lower() for k in _PENANDA_DIRI):
+        return []
+    try:
+        jawab = llm.tanya(
+            settings,
+            _SISTEM_EKSTRAK,
+            'Dari pesan pengguna berikut keluarkan JSON {"fakta": [{"jenis": "keahlian|prestasi|organisasi|sertifikat|'
+            'pengalaman|minat|kepribadian|lainnya", "isi": "teks singkat"}]}. Hanya hal yang pengguna nyatakan tentang '
+            "dirinya sendiri dan layak diingat untuk menilai beasiswa. Pertanyaan biasa tanpa pernyataan diri berarti "
+            "daftar kosong. Maksimal 3 butir.\n\n" + samarkan(t[:1500], nama),
+            timeout=30,
+        )
+        data = json.loads(jawab[jawab.find("{") : jawab.rfind("}") + 1])
+    except (UpstreamUnavailable, ValueError):
+        return []
+    hasil: list[tuple[str, str]] = []
+    for x in data.get("fakta", []) if isinstance(data, dict) else []:
+        if isinstance(x, dict) and isinstance(x.get("isi"), str) and x.get("jenis") in JENIS:
+            hasil.append((x["jenis"], x["isi"].strip()))
+    return hasil[:3]
+
+
+def catat_dari_percakapan(sesi: Session, p: Pengguna, pesan: str, settings: Settings) -> int:
+    """Menyimpan fakta dari pesan pengguna ke memori (sumber "chat"), bila memori utama menyala."""
+    if not p.memori_aktif:
+        return 0
+    try:
+        return sum(
+            1 for jenis, isi in ekstrak_dari_percakapan(settings, pesan, p.nama) if tambah(sesi, p, jenis, isi, "chat")
+        )
+    except Exception:  # memori adalah tambahan; jangan pernah menggagalkan jawaban
+        return 0

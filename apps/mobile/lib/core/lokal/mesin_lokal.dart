@@ -413,6 +413,13 @@ class MesinLokal {
         return Respons({'tersedia': true}, null);
       case '/chat/riwayat':
         return Respons(_riwayatChat, null);
+      case '/chat/ekspor':
+        return Respons([
+          for (final x in _riwayatChat)
+            {'pesan': x['pesan'], 'jawaban': x['jawaban'], 'waktu': x['waktu']},
+        ], null);
+      case '/chat/statistik':
+        return Respons(_statistikChat(), null);
       case '/me/kalender':
         return _kalender(q);
     }
@@ -590,17 +597,76 @@ class MesinLokal {
       return layaniGet('/rekomendasi', const {});
     }
     if (metode == 'POST' && jalur == '/chat' && body is Map) {
-      if (adaModelAi()) return null;
+      if (adaModelAi() && !aktif.value) return null; // luring: jangan menghubungi server
       final j = _jawabChat('${body['pesan'] ?? ''}');
       catatChat(j);
       return Respons(j, null);
     }
     if (metode == 'DELETE' && jalur == '/chat/riwayat') {
-      _riwayatChat = [];
-      _tulis('riwayat_chat.json', _riwayatChat);
+      hapusChatLokal();
+      _antre(metode, jalur, body);
       return Respons({}, null);
     }
+    if (metode == 'POST' && jalur == '/chat/impor' && body is Map) {
+      final butir = (body['butir'] as List? ?? const []).whereType<Map>();
+      final ada = {for (final x in _riwayatChat) '${x['pesan']}|${x['waktu']}'};
+      var n = 0;
+      for (final x in butir) {
+        if (ada.contains('${x['pesan']}|${x['waktu']}')) continue;
+        n++;
+        catatChat({
+          'id': 'lokal-impor-${DateTime.now().microsecondsSinceEpoch}-$n',
+          'pesan': x['pesan'],
+          'jawaban': x['jawaban'],
+          'waktu': x['waktu'] ?? DateTime.now().toIso8601String(),
+          'rujukan': const [],
+          'sumber': 'ponsel',
+        });
+      }
+      _antre(metode, jalur, body);
+      return Respons({'dipulihkan': n}, null);
+    }
     return null;
+  }
+
+  /// Mengosongkan riwayat chat di ponsel (dipanggil juga saat penghapusan di server berhasil agar tidak muncul lagi).
+  void hapusChatLokal() {
+    _riwayatChat = [];
+    _tulis('riwayat_chat.json', _riwayatChat);
+  }
+
+  Map<String, dynamic> _statistikChat() {
+    final sekarang = DateTime.now();
+    final minggu = _riwayatChat
+        .where(
+          (x) =>
+              (DateTime.tryParse('${x['waktu']}') ?? sekarang)
+                  .isAfter(sekarang.subtract(const Duration(days: 7))),
+        )
+        .length;
+    final hitung = <String, int>{};
+    for (final x in _riwayatChat) {
+      for (final r in (x['rujukan'] as List? ?? const [])) {
+        final n = '${(r as Map)['nama']}';
+        hitung[n] = (hitung[n] ?? 0) + 1;
+      }
+    }
+    final top = hitung.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final panjang = _riwayatChat.isEmpty
+        ? 0
+        : _riwayatChat
+                  .map((x) => '${x['jawaban'] ?? ''}'.length)
+                  .reduce((a, b) => a + b) ~/
+              _riwayatChat.length;
+    return {
+      'jumlah': _riwayatChat.length,
+      'tujuh_hari': minggu,
+      'rata_panjang_jawaban': panjang,
+      'beasiswa_teratas': [
+        for (final e in top.take(5)) {'nama': e.key, 'jumlah': e.value},
+      ],
+    };
   }
 
   // ---------- chatbot lokal ----------

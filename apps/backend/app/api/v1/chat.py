@@ -17,6 +17,7 @@ from app.models import Beasiswa, Pengguna
 from app.schemas.common import Amplop, Kosong
 from app.services import chat as layanan
 from app.services import llm
+from app.services import memori as layanan_memori
 
 router = APIRouter(prefix="/chat", tags=["chatbot"])
 
@@ -71,6 +72,8 @@ def status(settings: SettingsDep, _: SaatIni) -> Amplop[StatusOut]:
 def kirim(data: ChatIn, sesi: SesiDep, p: SaatIni, settings: SettingsDep) -> Amplop[ChatOut]:
     c = layanan.kirim(sesi, p, data.pesan, settings, date.today(), data.dokumen_ids)
     sesi.commit()
+    if layanan_memori.catat_dari_percakapan(sesi, p, data.pesan, settings):
+        sesi.commit()
     return Amplop(data=_out(sesi, c))
 
 
@@ -102,6 +105,8 @@ def kirim_stream(data: ChatIn, sesi: SesiDep, p: SaatIni, settings: SettingsDep)
         akhir = json.loads(_out(sesi, c).model_dump_json())
         akhir["sumber_data"] = sumber
         yield _sse("selesai", akhir)
+        if layanan_memori.catat_dari_percakapan(sesi, p, pesan, settings):
+            sesi.commit()
 
     return StreamingResponse(
         alir(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
