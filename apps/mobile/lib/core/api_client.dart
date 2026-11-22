@@ -184,7 +184,11 @@ class ApiClient {
       );
     }
     try {
-      return await _kirim(metode, jalur, body: body);
+      final r = await _kirim(metode, jalur, body: body);
+      if (metode == 'DELETE' && jalur == '/chat/riwayat') {
+        l?.hapusChatLokal(); // salinan di ponsel ikut hilang, bukan muncul lagi saat luring
+      }
+      return r;
     } on ApiException catch (e) {
       if (!e.galatJaringan || l == null || body is FormData) rethrow;
       final r = l.layaniTulis(metode, jalur, body);

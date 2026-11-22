@@ -12,18 +12,29 @@ class ButirMemori {
     required this.jenis,
     required this.isi,
     required this.aktif,
+    this.sumber,
   });
 
   final String id;
   final String jenis;
   final String isi;
   final bool aktif;
+  final String? sumber;
+
+  /// Asal butir: dibuat otomatis oleh AI dari percakapan atau dokumen, atau ditulis sendiri.
+  String get asal => switch (sumber) {
+    'chat' => 'otomatis dari percakapan',
+    'manual' => 'ditulis sendiri',
+    null => 'ditulis sendiri',
+    _ => 'otomatis dari dokumen',
+  };
 
   factory ButirMemori.fromJson(Map<String, dynamic> j) => ButirMemori(
     id: j['id'] as String,
     jenis: j['jenis'] as String,
     isi: j['isi'] as String,
     aktif: (j['aktif'] ?? true) as bool,
+    sumber: j['sumber'] as String?,
   );
 }
 
@@ -83,7 +94,13 @@ class _MemoriPageState extends State<MemoriPage> {
       _daftar = [
         for (final x in d)
           if (x.id == b.id)
-            ButirMemori(id: x.id, jenis: x.jenis, isi: x.isi, aktif: v)
+            ButirMemori(
+              id: x.id,
+              jenis: x.jenis,
+              isi: x.isi,
+              aktif: v,
+              sumber: x.sumber,
+            )
           else
             x,
       ];
@@ -331,7 +348,7 @@ class _MemoriPageState extends State<MemoriPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  b.jenis,
+                                  '${b.jenis} · ${b.asal}',
                                   style: t.labelSmall?.copyWith(
                                     color: Warna.muted,
                                     fontWeight: FontWeight.w700,
