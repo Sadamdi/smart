@@ -172,9 +172,11 @@ class ChatLokal {
 
   /// Menyelaraskan daftar sesi dengan [data] dari server. Sesi buatan ponsel yang belum tersalin tetap dipertahankan.
   void cerminSesi(List<dynamic> data) {
+    // Sesi ponsel dipertahankan bila masih kosong (baru dibuat) atau punya pesan yang belum tersalin. Sesi yang semua
+    // pesannya sudah di server tidak perlu dipertahankan; ia muncul dari daftar server.
     final lokal = [
       for (final s in _sesi)
-        if (s['lokal'] == true) s,
+        if (s['lokal'] == true && _perluDipertahankan('${s['id']}')) s,
     ];
     final hasil = <Peta>[
       for (final x in data)
@@ -188,6 +190,11 @@ class ChatLokal {
     ];
     _simpanSesi();
     _simpanPesan();
+  }
+
+  bool _perluDipertahankan(String id) {
+    final p = _pesan.where((m) => m['sesi_id'] == id).toList();
+    return p.isEmpty || p.any((m) => m['lokal'] == true);
   }
 
   /// Mengganti id sesi buatan ponsel dengan id dari server setelah berhasil disalin.

@@ -238,4 +238,16 @@ void main() {
     ]);
     expect(c.pesanSesi('s1').single['sumber'], 'ponsel');
   });
+
+  test('cermin sesi membuang sesi ponsel yang semua pesannya sudah tersalin, mempertahankan yang kosong atau tertunda', () {
+    final c = _baru();
+    final lama = c.buatSesi(judul: 'Lama')['id'] as String;
+    final kosong = c.buatSesi(judul: 'Kosong')['id'] as String;
+    final tunda = c.buatSesi(judul: 'Tunda')['id'] as String;
+    c.catatChat(_pesan('a', lama, 'sudah', lokal: false));
+    c.catatChat(_pesan('b', tunda, 'belum'));
+    c.cerminSesi(const []);
+    final id = c.daftarSesi().map((s) => s['id']).toSet();
+    expect(id, {kosong, tunda});
+  });
 }
