@@ -339,6 +339,7 @@ TABEL_SMART = [
     "rekomendasi",
     "interaksi",
     "notifikasi",
+    "sesi_chat",
     "percakapan",
     "memori_pengguna",
     "tugas_pribadi",
