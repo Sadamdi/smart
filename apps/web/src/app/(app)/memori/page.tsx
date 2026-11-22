@@ -63,7 +63,7 @@ export default function MemoriAI() {
   return (
     <div className="halaman-masuk">
       <JudulHalaman
-        judul="Memori AI"
+        judul="Memori Pintar"
         deskripsi="Hal yang dipelajari asisten dari dokumen dan percakapan Anda. Disimpan terenkripsi di server dan hanya Anda yang dapat melihatnya."
         aksi={
           (daftar.data?.length ?? 0) > 0 ? (

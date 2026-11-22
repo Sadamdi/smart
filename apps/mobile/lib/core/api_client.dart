@@ -186,7 +186,7 @@ class ApiClient {
     try {
       final r = await _kirim(metode, jalur, body: body);
       if (metode == 'DELETE' && jalur == '/chat/riwayat') {
-        l?.hapusChatLokal(); // salinan di ponsel ikut hilang, bukan muncul lagi saat luring
+        l?.chat.hapusSemua(); // salinan di ponsel ikut hilang, bukan muncul lagi saat luring
       }
       return r;
     } on ApiException catch (e) {
@@ -413,6 +413,9 @@ class ApiClient {
         options: Options(
           method: metode,
           headers: {if (token != null) 'Authorization': 'Bearer $token'},
+          // Unggahan dibaca AI di server dan bisa memakan puluhan detik.
+          sendTimeout: body is FormData ? const Duration(minutes: 3) : null,
+          receiveTimeout: body is FormData ? const Duration(minutes: 3) : null,
         ),
       );
     } on DioException catch (e) {

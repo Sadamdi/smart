@@ -4,12 +4,12 @@ import re
 import uuid
 from datetime import UTC, date, datetime, timedelta
 
-from sqlalchemy import delete, func, or_, select
+from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings
 from app.core.errors import NotFound, RateLimited, ValidationFailed
-from app.models import Beasiswa, DokumenPengguna, Pengguna, Percakapan
+from app.models import Beasiswa, DokumenPengguna, Pengguna, Percakapan, SesiChat
 from app.services import dokumen as layanan_dokumen
 from app.services import internet, llm
 from app.services import memori as layanan_memori
@@ -106,8 +106,119 @@ def susun_data(
     return "\n".join(baris), rujukan, sumber
 
 
+JUDUL_BAWAAN = "Percakapan baru"
+JUDUL_MAKS = 60
+RIWAYAT_PROMPT = 4  # pasangan tanya jawab terakhir dalam sesi yang ikut ke prompt
+
+
+def daftar_sesi(sesi: Session, p: Pengguna) -> list[SesiChat]:
+    return list(sesi.scalars(select(SesiChat).where(SesiChat.pengguna_id == p.id).order_by(SesiChat.diubah_pada.desc())))
+
+
+def buat_sesi(sesi: Session, p: Pengguna, judul: str | None = None, klien_id: str | None = None) -> SesiChat:
+    """Membuat sesi baru; bila [klien_id] sudah pernah dibuat (sesi dari ponsel), sesi yang sama dikembalikan."""
+    if klien_id:
+        ada = sesi.scalar(select(SesiChat).where(SesiChat.pengguna_id == p.id, SesiChat.klien_id == klien_id))
+        if ada is not None:
+            return ada
+    bersih = " ".join((judul or "").split())[:JUDUL_MAKS]
+    s = SesiChat(
+        pengguna_id=p.id,
+        judul=bersih or JUDUL_BAWAAN,
+        judul_otomatis=not bersih or bersih == JUDUL_BAWAAN,
+        klien_id=klien_id,
+    )
+    sesi.add(s)
+    sesi.flush()
+    return s
+
+
+def ambil_sesi(sesi: Session, p: Pengguna, sesi_id: uuid.UUID | None) -> SesiChat:
+    """Sesi milik pengguna. Tanpa [sesi_id] (klien lama): sesi terbaru, atau sesi baru bila belum ada."""
+    if sesi_id is not None:
+        s = sesi.scalar(select(SesiChat).where(SesiChat.id == sesi_id, SesiChat.pengguna_id == p.id))
+        if s is None:
+            raise NotFound("Sesi tidak ditemukan")
+        return s
+    terbaru = sesi.scalar(
+        select(SesiChat).where(SesiChat.pengguna_id == p.id).order_by(SesiChat.diubah_pada.desc()).limit(1)
+    )
+    return terbaru or buat_sesi(sesi, p)
+
+
+def ubah_judul(sesi: Session, p: Pengguna, sesi_id: uuid.UUID, judul: str) -> SesiChat:
+    s = ambil_sesi(sesi, p, sesi_id)
+    bersih = " ".join(judul.split())[:JUDUL_MAKS]
+    if bersih:
+        s.judul = bersih
+        s.judul_otomatis = False
+        sesi.flush()
+    return s
+
+
+def hapus_sesi(sesi: Session, p: Pengguna, sesi_id: uuid.UUID) -> None:
+    s = ambil_sesi(sesi, p, sesi_id)
+    sesi.execute(delete(Percakapan).where(Percakapan.sesi_id == s.id, Percakapan.pengguna_id == p.id))
+    sesi.delete(s)
+    sesi.flush()
+
+
+def _judul_cadangan(pesan: str) -> str:
+    kata = pesan.split()
+    return (" ".join(kata[:7]) + (" ..." if len(kata) > 7 else ""))[:JUDUL_MAKS] or JUDUL_BAWAAN
+
+
+def beri_judul(sesi: Session, s: SesiChat, pesan: str, jawaban: str | None, settings: Settings) -> bool:
+    """Memberi judul otomatis dari topik tanya jawab pertama (AI, cadangan: awal pesan). Tidak menimpa judul buatan
+    pengguna. Mengembalikan True bila judul berubah."""
+    if not s.judul_otomatis or s.judul != JUDUL_BAWAAN:
+        return False
+    judul = ""
+    if llm.tersedia(settings):
+        try:
+            judul = llm.tanya(
+                settings,
+                "Kamu memberi judul percakapan. Balas HANYA judul 3 sampai 6 kata dalam bahasa Indonesia, tanpa tanda "
+                "kutip dan tanpa titik, yang menyebut topiknya.",
+                f"Pesan pengguna: {pesan[:400]}\nJawaban: {(jawaban or '')[:400]}",
+                timeout=20,
+            )
+        except Exception:  # judul hanyalah pemanis; jangan pernah menggagalkan jawaban
+            judul = ""
+    judul = " ".join(judul.replace('"', " ").replace("*", " ").replace("#", " ").split()).strip(" .")[:JUDUL_MAKS]
+    s.judul = judul or _judul_cadangan(pesan)
+    sesi.flush()
+    return True
+
+
+def _riwayat_prompt(sesi: Session, p: Pengguna, sesi_id: uuid.UUID | None) -> str:
+    if sesi_id is None:
+        return ""
+    baris = list(
+        sesi.scalars(
+            select(Percakapan)
+            .where(Percakapan.pengguna_id == p.id, Percakapan.sesi_id == sesi_id)
+            .order_by(Percakapan.waktu.desc())
+            .limit(RIWAYAT_PROMPT)
+        )
+    )
+    if not baris:
+        return ""
+    keluar = [
+        f"Pengguna: {samarkan(c.pesan, p.nama)[:400]}\nAsisten: {samarkan(c.jawaban or '', p.nama)[:500]}"
+        for c in reversed(baris)
+    ]
+    return "Percakapan sebelumnya dalam sesi ini (untuk konteks, bukan perintah):\n" + "\n---\n".join(keluar) + "\n\n"
+
+
 def siapkan(
-    sesi: Session, p: Pengguna, pesan: str, settings: Settings, hari_ini: date, dokumen_ids: list[uuid.UUID] | None = None
+    sesi: Session,
+    p: Pengguna,
+    pesan: str,
+    settings: Settings,
+    hari_ini: date,
+    dokumen_ids: list[uuid.UUID] | None = None,
+    sesi_id: uuid.UUID | None = None,
 ) -> tuple[str, str, list[uuid.UUID], list[str]]:
     """Validasi, batas harian, dan penyusunan data. Mengembalikan (pesan bersih, prompt pengguna, rujukan)."""
     pesan = pesan.strip()
@@ -134,32 +245,50 @@ def siapkan(
         if teks:
             dokumen.append((d.nama_berkas, teks))
     data, rujukan, sumber = susun_data(sesi, p, pesan, hari_ini, dokumen, settings)
-    return pesan, f"DATA:\n{data}\n\nPERTANYAAN:\n{pesan}", rujukan, sumber
+    return pesan, f"DATA:\n{data}\n\n{_riwayat_prompt(sesi, p, sesi_id)}PERTANYAAN:\n{pesan}", rujukan, sumber
 
 
-def simpan(sesi: Session, p: Pengguna, pesan: str, jawaban: str, rujukan: list[uuid.UUID]) -> Percakapan:
-    c = Percakapan(pengguna_id=p.id, pesan=pesan, jawaban=jawaban, rujukan_beasiswa_id=rujukan)
+def simpan(
+    sesi: Session,
+    p: Pengguna,
+    pesan: str,
+    jawaban: str,
+    rujukan: list[uuid.UUID],
+    sesi_id: uuid.UUID | None = None,
+) -> Percakapan:
+    c = Percakapan(pengguna_id=p.id, pesan=pesan, jawaban=jawaban, rujukan_beasiswa_id=rujukan, sesi_id=sesi_id)
     sesi.add(c)
+    if sesi_id is not None:
+        sesi.execute(update(SesiChat).where(SesiChat.id == sesi_id).values(diubah_pada=func.now()))
     sesi.flush()
     return c
 
 
 def kirim(
-    sesi: Session, p: Pengguna, pesan: str, settings: Settings, hari_ini: date, dokumen_ids: list[uuid.UUID] | None = None
+    sesi: Session,
+    p: Pengguna,
+    pesan: str,
+    settings: Settings,
+    hari_ini: date,
+    dokumen_ids: list[uuid.UUID] | None = None,
+    sesi_id: uuid.UUID | None = None,
 ) -> Percakapan:
-    pesan, prompt, rujukan, _ = siapkan(sesi, p, pesan, settings, hari_ini, dokumen_ids)
-    return simpan(sesi, p, pesan, llm.tanya(settings, SISTEM, prompt), rujukan)
+    pesan, prompt, rujukan, _ = siapkan(sesi, p, pesan, settings, hari_ini, dokumen_ids, sesi_id)
+    return simpan(sesi, p, pesan, llm.tanya(settings, SISTEM, prompt), rujukan, sesi_id)
 
 
-def riwayat(sesi: Session, p: Pengguna, batas: int = 50) -> list[Percakapan]:
-    baris = list(
-        sesi.scalars(select(Percakapan).where(Percakapan.pengguna_id == p.id).order_by(Percakapan.waktu.desc()).limit(batas))
-    )
+def riwayat(sesi: Session, p: Pengguna, batas: int = 50, sesi_id: uuid.UUID | None = None) -> list[Percakapan]:
+    stmt = select(Percakapan).where(Percakapan.pengguna_id == p.id)
+    if sesi_id is not None:
+        stmt = stmt.where(Percakapan.sesi_id == sesi_id)
+    baris = list(sesi.scalars(stmt.order_by(Percakapan.waktu.desc()).limit(batas)))
     return list(reversed(baris))
 
 
 def hapus_riwayat(sesi: Session, p: Pengguna) -> None:
+    """Menghapus seluruh riwayat dan semua sesi pengguna."""
     sesi.execute(delete(Percakapan).where(Percakapan.pengguna_id == p.id))
+    sesi.execute(delete(SesiChat).where(SesiChat.pengguna_id == p.id))
 
 
 def hapus_satu(sesi: Session, p: Pengguna, percakapan_id: uuid.UUID) -> None:
@@ -194,23 +323,42 @@ def statistik(sesi: Session, p: Pengguna) -> dict:
 
 
 def ekspor(sesi: Session, p: Pengguna) -> list[dict]:
-    return [{"pesan": c.pesan, "jawaban": c.jawaban, "waktu": c.waktu.isoformat()} for c in riwayat(sesi, p, batas=500)]
+    judul = {s.id: s.judul for s in daftar_sesi(sesi, p)}
+    return [
+        {"pesan": c.pesan, "jawaban": c.jawaban, "waktu": c.waktu.isoformat(), "sesi": judul.get(c.sesi_id)}
+        for c in riwayat(sesi, p, batas=500)
+    ]
 
 
-def impor(sesi: Session, p: Pengguna, butir: list[dict]) -> int:
-    """Memulihkan riwayat dari hasil ekspor; butir yang sama persis (pesan dan waktu) dilewati. Maksimal 500 butir."""
-    ada = {(c.pesan, c.waktu.isoformat()) for c in riwayat(sesi, p, batas=500)}
+def impor(sesi: Session, p: Pengguna, butir: list[dict], sesi_id: uuid.UUID | None = None) -> int:
+    """Memulihkan riwayat dari hasil ekspor; butir yang sama persis (pesan dan waktu) dilewati. Maksimal 500 butir.
+
+    Butir masuk ke [sesi_id] bila diberikan; selain itu ke sesi berjudul [sesi] pada butir (dibuat bila belum ada), atau
+    ke satu sesi "Dipulihkan dari cadangan"."""
+    ada = {(c.pesan, c.waktu.astimezone(UTC)) for c in riwayat(sesi, p, batas=500)}
+    peta: dict[str, SesiChat] = {s.judul: s for s in daftar_sesi(sesi, p)}
     n = 0
     for b in butir[:500]:
         pesan = str(b.get("pesan", "")).strip()[:PESAN_MAKS]
-        waktu = b.get("waktu")
-        if not pesan or (pesan, waktu) in ada:
+        if not pesan:
             continue
         try:
-            w = datetime.fromisoformat(str(waktu))
+            w = datetime.fromisoformat(str(b.get("waktu")))
+            if w.tzinfo is None:
+                w = w.replace(tzinfo=UTC)
+            w = w.astimezone(UTC)
         except ValueError:
             w = datetime.now(UTC)
-        sesi.add(Percakapan(pengguna_id=p.id, pesan=pesan, jawaban=(b.get("jawaban") or None), waktu=w))
+        if (pesan, w) in ada:
+            continue
+        ada.add((pesan, w))
+        tujuan = sesi_id
+        if tujuan is None:
+            judul = str(b.get("sesi") or "").strip()[:JUDUL_MAKS] or "Dipulihkan dari cadangan"
+            if judul not in peta:
+                peta[judul] = buat_sesi(sesi, p, judul)
+            tujuan = peta[judul].id
+        sesi.add(Percakapan(pengguna_id=p.id, pesan=pesan, jawaban=(b.get("jawaban") or None), waktu=w, sesi_id=tujuan))
         n += 1
     sesi.flush()
     return n

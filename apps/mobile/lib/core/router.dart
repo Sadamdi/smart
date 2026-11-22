@@ -14,6 +14,7 @@ import '../features/beasiswa/presentation/jelajah_page.dart';
 import '../features/beasiswa/presentation/tersimpan_page.dart';
 import '../features/beranda/presentation/beranda_page.dart';
 import '../features/chat/presentation/chat_page.dart';
+import '../features/chat/presentation/sesi_page.dart';
 import '../features/pengaturan/presentation/model_ai_page.dart';
 import '../features/memori/memori_page.dart';
 import 'cache_lokal.dart';
@@ -63,6 +64,7 @@ GoRouter buatRouter(SegarkanRouter segarkan) {
       GoRoute(path: '/tersimpan', builder: (_, _) => const TersimpanPage()),
       GoRoute(path: '/dokumen', builder: (_, _) => const DokumenPage()),
       GoRoute(path: '/memori', builder: (_, _) => const MemoriPage()),
+      GoRoute(path: '/chat/sesi', builder: (_, _) => const SesiPage()),
       GoRoute(
         path: '/profil-lanjutan',
         builder: (_, _) => const ProfilLanjutanPage(),

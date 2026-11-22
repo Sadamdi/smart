@@ -624,7 +624,7 @@ class _ProfilPageState extends State<ProfilPage> {
                     ),
                     (Icons.description_outlined, 'Dokumen Saya', '/dokumen'),
                     (Icons.chat_bubble_outline, 'Chatbot AI', '/chat'),
-                    (Icons.psychology_outlined, 'Memori AI', '/memori'),
+                    (Icons.psychology_outlined, 'Memori Pintar', '/memori'),
                     (Icons.settings_outlined, 'Pengaturan', '/pengaturan'),
                   ]) ...[
                     ListTile(

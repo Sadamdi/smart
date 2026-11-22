@@ -14,6 +14,7 @@ from app.models.tables import (
     Percakapan,
     Persyaratan,
     Rekomendasi,
+    SesiChat,
     Sumber,
     TugasPribadi,
 )
@@ -32,6 +33,7 @@ __all__ = [
     "Pengguna",
     "Pengaturan",
     "Percakapan",
+    "SesiChat",
     "Persyaratan",
     "Rekomendasi",
     "Sumber",
