@@ -18,12 +18,16 @@ export default function ChatbotAI() {
   const qc = useQueryClient();
   const status = useStatusChat();
   const sesi = useSesiChat();
-  /** Sesi yang dibuka; null berarti percakapan baru yang sesinya dibuat saat pesan pertama dikirim. */
-  const [sesiId, setSesiId] = useState<string | null>(null);
-  const [barumulai, setBarumulai] = useState(false);
-  const riwayat = useRiwayatChat(sesiId);
+  /** Pilihan pengguna: undefined = belum memilih (sesi terbaru dibuka), null = percakapan baru, selain itu id sesi. */
+  const [pilihan, setPilihan] = useState<string | null | undefined>(undefined);
   const [pesan, setPesan] = useState("");
   const [menunggu, setMenunggu] = useState<string | null>(null);
+  const daftarSesi: SesiChat[] = sesi.data ?? [];
+  // Sesi yang dibuka diturunkan dari pilihan dan daftar (tanpa efek): sesi yang sudah dihapus tidak boleh tetap menjadi
+  // tujuan pesan. Daftar dianggap basi selama masih dimuat ulang.
+  const sesiHilang = pilihan != null && !menunggu && sesi.isSuccess && !sesi.isFetching && !daftarSesi.some((x) => x.id === pilihan);
+  const sesiId: string | null = pilihan === undefined ? (daftarSesi[0]?.id ?? null) : sesiHilang ? null : pilihan;
+  const riwayat = useRiwayatChat(sesiId);
   const [galat, setGalat] = useState<unknown>(null);
   const [sementara, setSementara] = useState("");
   const batal = useRef<AbortController | null>(null);
@@ -83,31 +87,18 @@ export default function ChatbotAI() {
     }
   }
   const daftar = [...(riwayat.data ?? [])].sort((a, b) => a.waktu.localeCompare(b.waktu));
-  const daftarSesi: SesiChat[] = sesi.data ?? [];
   const sesiAktif = daftarSesi.find((x) => x.id === sesiId);
-
-  // Buka sesi terbaru saat daftar pertama kali tiba (kecuali pengguna sengaja memulai percakapan baru).
-  useEffect(() => {
-    if (sesiId === null && !barumulai && daftarSesi.length > 0) setSesiId(daftarSesi[0].id);
-  }, [sesiId, barumulai, daftarSesi]);
-
-  // Sesi yang sudah tidak ada (dihapus, mis. lewat Hapus riwayat) tidak boleh tetap menjadi tujuan pesan.
-  useEffect(() => {
-    if (sesiId !== null && !menunggu && sesi.isSuccess && !sesi.isFetching && !daftarSesi.some((x) => x.id === sesiId)) setSesiId(null);
-  }, [sesiId, menunggu, sesi.isSuccess, sesi.isFetching, daftarSesi]);
 
   function pilihSesi(id: string) {
     if (menunggu) return;
-    setBarumulai(false);
-    setSesiId(id);
+    setPilihan(id);
     setGalat(null);
     setLampiran([]);
   }
 
   function sesiBaru() {
     if (menunggu) return;
-    setBarumulai(true);
-    setSesiId(null);
+    setPilihan(null);
     setGalat(null);
     setLampiran([]);
   }
@@ -122,10 +113,7 @@ export default function ChatbotAI() {
   async function hapusSesi(s: SesiChat) {
     if (menunggu || !window.confirm(`Hapus percakapan "${s.judul}" beserta isinya?`)) return;
     await kirim(`/chat/sesi/${s.id}`, "DELETE");
-    if (s.id === sesiId) {
-      setSesiId(null);
-      setBarumulai(false);
-    }
+    if (s.id === sesiId) setPilihan(null);
     void qc.invalidateQueries({ queryKey: ["chat"] });
   }
 
@@ -151,8 +139,7 @@ export default function ChatbotAI() {
       if (tujuan === null) {
         // Percakapan baru: sesinya dibuat dulu; judulnya diberi AI dari topik setelah jawaban pertama.
         tujuan = (await kirim<SesiChat>("/chat/sesi", "POST", {})).data.id;
-        setSesiId(tujuan);
-        setBarumulai(false);
+        setPilihan(tujuan);
         await qc.invalidateQueries({ queryKey: ["chat", "sesi"] });
       }
       for await (const k of alirSse("/chat/stream", { pesan: isi, sesi_id: tujuan, dokumen_ids: lampiran.map((l) => l.id) }, kontrol.signal)) {
