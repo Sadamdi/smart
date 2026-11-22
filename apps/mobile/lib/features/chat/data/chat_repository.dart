@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show debugPrint;
+
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' hide Response;
 
@@ -350,6 +352,7 @@ class ChatRepository {
     _sinkron = true;
     var berubah = false;
     try {
+      // Satu sesi atau pesan yang gagal tidak boleh menghentikan sisanya; dicoba lagi pada sinkron berikutnya.
       for (final s in lokal.chat.daftarSesi()) {
         final id = '${s['id']}';
         if (!id.startsWith('lokal-')) continue;
@@ -357,27 +360,35 @@ class ChatRepository {
             .pesanSesi(id)
             .any((m) => m['lokal'] == true);
         if (!tertunda) continue; // sesi kosong tidak perlu disalin
-        await _sesiServer(id);
-        berubah = true;
+        try {
+          await _sesiServer(id);
+          berubah = true;
+        } on Object catch (e) {
+          debugPrint('sinkron sesi $id gagal: $e');
+        }
       }
       for (final m in lokal.chat.belumSinkron()) {
         final sid = '${m['sesi_id']}';
         if (sid.startsWith('lokal-')) continue;
-        final waktu = DateTime.tryParse('${m['waktu']}')?.toUtc();
-        final r = await _api.post(
-          '/chat/catat-lokal',
-          body: {
-            'pesan': m['pesan'],
-            'jawaban': m['jawaban'],
-            'waktu': waktu?.toIso8601String(),
-            'sesi_id': sid,
-          },
-        );
-        lokal.chat.tandaiSinkron('${m['id']}');
-        berubah = true;
-        final d = r.data;
-        if (d is Map && d['judul'] != null) {
-          lokal.chat.ubahJudul(sid, '${d['judul']}', otomatis: true);
+        try {
+          final waktu = DateTime.tryParse('${m['waktu']}')?.toUtc();
+          final r = await _api.post(
+            '/chat/catat-lokal',
+            body: {
+              'pesan': m['pesan'],
+              'jawaban': m['jawaban'],
+              'waktu': waktu?.toIso8601String(),
+              'sesi_id': sid,
+            },
+          );
+          lokal.chat.tandaiSinkron('${m['id']}');
+          berubah = true;
+          final d = r.data;
+          if (d is Map && d['judul'] != null) {
+            lokal.chat.ubahJudul(sid, '${d['judul']}', otomatis: true);
+          }
+        } on Object catch (e) {
+          debugPrint('sinkron pesan ${m['id']} gagal: $e');
         }
       }
       await segarkanMemori();

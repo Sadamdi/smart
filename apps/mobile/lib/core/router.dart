@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'theme/app_theme.dart';
@@ -160,34 +161,11 @@ class _Cangkang extends StatelessWidget {
               top: 0,
               child: SafeArea(bottom: false, child: BannerPerbarui()),
             ),
-            Positioned(
+            const Positioned(
               left: 0,
               right: 0,
               bottom: 8,
-              child: ValueListenableBuilder<bool>(
-                valueListenable: Get.find<CacheLokal>().luring,
-                builder: (_, luring, _) => luring
-                    ? Center(
-                        child: Material(
-                          color: Warna.navy,
-                          borderRadius: BorderRadius.circular(20),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
-                            child: Text(
-                              'Mode luring: menampilkan data terakhir',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
+              child: _SpandukLuring(),
             ),
           ],
         ),
@@ -223,6 +201,71 @@ class _Cangkang extends StatelessWidget {
                       ),
                     ),
                 ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+/// Pemberitahuan "mode luring": muncul sebentar saat jaringan putus (atau mode luring dipilih), lalu menghilang sendiri
+/// agar tidak menutupi isi halaman. Muncul lagi bila status berubah.
+class _SpandukLuring extends StatefulWidget {
+  const _SpandukLuring();
+
+  @override
+  State<_SpandukLuring> createState() => _SpandukLuringState();
+}
+
+class _SpandukLuringState extends State<_SpandukLuring> {
+  late final ValueNotifier<bool> _luring = Get.find<CacheLokal>().luring;
+  bool _tampil = false;
+  Timer? _sembunyi;
+
+  @override
+  void initState() {
+    super.initState();
+    _luring.addListener(_berubah);
+    _berubah();
+  }
+
+  void _berubah() {
+    _sembunyi?.cancel();
+    if (!_luring.value) {
+      if (_tampil) setState(() => _tampil = false);
+      return;
+    }
+    setState(() => _tampil = true);
+    _sembunyi = Timer(const Duration(seconds: 4), () {
+      if (mounted) setState(() => _tampil = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _sembunyi?.cancel();
+    _luring.removeListener(_berubah);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: AnimatedOpacity(
+        opacity: _tampil ? 1 : 0,
+        duration: const Duration(milliseconds: 250),
+        child: Center(
+          child: Material(
+            color: Warna.navy,
+            borderRadius: BorderRadius.circular(20),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              child: Text(
+                'Mode luring: menampilkan data terakhir',
+                style: TextStyle(color: Colors.white, fontSize: 12),
               ),
             ),
           ),
