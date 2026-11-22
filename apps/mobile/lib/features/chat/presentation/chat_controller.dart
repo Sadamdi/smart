@@ -101,6 +101,29 @@ class ChatController extends GetxController {
   /// Chatbot dianggap tersedia sampai terbukti sebaliknya.
   bool get bisaMenjawab => tersedia.value ?? true;
 
+  Worker? _pendengarSinkron;
+
+  @override
+  void onInit() {
+    super.onInit();
+    // Setelah sesi ponsel tersalin ke server (id dan judul berubah), daftar dan layar ikut diperbarui.
+    _pendengarSinkron = ever(_repo.versiSinkron, (_) async {
+      final lama = sesiId.value;
+      if (lama != null && _repo.penggantianSesi[lama] != null) {
+        sesiId.value = _repo.penggantianSesi[lama];
+      }
+      await daftarSesi.muat();
+      _selaraskanJudul();
+      if (!mengirim.value && sesiId.value != lama) await riwayat.muat();
+    });
+  }
+
+  @override
+  void onClose() {
+    _pendengarSinkron?.dispose();
+    super.onClose();
+  }
+
   Future<void> buka() async {
     await Future.wait([tersedia.muat(), daftarSesi.muat()]);
     // Buka sesi terbaru bila belum ada yang dipilih.

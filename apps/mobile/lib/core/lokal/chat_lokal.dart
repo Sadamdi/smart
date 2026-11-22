@@ -60,7 +60,12 @@ class ChatLokal {
       final s = buatSesi(judul: 'Percakapan sebelumnya');
       for (final m in tanpaSesi) {
         m['sesi_id'] = s['id'];
+        // Format lama menandai buatan ponsel lewat sumber; hanya itu yang masih perlu disalin ke server.
+        m['lokal'] = m['lokal'] == true || m['sumber'] == 'ponsel' || m['sumber'] == 'lokal';
       }
+      // Sesi hasil migrasi tanpa pesan tertunda tidak perlu ditandai belum tersalin.
+      s['lokal'] = tanpaSesi.any((m) => m['lokal'] == true);
+      _simpanSesi();
       _simpanPesan();
     }
   }
@@ -243,7 +248,12 @@ class ChatLokal {
     ];
     for (final x in data) {
       if (x is! Map || x['lokal'] == true) continue;
-      _pesan.add({...Peta.from(x), 'sesi_id': sesiId, 'lokal': false});
+      final m = {...Peta.from(x), 'sesi_id': sesiId, 'lokal': false};
+      // Jawaban model ponsel yang sudah tersalin tetap berlabel ponsel, bukan layanan server.
+      if ('${m['jawaban']}'.contains('(Dijawab model AI di ponsel')) {
+        m['sumber'] = 'ponsel';
+      }
+      _pesan.add(m);
     }
     _simpanPesan();
   }

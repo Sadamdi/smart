@@ -293,7 +293,7 @@ class _ChatPageState extends State<ChatPage> {
               onTap: () => context.push('/chat/sesi'),
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
+                  horizontal: 10,
                   vertical: 9,
                 ),
                 decoration: BoxDecoration(
@@ -303,8 +303,6 @@ class _ChatPageState extends State<ChatPage> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.forum_outlined, size: 18, color: Warna.primary),
-                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         _c.sesiJudul.value,

@@ -199,4 +199,43 @@ void main() {
       expect(lain.daftarSesi().single['judul'], 'Jepang');
     },
   );
+
+  test('migrasi: pesan lama tanpa sesi hanya ditandai belum tersalin bila buatan ponsel', () {
+    final c = _baru();
+    c.muat(
+      pesan: [
+        {..._pesan('a', null, 'dari server', lokal: false), 'sumber': 'server'}..remove('lokal'),
+        {..._pesan('b', null, 'dari ponsel', lokal: false)}..remove('lokal'),
+      ],
+      sesi: const [],
+    );
+    final s = c.daftarSesi().single;
+    expect(s['judul'], 'Percakapan sebelumnya');
+    expect(s['lokal'], isTrue);
+    expect(c.belumSinkron().map((m) => m['id']), ['b']);
+
+    final d = _baru();
+    d.muat(
+      pesan: [
+        {..._pesan('a', null, 'dari server', lokal: false), 'sumber': 'server'}..remove('lokal'),
+      ],
+      sesi: const [],
+    );
+    expect(d.daftarSesi().single['lokal'], isFalse);
+    expect(d.belumSinkron(), isEmpty);
+  });
+
+  test('cermin riwayat mempertahankan label ponsel pada jawaban model ponsel', () {
+    final c = _baru();
+    c.cerminRiwayat('s1', [
+      {
+        'id': 'x',
+        'pesan': 'hai',
+        'jawaban': 'halo (Dijawab model AI di ponsel. Estimasi hanya perkiraan.)',
+        'sumber': 'server',
+        'waktu': DateTime.now().toIso8601String(),
+      },
+    ]);
+    expect(c.pesanSesi('s1').single['sumber'], 'ponsel');
+  });
 }

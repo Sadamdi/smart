@@ -239,6 +239,7 @@ class ChatRepository {
       throw ApiException('JARINGAN', 'Tidak ada jaringan.', 0);
     }
     _lokal.chat.gantiIdSesi(sesiId, baru);
+    penggantianSesi[sesiId] = baru;
     return baru;
   }
 
@@ -335,12 +336,19 @@ class ChatRepository {
 
   bool _sinkron = false;
 
+  /// Naik setiap kali sinkron mengubah sesi atau judul; pendengar memuat ulang daftar dan riwayatnya.
+  final versiSinkron = 0.obs;
+
+  /// Id sesi ponsel yang sudah diganti id server (lama ke baru), agar layar yang masih memegang id lama berpindah.
+  final penggantianSesi = <String, String>{};
+
   /// Menyalin sesi dan jawaban buatan ponsel ke server (sekali jalan pada satu waktu). Server menyimpan riwayatnya,
   /// memberi judul dari topik, dan mempelajari memori dari pesan pengguna. Tidak berbuat apa pun di mode luring.
   Future<void> sinkronkan() async {
     final lokal = _lokal;
     if (_sinkron || lokal.aktif.value) return;
     _sinkron = true;
+    var berubah = false;
     try {
       for (final s in lokal.chat.daftarSesi()) {
         final id = '${s['id']}';
@@ -350,6 +358,7 @@ class ChatRepository {
             .any((m) => m['lokal'] == true);
         if (!tertunda) continue; // sesi kosong tidak perlu disalin
         await _sesiServer(id);
+        berubah = true;
       }
       for (final m in lokal.chat.belumSinkron()) {
         final sid = '${m['sesi_id']}';
@@ -365,6 +374,7 @@ class ChatRepository {
           },
         );
         lokal.chat.tandaiSinkron('${m['id']}');
+        berubah = true;
         final d = r.data;
         if (d is Map && d['judul'] != null) {
           lokal.chat.ubahJudul(sid, '${d['judul']}', otomatis: true);
@@ -375,6 +385,7 @@ class ChatRepository {
       // jaringan putus atau server menolak: dicoba lagi pada kesempatan berikutnya
     } finally {
       _sinkron = false;
+      if (berubah) versiSinkron.value++;
     }
   }
 
