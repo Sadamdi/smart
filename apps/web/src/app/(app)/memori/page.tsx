@@ -19,7 +19,7 @@ function Butir({ b, utama }: { b: ButirMemori; utama: boolean }) {
     <li className={`rounded-[14px] border border-c4 bg-card p-3 ${utama && b.aktif ? "" : "opacity-50"}`}>
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold uppercase text-muted">{b.jenis}</p>
+          <p className="text-xs font-bold uppercase text-muted">{b.jenis} · {b.sumber === "chat" ? "otomatis dari percakapan" : !b.sumber || b.sumber === "manual" ? "ditulis sendiri" : "otomatis dari dokumen"}</p>
           {sunting ? (
             <div className="mt-1 flex gap-2">
               <Masukan aria-label="Isi memori" value={isi} maxLength={480} onChange={(e) => setIsi(e.target.value)} />

@@ -165,3 +165,24 @@ def test_riwayat_chat_statistik_ekspor_impor_dan_hapus_satu(klien_db, monkeypatc
     )  # tidak ganda
     assert len(klien_db.get(f"{B}/chat/riwayat", headers=h).json()["data"]) == 2
     assert klien_db.delete(f"{B}/chat/riwayat/{uuid.uuid4()}", headers=h).status_code == 404
+
+
+def test_memori_dari_percakapan(monkeypatch):
+    from app.core.config import Settings
+    from app.services import llm, memori
+
+    panggilan = []
+
+    def palsu(settings, sistem, prompt, **kw):
+        panggilan.append(prompt)
+        return '{"fakta": [{"jenis": "organisasi", "isi": "Ketua BEM"}, {"jenis": "ngawur", "isi": "x"}]}'
+
+    monkeypatch.setattr(llm, "tersedia", lambda s: True)
+    monkeypatch.setattr(llm, "tanya", palsu)
+    s = Settings()
+    assert memori.ekstrak_dari_percakapan(s, "kapan tenggat?", None) == []  # tanpa pernyataan diri: AI tidak dipanggil
+    assert panggilan == []
+    hasil = memori.ekstrak_dari_percakapan(s, "Saya ketua BEM dan juara lomba debat nasional 2025", None)
+    assert hasil == [("organisasi", "Ketua BEM")]  # jenis tak dikenal dibuang
+    monkeypatch.setattr(llm, "tersedia", lambda s: False)
+    assert memori.ekstrak_dari_percakapan(s, "Saya ketua BEM dan juara lomba debat nasional 2025", None) == []

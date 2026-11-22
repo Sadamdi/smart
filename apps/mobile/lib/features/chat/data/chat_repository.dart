@@ -170,6 +170,13 @@ class ChatRepository {
         yield* _alirModel(pesan);
         return;
       }
+      if (e.galatJaringan && lokal.modeAi.value != 'server') {
+        throw ApiException(
+          'JARINGAN',
+          'Tidak ada internet dan model AI ponsel belum siap. Unduh model di Pengaturan > Model AI, atau aktifkan mode luring untuk jawaban dari data di ponsel.',
+          0,
+        );
+      }
       rethrow;
     }
   }
