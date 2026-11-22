@@ -61,7 +61,10 @@ class ChatLokal {
       for (final m in tanpaSesi) {
         m['sesi_id'] = s['id'];
         // Format lama menandai buatan ponsel lewat sumber; hanya itu yang masih perlu disalin ke server.
-        m['lokal'] = m['lokal'] == true || m['sumber'] == 'ponsel' || m['sumber'] == 'lokal';
+        m['lokal'] =
+            m['lokal'] == true ||
+            m['sumber'] == 'ponsel' ||
+            m['sumber'] == 'lokal';
       }
       // Sesi hasil migrasi tanpa pesan tertunda tidak perlu ditandai belum tersalin.
       s['lokal'] = tanpaSesi.any((m) => m['lokal'] == true);
@@ -287,6 +290,44 @@ class ChatLokal {
     _simpanSesi();
   }
 
+  static const _kataUmum = {
+    'yang',
+    'dan',
+    'untuk',
+    'dengan',
+    'dari',
+    'atau',
+    'ini',
+    'itu',
+    'saya',
+    'aku',
+    'ingin',
+    'mau',
+    'apa',
+    'apakah',
+    'bagaimana',
+    'berapa',
+    'kapan',
+    'adalah',
+    'tidak',
+    'bisa',
+    'dapat',
+    'akan',
+    'sudah',
+    'belum',
+    'juga',
+    'agar',
+    'supaya',
+    'dalam',
+    'oleh',
+    'sebagai',
+    'jadi',
+    'beasiswa',
+    'the',
+    'and',
+    'for',
+  };
+
   Peta statistik() {
     final sekarang = DateTime.now();
     final minggu = _pesan
@@ -311,10 +352,55 @@ class ChatLokal {
                   .map((x) => '${x['jawaban'] ?? ''}'.length)
                   .reduce((a, b) => a + b) ~/
               _pesan.length;
+    // Rincian sejajar dengan statistik server: token diperkirakan (karakter / 4), asal jawaban, 7 hari, topik.
+    final hariIni = DateTime(sekarang.year, sekarang.month, sekarang.day);
+    final perHari = <DateTime, int>{
+      for (var i = 6; i >= 0; i--) hariIni.subtract(Duration(days: i)): 0,
+    };
+    final kata = <String, int>{};
+    var ponsel = 0;
+    var masuk = 0;
+    var keluar = 0;
+    for (final x in _pesan) {
+      final w = _waktu(x['waktu']).toLocal();
+      final h = DateTime(w.year, w.month, w.day);
+      if (perHari.containsKey(h)) perHari[h] = perHari[h]! + 1;
+      final j = '${x['jawaban'] ?? ''}';
+      final t = '${x['pesan'] ?? ''}';
+      masuk += t.length;
+      keluar += j.length;
+      if (j.contains('(Dijawab model AI di ponsel') ||
+          x['sumber'] == 'ponsel') {
+        ponsel++;
+      }
+      for (final m in RegExp(r'[a-zA-Z]{4,}').allMatches(t.toLowerCase())) {
+        final k = m.group(0)!;
+        if (!_kataUmum.contains(k)) kata[k] = (kata[k] ?? 0) + 1;
+      }
+    }
+    final topik = kata.entries.toList()
+      ..sort(
+        (a, b) =>
+            b.value != a.value ? b.value - a.value : a.key.compareTo(b.key),
+      );
+    String tgl(DateTime d) =>
+        '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
     return {
       'jumlah': _pesan.length,
       'tujuh_hari': minggu,
       'rata_panjang_jawaban': panjang,
+      'jumlah_sesi': _sesi.length,
+      'token_masuk': (masuk / 4).round(),
+      'token_keluar': (keluar / 4).round(),
+      'dijawab_server': _pesan.length - ponsel,
+      'dijawab_ponsel': ponsel,
+      'per_hari': [
+        for (final e in perHari.entries)
+          {'tanggal': tgl(e.key), 'jumlah': e.value},
+      ],
+      'topik': [
+        for (final e in topik.take(6)) {'kata': e.key, 'jumlah': e.value},
+      ],
       'beasiswa_teratas': [
         for (final e in top.take(5)) {'nama': e.key, 'jumlah': e.value},
       ],

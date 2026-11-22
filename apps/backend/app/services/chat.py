@@ -297,9 +297,43 @@ def hapus_satu(sesi: Session, p: Pengguna, percakapan_id: uuid.UUID) -> None:
         raise NotFound("Percakapan tidak ditemukan")
 
 
+_KATA_UMUM = frozenset(
+    "yang dan untuk dengan dari atau ini itu saya aku ingin mau apa apakah bagaimana berapa kapan di ke pada adalah ada "
+    "tidak bisa dapat akan sudah belum juga agar supaya dalam oleh sebagai jadi nya kah lah the and for beasiswa".split()
+)
+
+
+def _statistik_rinci(baris: list[Percakapan], jumlah_sesi: int) -> dict:
+    """Estimasi pemakaian (token = karakter / 4), asal jawaban, aktivitas tujuh hari, dan topik dari kata pertanyaan."""
+    hari_ini = datetime.now(UTC).date()
+    per_hari = {hari_ini - timedelta(days=i): 0 for i in range(6, -1, -1)}
+    kata: dict[str, int] = {}
+    ponsel = 0
+    for c in baris:
+        d = c.waktu.astimezone(UTC).date()
+        if d in per_hari:
+            per_hari[d] += 1
+        if "(Dijawab model AI di ponsel" in (c.jawaban or ""):
+            ponsel += 1
+        for k in re.findall(r"[a-zA-Z]{4,}", (c.pesan or "").lower()):
+            if k not in _KATA_UMUM:
+                kata[k] = kata.get(k, 0) + 1
+    topik = sorted(kata.items(), key=lambda x: (-x[1], x[0]))[:6]
+    return {
+        "jumlah_sesi": jumlah_sesi,
+        "token_masuk": round(sum(len(c.pesan or "") for c in baris) / 4),
+        "token_keluar": round(sum(len(c.jawaban or "") for c in baris) / 4),
+        "dijawab_server": len(baris) - ponsel,
+        "dijawab_ponsel": ponsel,
+        "per_hari": [{"tanggal": d.isoformat(), "jumlah": n} for d, n in per_hari.items()],
+        "topik": [{"kata": k, "jumlah": n} for k, n in topik],
+    }
+
+
 def statistik(sesi: Session, p: Pengguna) -> dict:
     """Isi dan pemakaian chatbot: jumlah pertanyaan, 7 hari terakhir, rentang waktu, dan beasiswa teratas."""
     baris = list(sesi.scalars(select(Percakapan).where(Percakapan.pengguna_id == p.id).order_by(Percakapan.waktu)))
+    jumlah_sesi = len(daftar_sesi(sesi, p))
     pekan = datetime.now(UTC) - timedelta(days=7)
     hitung: dict[uuid.UUID, int] = {}
     for c in baris:
@@ -318,6 +352,7 @@ def statistik(sesi: Session, p: Pengguna) -> dict:
         "terakhir": baris[-1].waktu if baris else None,
         "rata_panjang_jawaban": round(sum(len(c.jawaban or "") for c in baris) / len(baris)) if baris else 0,
         "sisa_batas_harian": None,
+        **_statistik_rinci(baris, jumlah_sesi),
         "beasiswa_teratas": [{"id": i, "nama": nama.get(i, "(sudah tidak terbit)"), "jumlah": n} for i, n in teratas],
     }
 

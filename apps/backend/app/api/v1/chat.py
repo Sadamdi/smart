@@ -136,6 +136,13 @@ class StatistikChatOut(BaseModel):
     pertama: datetime | None
     terakhir: datetime | None
     rata_panjang_jawaban: int
+    jumlah_sesi: int = 0
+    token_masuk: int = 0
+    token_keluar: int = 0
+    dijawab_server: int = 0
+    dijawab_ponsel: int = 0
+    per_hari: list[dict] = []
+    topik: list[dict] = []
     beasiswa_teratas: list[dict]
 
 
