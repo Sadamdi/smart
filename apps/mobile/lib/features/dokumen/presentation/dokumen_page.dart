@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/dependensi.dart';
+import '../../../core/lokal/ekstrak_teks.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/state_widgets.dart';
 import '../../../core/widgets/tombol_bulat.dart';
 import '../data/dokumen_repository.dart';
 import '../domain/dokumen.dart';
+import '../../chat/presentation/chat_controller.dart';
 import 'dokumen_controller.dart';
 
 const _jenis = {
@@ -38,13 +40,15 @@ class _DokumenPageState extends State<DokumenPage> {
     final pesan = ScaffoldMessenger.of(context);
     final hasil = await FilePicker.pickFiles(
       type: FileType.custom,
-      allowedExtensions: const ['pdf', 'docx', 'txt', 'png', 'jpg', 'jpeg'],
+      allowedExtensions: ChatController.jenisDidukung,
     );
     final berkas = hasil.isEmpty ? null : hasil.first;
     if (berkas?.path == null) return;
     try {
-      await _c.unggah(berkas!.path!, berkas.name);
-      pesan.showSnackBar(const SnackBar(content: Text('Dokumen diunggah.')));
+      final info = await _c.unggah(berkas!.path!, berkas.name);
+      pesan.showSnackBar(SnackBar(content: Text(info)));
+    } on EkstrakGagal catch (e) {
+      pesan.showSnackBar(SnackBar(content: Text(e.pesan)));
     } catch (e) {
       pesan.showSnackBar(SnackBar(content: Text(pesanGalat(e))));
     }

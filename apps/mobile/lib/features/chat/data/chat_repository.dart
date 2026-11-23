@@ -8,8 +8,10 @@ import 'package:get/get.dart' hide Response;
 
 import '../../../core/api_client.dart';
 import '../../../core/lokal/chat_lokal.dart';
+import '../../../core/lokal/ekstrak_teks.dart';
 import '../../../core/lokal/mesin_lokal.dart';
 import '../../../core/lokal/model_ai.dart';
+import '../../dokumen/data/dokumen_repository.dart';
 
 class PesanChat {
   const PesanChat({
@@ -182,13 +184,27 @@ class ChatRepository {
   }
 
   /// Jawaban model AI di ponsel sebagai aliran token; di akhir disimpan ke riwayat lokal dan dikirim [SelesaiChat].
-  Stream<KejadianChat> _alirModel(String pesan, String? sesiId) async* {
+  Stream<KejadianChat> _alirModel(
+    String pesan,
+    String? sesiId, {
+    List<({String nama, String teks})> lampiran = const [],
+  }) async* {
     final lokal = _lokal;
     final ai = Get.find<PengelolaModelAi>();
     final jawaban = StringBuffer();
     _batalSaran = true;
     await _saranModel;
-    final konteks = '${_riwayatUntukModel(sesiId)}${lokal.konteksChat(pesan)}';
+    final dokumen = StringBuffer();
+    if (lampiran.isNotEmpty) {
+      final jatah = 5000 ~/ lampiran.length;
+      for (final l in lampiran) {
+        dokumen.writeln(
+          'DOKUMEN LAMPIRAN "${l.nama}" (milik pengguna, dibaca di ponsel):\n${potongRelevan(l.teks, pesan, batas: jatah)}\n',
+        );
+      }
+    }
+    final konteks =
+        '${_riwayatUntukModel(sesiId)}$dokumen${lokal.konteksChat(pesan)}';
     await for (final t in ai.jawabAlir(pesan, konteks)) {
       jawaban.write(t);
       yield TokenChat(t);
@@ -205,7 +221,7 @@ class ChatRepository {
     lokal.chat.catatChat({
       'id': id,
       'sesi_id': sesiId,
-      'pesan': pesan,
+      'pesan': lampiran.isEmpty ? pesan : '$pesan\n[Lampiran: ${lampiran.map((l) => l.nama).join(', ')}]',
       'jawaban': akhir,
       'waktu': DateTime.now().toIso8601String(),
       'rujukan': rujukan,
@@ -254,9 +270,22 @@ class ChatRepository {
     String? sesiId,
     CancelToken? batal,
     List<String> dokumenIds = const [],
+    List<({String nama, String teks})> teksLampiran = const [],
   }) async* {
     final lokal = _lokal;
     final pakaiModel = lokal.aktif.value || lokal.aiLokalAktif;
+    if (teksLampiran.isNotEmpty) {
+      // Lampiran dibaca di ponsel: hanya model AI di ponsel yang bisa menjawabnya (server tidak menerima teksnya).
+      if (!_modelSiap) {
+        throw ApiException(
+          'MODEL',
+          'Membaca lampiran tanpa server butuh model AI di ponsel. Unduh di Pengaturan, Model AI di ponsel.',
+          0,
+        );
+      }
+      yield* _alirModel(pesan, sesiId, lampiran: teksLampiran);
+      return;
+    }
     if (dokumenIds.isNotEmpty && lokal.aktif.value) {
       throw ApiException(
         'LURING',
@@ -349,6 +378,9 @@ class ChatRepository {
   /// Menyalin sesi dan jawaban buatan ponsel ke server (sekali jalan pada satu waktu). Server menyimpan riwayatnya,
   /// memberi judul dari topik, dan mempelajari memori dari pesan pengguna. Tidak berbuat apa pun di mode luring.
   Future<void> sinkronkan() async {
+    if (Get.isRegistered<DokumenRepository>()) {
+      unawaited(Get.find<DokumenRepository>().kirimTertunda());
+    }
     final lokal = _lokal;
     if (_sinkron || lokal.aktif.value) return;
     _sinkron = true;
