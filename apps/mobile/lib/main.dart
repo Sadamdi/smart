@@ -15,6 +15,7 @@ import 'core/lokal/model_ai.dart';
 import 'core/update/pemeriksa_pembaruan.dart';
 import 'core/widgets/layar_pembuka.dart';
 import 'features/auth/presentation/auth_controller.dart';
+import 'features/dokumen/data/dokumen_repository.dart';
 
 void main() {
   // Huruf Plus Jakarta Sans dibundel di assets/google_fonts: tanpa unduhan saat pertama dibuka.
@@ -48,6 +49,14 @@ class _SmartAppState extends State<SmartApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _router = buatRouter(_segarkan);
     _pantau = ever(Get.find<AuthController>().state, (_) => _segarkan.ping());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Aplikasi dibuka kembali: unggah berkas yang diantrekan saat luring, tanpa menunggu pengguna mengobrol.
+    if (state == AppLifecycleState.resumed && Get.isRegistered<DokumenRepository>()) {
+      unawaited(Get.find<DokumenRepository>().kirimTertunda());
+    }
   }
 
   @override
