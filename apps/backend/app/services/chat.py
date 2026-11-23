@@ -271,6 +271,7 @@ def siapkan(
         d = sesi.scalar(select(DokumenPengguna).where(DokumenPengguna.id == did, DokumenPengguna.pengguna_id == p.id))
         if d is None:
             raise ValidationFailed("Dokumen lampiran tidak ditemukan")
+        d.terakhir_dipakai = datetime.now(UTC)  # dipakai: tidak ikut dibersihkan sebagai lampiran lama
         teks = layanan_dokumen.teks_penuh(settings, d) or (d.hasil_baca or {}).get("ringkasan_teks", "")
         if teks:
             dokumen.append((d.nama_berkas, teks))

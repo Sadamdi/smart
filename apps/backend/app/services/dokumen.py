@@ -236,7 +236,9 @@ def total_berkas(sesi: Session, p: Pengguna) -> int:
     return total
 
 
-def simpan(sesi: Session, p: Pengguna, jenis: str, nama: str, isi: bytes, settings: Settings) -> DokumenPengguna:
+def simpan(
+    sesi: Session, p: Pengguna, jenis: str, nama: str, isi: bytes, settings: Settings, asal: str = "profil"
+) -> DokumenPengguna:
     ext = Path(nama).suffix.lower()
     if ext not in TIPE_DIIZINKAN:
         raise ValidationFailed("Tipe berkas harus PDF, DOCX, TXT, PNG, atau JPG")
@@ -246,14 +248,21 @@ def simpan(sesi: Session, p: Pengguna, jenis: str, nama: str, isi: bytes, settin
         raise ValidationFailed("Berkas kosong")
     isi = perkecil_gambar(nama, isi, settings.upload_gambar_sisi_maks)
     if settings.upload_simpan_berkas and total_berkas(sesi, p) + len(isi) > settings.upload_total_maks_byte:
-        raise ValidationFailed("Ruang penyimpanan dokumen penuh (maksimal 50 MB). Hapus dokumen lama lebih dulu")
+        from app.services import pembersihan  # dibersihkan dulu: lampiran chat lama tidak boleh memenuhi ruang
+
+        pembersihan.bersihkan_dokumen(sesi, settings, p, paksa_penuh=True)
+    if settings.upload_simpan_berkas and total_berkas(sesi, p) + len(isi) > settings.upload_total_maks_byte:
+        mb = settings.upload_total_maks_byte // (1024 * 1024)
+        raise ValidationFailed(f"Ruang penyimpanan dokumen penuh (maksimal {mb} MB). Hapus dokumen lama lebih dulu")
     folder = Path(settings.upload_dir) / str(p.id)
     folder.mkdir(parents=True, exist_ok=True)
     lokasi = folder / f"{uuid.uuid4().hex}{ext}"
     lokasi.write_bytes(
         enkripsi(settings, isi, p.id.bytes)
     )  # terenkripsi di disk; didekripsi hanya untuk pemilik dan chatbot
-    d = DokumenPengguna(pengguna_id=p.id, jenis=jenis, nama_berkas=Path(nama).name[:200], lokasi_penyimpanan=str(lokasi))
+    d = DokumenPengguna(
+        pengguna_id=p.id, jenis=jenis, nama_berkas=Path(nama).name[:200], lokasi_penyimpanan=str(lokasi), asal=asal
+    )
     teks_dokumen = ""
     try:
         teks = ekstrak_teks(nama, isi) or baca_gambar(settings, nama, isi)

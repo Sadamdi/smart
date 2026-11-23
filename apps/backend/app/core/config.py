@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     upload_dir: str = "data/unggahan"
     upload_maks_byte: int = 10 * 1024 * 1024
     # Total berkas per pengguna di server, supaya penyimpanan tidak membengkak.
-    upload_total_maks_byte: int = 50 * 1024 * 1024
+    upload_total_maks_byte: int = 500 * 1024 * 1024
     # Gambar yang lebih besar dari sisi ini diperkecil sebelum disimpan.
     upload_gambar_sisi_maks: int = 1600
     # True (bawaan sejak 18 November 2026): berkas disimpan di server agar bisa dilihat dari web dan HP.
