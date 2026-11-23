@@ -85,6 +85,7 @@ class DokumenPengguna(IdMixin, WaktuMixin, Base):
     __table_args__ = (
         CheckConstraint("jenis in ('cv','sertifikat','pengalaman_organisasi')", name="jenis"),
         CheckConstraint("status_baca in ('menunggu','selesai','gagal')", name="status_baca"),
+        CheckConstraint("asal in ('profil','chat')", name="asal"),
         Index("ix_dokumen_pengguna_pengguna_id", "pengguna_id"),
     )
 
@@ -95,6 +96,9 @@ class DokumenPengguna(IdMixin, WaktuMixin, Base):
     hasil_baca: Mapped[dict | None] = mapped_column(JSONB)
     status_baca: Mapped[str] = mapped_column(Text, nullable=False, server_default="menunggu")
     tanggal_unggah: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
+    # 'profil': diunggah dari halaman Dokumen (tidak dihapus otomatis); 'chat': lampiran chat (dibersihkan bila tak dipakai)
+    asal: Mapped[str] = mapped_column(Text, nullable=False, server_default="profil")
+    terakhir_dipakai: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Sumber(IdMixin, WaktuMixin, Base):
@@ -290,6 +294,8 @@ class MemoriPengguna(IdMixin, WaktuMixin, Base):
     sumber: Mapped[str | None] = mapped_column(Text)
     # dapat dimatikan per butir: butir nonaktif tidak dipakai chatbot (lebih cepat, tetapi kurang personal)
     aktif: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+    # terakhir masuk ke konteks chatbot; dasar pembersihan butir otomatis yang dinonaktifkan dan tak terpakai
+    terakhir_dipakai: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class TugasPribadi(IdMixin, WaktuMixin, Base):

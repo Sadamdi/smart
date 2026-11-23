@@ -11,6 +11,7 @@ from app.db import get_session
 from app.models import Pengguna
 from app.schemas.common import Amplop, Kosong
 from app.services import memori as layanan
+from app.services import pembersihan
 
 router = APIRouter(prefix="/me/memori", tags=["memori"])
 
@@ -65,6 +66,8 @@ def atur(data: PengaturanIn, sesi: SesiDep, p: SaatIni) -> Amplop[StatistikOut]:
 
 @router.get("", summary="Memori tentang pengguna (dari dokumen dan percakapan)", response_model=Amplop[list[MemoriOut]])
 def daftar(sesi: SesiDep, p: SaatIni) -> Amplop[list[MemoriOut]]:
+    if pembersihan.bersihkan_memori(sesi, p):  # butir otomatis yang dinonaktifkan dan lama tak terpakai
+        sesi.commit()
     return Amplop(data=[MemoriOut.model_validate(m) for m in layanan.daftar(sesi, p)])
 
 

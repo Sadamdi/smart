@@ -93,6 +93,9 @@ def test_chat_memakai_lampiran_memori_dan_data_tersamarkan(klien_db, sesi, tmp_p
             f"{B}/chat", headers=h, json={"pesan": "Nilai CV saya untuk Beasiswa Kepemimpinan Uji", "dokumen_ids": [d["id"]]}
         )
         assert r.status_code == 200, r.text
+        assert r.json()["data"]["pesan"].endswith(
+            "[Lampiran: " + d["nama_berkas"] + "]"
+        )  # klien menampilkan berkas tertanam
         prompt = tertangkap["pesan"]
         assert "Ketua BEM" in prompt and "Hackathon" in prompt  # isi dokumen sampai ke AI
         assert (
