@@ -39,7 +39,7 @@ class PesanChat {
   });
 
   /// Lampiran pertanyaan ini; [teks] ada bila dibaca di ponsel (untuk pratinjau).
-  final List<({String nama, String? teks})> lampiran;
+  final List<({String nama, String? teks, String? path})> lampiran;
 
   /// Asal jawaban: server (layanan AI), ponsel (model AI di ponsel), atau data lokal (aturan tanpa model).
   final String sumber;
@@ -53,14 +53,21 @@ class PesanChat {
 
   factory PesanChat.fromJson(Map<String, dynamic> j) {
     final p = pisahLampiran(j['pesan'] as String);
-    final simpan = <String, String?>{
+    final simpan = <String, Map>{
       for (final x in (j['lampiran'] as List? ?? const []))
-        '${(x as Map)['nama']}': x['teks'] as String?,
+        '${(x as Map)['nama']}': x,
     };
     return PesanChat(
       id: j['id'] as String,
       pesan: p.teks,
-      lampiran: [for (final n in p.nama) (nama: n, teks: simpan[n])],
+      lampiran: [
+        for (final n in p.nama)
+          (
+            nama: n,
+            teks: simpan[n]?['teks'] as String?,
+            path: simpan[n]?['path'] as String?,
+          ),
+      ],
       jawaban: j['jawaban'] as String?,
       sumber: (j['sumber'] as String?) ?? 'server',
       rujukan: [
@@ -214,7 +221,7 @@ class ChatRepository {
   Stream<KejadianChat> _alirModel(
     String pesan,
     String? sesiId, {
-    List<({String nama, String teks})> lampiran = const [],
+    List<({String nama, String teks, String? path})> lampiran = const [],
   }) async* {
     final lokal = _lokal;
     final ai = Get.find<PengelolaModelAi>();
@@ -257,6 +264,7 @@ class ChatRepository {
             {
               'nama': l.nama,
               'teks': l.teks.length > 6000 ? l.teks.substring(0, 6000) : l.teks,
+              'path': ?l.path,
             },
         ],
       'jawaban': akhir,
@@ -307,7 +315,7 @@ class ChatRepository {
     String? sesiId,
     CancelToken? batal,
     List<String> dokumenIds = const [],
-    List<({String nama, String teks})> teksLampiran = const [],
+    List<({String nama, String teks, String? path})> teksLampiran = const [],
   }) async* {
     final lokal = _lokal;
     final pakaiModel = lokal.aktif.value || lokal.aiLokalAktif;
