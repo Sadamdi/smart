@@ -21,6 +21,7 @@ function pasang(opsi: {
   kirim: ReturnType<typeof balas> | ReturnType<typeof sse>;
   sesi?: ReturnType<typeof SESI>[];
   riwayat?: Record<string, unknown[]>;
+  dokumen?: unknown[];
 }) {
   const sesiServer = [...(opsi.sesi ?? [])];
   const f = vi.fn(async (url: string, init?: RequestInit) => {
@@ -32,6 +33,7 @@ function pasang(opsi: {
     }
     if (u.endsWith("/chat/sesi")) return balas(200, { success: true, data: sesiServer });
     if (u.includes("/chat/riwayat")) return balas(200, { success: true, data: opsi.riwayat?.[new URL(u, "http://x").searchParams.get("sesi_id") ?? ""] ?? [] });
+    if (u.endsWith("/me/dokumen")) return balas(200, { success: true, data: (opsi as { dokumen?: unknown[] }).dokumen ?? [] });
     if (u.endsWith("/chat/stream") && init?.method === "POST") return opsi.kirim;
     return balas(404, { success: false, error: { code: "NOT_FOUND", message: "x" } });
   });
@@ -113,5 +115,26 @@ describe("Chatbot AI", () => {
     expect(await screen.findByText("Layanan AI sedang tidak tersedia")).toBeInTheDocument();
     expect(screen.getByLabelText("Pesan")).toBeDisabled();
     expect(screen.getByText(/secara manual/)).toBeInTheDocument();
+  });
+
+  it("menampilkan lampiran tertanam di pesan dan membuka pratinjau teks bacaan", async () => {
+    pasang({
+      tersedia: true,
+      kirim: balas(200, {}),
+      sesi: [SESI("s1", "CV")],
+      riwayat: {
+        s1: [{ id: "c1", sesi_id: "s1", pesan: "Berapa IPK saya?\n[Lampiran: cv nabila.docx]", jawaban: "IPK 3,72.", waktu: "2026-11-22T10:00:00Z", rujukan: [] }],
+      },
+      dokumen: [{ id: "d1", jenis: "cv", nama_berkas: "cv nabila.docx", status_baca: "selesai", hasil_baca: { ringkasan_teks: "IPK 3,72 dan IELTS 7.0" }, tanggal_unggah: "2026-11-22T10:00:00Z", ada_berkas: true }],
+    });
+    tampil();
+    const chip = await screen.findByRole("button", { name: /Lihat pratinjau cv nabila\.docx/ });
+    expect(screen.queryByText(/\[Lampiran:/)).toBeNull(); // penanda tidak bocor ke teks pesan
+    expect(screen.getByText("Berapa IPK saya?")).toBeTruthy();
+    fireEvent.click(chip);
+    expect(await screen.findByText("IPK 3,72 dan IELTS 7.0")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Buka berkas asli/ })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Tutup pratinjau/ }));
+    await waitFor(() => expect(screen.queryByText("IPK 3,72 dan IELTS 7.0")).toBeNull());
   });
 });
