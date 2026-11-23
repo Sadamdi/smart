@@ -47,6 +47,7 @@ class DokumenRepository {
     required String jenis,
     required String path,
     required String nama,
+    String asal = 'profil',
   }) async {
     final dir = (await _berkasAntrean()).parent.path;
     final salinan = '$dir/${DateTime.now().microsecondsSinceEpoch}-${nama.replaceAll(RegExp(r'[^\w.\- ]'), '_')}';
@@ -56,6 +57,7 @@ class DokumenRepository {
       'jenis': jenis,
       'path': salinan,
       'nama': nama,
+      'asal': asal,
       'dibuat': DateTime.now().toIso8601String(),
     });
     await _tulisAntrean(a);
@@ -76,6 +78,14 @@ class DokumenRepository {
       }
     }
   }
+
+  /// Pemakaian ruang dokumen di server: terpakai_byte, maks_byte, persen, dokumen_profil, dokumen_chat.
+  Future<Map<String, dynamic>> penyimpanan() async =>
+      (await _api.get('/me/dokumen/penyimpanan')).data as Map<String, dynamic>;
+
+  /// Membersihkan lampiran chat dan memori yang tak terpakai sekarang; mengembalikan jumlah yang dihapus.
+  Future<Map<String, dynamic>> bersihkan() async =>
+      (await _api.post('/me/dokumen/penyimpanan/bersihkan')).data as Map<String, dynamic>;
 
   Future<int> jumlahTertunda() async => (await _bacaAntrean()).length;
 
@@ -109,7 +119,12 @@ class DokumenRepository {
           continue;
         }
         try {
-          await unggah(jenis: '${x['jenis']}', path: f.path, nama: '${x['nama']}');
+          await unggah(
+            jenis: '${x['jenis']}',
+            path: f.path,
+            nama: '${x['nama']}',
+            asal: '${x['asal'] ?? 'profil'}',
+          );
           f.deleteSync();
         } on ApiException catch (e) {
           if (e.galatJaringan) {
@@ -142,9 +157,11 @@ class DokumenRepository {
     required String jenis,
     required String path,
     required String nama,
+    String asal = 'profil',
   }) async {
     final form = FormData.fromMap({
       'jenis': jenis,
+      'asal': asal,
       'berkas': await MultipartFile.fromFile(path, filename: nama),
     });
     final r = await _api.post('/me/dokumen', body: form);

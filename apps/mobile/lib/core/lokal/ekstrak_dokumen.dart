@@ -128,8 +128,10 @@ class EkstrakDokumen {
     try {
       final r = await pengenal.processImage(InputImage.fromFilePath(path));
       return r.text;
-    } on Object {
-      throw EkstrakGagal('Gambar tidak dapat dibaca. Coba foto yang lebih jelas.');
+    } on Object catch (e) {
+      debugPrint('OCR gagal: $e');
+      final rinci = '$e'.split('\n').first;
+      throw EkstrakGagal('Gambar tidak dapat dibaca (${e.runtimeType}: $rinci).');
     } finally {
       await pengenal.close();
     }

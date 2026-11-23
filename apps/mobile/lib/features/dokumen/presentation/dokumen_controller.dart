@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
@@ -15,6 +16,17 @@ class DokumenController extends GetxController {
   DokumenRepository get _repo => Get.find<DokumenRepository>();
 
   late final daftar = Muatan<List<Dokumen>>(_repo.daftar);
+  late final penyimpanan = Muatan<Map<String, dynamic>>(_repo.penyimpanan);
+
+  /// Membersihkan sekarang; mengembalikan keterangan untuk pengguna.
+  Future<String> bersihkanRuang() async {
+    final h = await _repo.bersihkan();
+    await Future.wait([daftar.muat(), penyimpanan.muat()]);
+    final d = (h['dokumen_dihapus'] as num?)?.toInt() ?? 0;
+    final m = (h['memori_dihapus'] as num?)?.toInt() ?? 0;
+    if (d == 0 && m == 0) return 'Tidak ada yang perlu dibersihkan.';
+    return 'Dibersihkan: $d lampiran chat dan $m butir memori.';
+  }
 
   /// Jenis dokumen yang dipilih sebelum mengunggah.
   final jenis = 'cv'.obs;
@@ -42,6 +54,7 @@ class DokumenController extends GetxController {
       try {
         await _repo.unggah(jenis: jenis.value, path: kirimPath, nama: kirimNama);
         await daftar.muat();
+        unawaited(penyimpanan.muat());
         return 'Dokumen diunggah.';
       } on ApiException catch (e) {
         if (!e.galatJaringan) rethrow;
@@ -62,6 +75,7 @@ class DokumenController extends GetxController {
 
   void bersihkan() {
     daftar.reset();
+    penyimpanan.reset();
     jenis.value = 'cv';
   }
 }

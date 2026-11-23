@@ -6,6 +6,7 @@ class Dokumen {
     required this.statusBaca,
     this.hasilBaca,
     this.adaBerkas = false,
+    this.asal = 'profil',
   });
 
   final String id;
@@ -14,6 +15,9 @@ class Dokumen {
   final String statusBaca;
   final Map<String, dynamic>? hasilBaca;
   final bool adaBerkas;
+
+  /// 'profil' (halaman Dokumen) atau 'chat' (lampiran chat; dibersihkan otomatis bila lama tak dipakai).
+  final String asal;
 
   /// Ringkasan nilai yang terbaca (IPK, semester, skor bahasa) untuk ditampilkan.
   List<String> get ringkasan {
@@ -34,5 +38,6 @@ class Dokumen {
     statusBaca: j['status_baca'] as String,
     hasilBaca: j['hasil_baca'] as Map<String, dynamic>?,
     adaBerkas: (j['ada_berkas'] ?? false) as bool,
+    asal: (j['asal'] ?? 'profil') as String,
   );
 }

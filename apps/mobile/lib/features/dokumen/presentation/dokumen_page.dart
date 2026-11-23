@@ -34,6 +34,7 @@ class _DokumenPageState extends State<DokumenPage> {
   void initState() {
     super.initState();
     _c.daftar.muat();
+    _c.penyimpanan.muat();
   }
 
   Future<void> _unggah() async {
@@ -49,6 +50,15 @@ class _DokumenPageState extends State<DokumenPage> {
       pesan.showSnackBar(SnackBar(content: Text(info)));
     } on EkstrakGagal catch (e) {
       pesan.showSnackBar(SnackBar(content: Text(e.pesan)));
+    } catch (e) {
+      pesan.showSnackBar(SnackBar(content: Text(pesanGalat(e))));
+    }
+  }
+
+  Future<void> _bersihkan() async {
+    final pesan = ScaffoldMessenger.of(context);
+    try {
+      pesan.showSnackBar(SnackBar(content: Text(await _c.bersihkanRuang())));
     } catch (e) {
       pesan.showSnackBar(SnackBar(content: Text(pesanGalat(e))));
     }
@@ -164,9 +174,11 @@ class _DokumenPageState extends State<DokumenPage> {
           ),
           const SizedBox(height: 4),
           Text(
-            'PDF, DOCX, TXT, PNG, atau JPG, maksimal 10 MB. Berkas disimpan di server agar bisa dilihat dari web dan HP. Gambar diperkecil otomatis dan dibaca oleh layanan AI.',
+            'PDF, Word, PowerPoint, Excel, gambar, dan teks, maksimal 10 MB per berkas. Berkas disimpan di server agar bisa dilihat dari web dan HP. Tanpa jaringan, berkas diantrekan dan diunggah otomatis saat online.',
             style: t.bodySmall,
           ),
+          const SizedBox(height: 12),
+          Obx(() => _KartuRuang(_c.penyimpanan.state.value.value, _bersihkan)),
           const SizedBox(height: 16),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -247,6 +259,9 @@ class _KartuDokumen extends StatelessWidget {
         : gagal
         ? 'Belum terbaca, isi profil manual'
         : 'Sedang dibaca';
+    final tambahan = d.asal == 'chat'
+        ? 'Lampiran chat, dihapus otomatis bila 30 hari tak dipakai'
+        : null;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.fromLTRB(12, 12, 4, 12),
@@ -279,6 +294,14 @@ class _KartuDokumen extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text('$jenis · $keterangan', style: t.bodySmall),
+                if (tambahan != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      tambahan,
+                      style: t.bodySmall?.copyWith(color: Warna.muted),
+                    ),
+                  ),
                 const SizedBox(height: 6),
                 terbaca
                     ? Lencana(
@@ -309,6 +332,81 @@ class _KartuDokumen extends StatelessWidget {
             tooltip: 'Hapus',
             onPressed: onHapus,
             icon: Icon(Icons.delete_outline_rounded, color: Warna.muted),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+/// Pemakaian ruang dokumen di server beserta tombol bersihkan manual.
+class _KartuRuang extends StatelessWidget {
+  const _KartuRuang(this.data, this.onBersihkan);
+
+  final Map<String, dynamic>? data;
+  final VoidCallback onBersihkan;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = data;
+    if (d == null) return const SizedBox.shrink();
+    final t = Theme.of(context).textTheme;
+    final terpakai = (d['terpakai_byte'] as num?)?.toInt() ?? 0;
+    final maks = (d['maks_byte'] as num?)?.toInt() ?? 1;
+    final persen = (d['persen'] as num?)?.toInt() ?? 0;
+    final penuh = persen >= 80;
+    String mb(int b) {
+      if (b < 1024 * 1024) return '${(b / 1024).round()} KB';
+      final v = b / (1024 * 1024);
+      return v == v.roundToDouble() ? '${v.round()} MB' : '${v.toStringAsFixed(1)} MB';
+    }
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Warna.kartu,
+        borderRadius: BorderRadius.circular(Jari.kartu),
+        border: Border.all(color: penuh ? Warna.error : Warna.container4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Ruang dokumen',
+                  style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              Text('${mb(terpakai)} dari ${mb(maks)}', style: t.labelLarge),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: (terpakai / maks).clamp(0.0, 1.0),
+              minHeight: 8,
+              color: penuh ? Warna.error : Warna.primary,
+              backgroundColor: Warna.container4,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            penuh
+                ? 'Ruang hampir penuh. Lampiran chat lama dibersihkan otomatis, atau bersihkan sekarang.'
+                : 'Lampiran chat yang 30 hari tak dipakai dan memori yang tak terpakai dibersihkan otomatis. Dokumen profil tidak pernah dihapus otomatis.',
+            style: t.bodySmall,
+          ),
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: onBersihkan,
+              icon: const Icon(Icons.cleaning_services_outlined, size: 18),
+              label: const Text('Bersihkan yang tidak terpakai'),
+            ),
           ),
         ],
       ),

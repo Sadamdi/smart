@@ -130,9 +130,10 @@ class ChatController extends GetxController {
             jenis: jenisDari(berkas.name),
             path: berkas.path!,
             nama: berkas.name,
+            asal: 'chat',
           );
           lampiran.add(
-            LampiranChat(id: d.id, nama: d.namaBerkas, ukuran: byte, catatan: 'Dibaca server'),
+            LampiranChat(id: d.id, nama: d.namaBerkas, ukuran: byte, catatan: 'Di server'),
           );
           return;
         } on ApiException catch (e) {
@@ -146,7 +147,7 @@ class ChatController extends GetxController {
           nama: berkas.name,
           teks: h.teks,
           ukuran: byte,
-          catatan: h.catatan == null ? 'Dibaca di ponsel' : 'Dibaca di ponsel. ${h.catatan}',
+          catatan: h.catatan == null ? 'Di ponsel' : 'Di ponsel. ${h.catatan}',
         ),
       );
       if (jenisServer.contains(ext)) {
@@ -154,6 +155,7 @@ class ChatController extends GetxController {
           jenis: jenisDari(berkas.name),
           path: berkas.path!,
           nama: berkas.name,
+          asal: 'chat',
         );
       }
     } on EkstrakGagal catch (e) {

@@ -36,6 +36,7 @@ class DokumenOut(BaseModel):
     hasil_baca: dict | None = None
     tanggal_unggah: datetime
     ada_berkas: bool = False
+    asal: str = "profil"
 
     @model_validator(mode="before")
     @classmethod
@@ -49,6 +50,7 @@ class DokumenOut(BaseModel):
                 "hasil_baca": d.hasil_baca,
                 "tanggal_unggah": d.tanggal_unggah,
                 "ada_berkas": bool(d.lokasi_penyimpanan) and Path(d.lokasi_penyimpanan).exists(),
+                "asal": d.asal,
             }
         return d
 
