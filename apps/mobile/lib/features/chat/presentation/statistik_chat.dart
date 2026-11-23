@@ -218,6 +218,7 @@ class _IsiStatistik extends StatelessWidget {
           child: SizedBox(
             height: 12,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (server > 0)
                   Expanded(
@@ -273,7 +274,10 @@ class _IsiStatistik extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        Text('${_n(x['pertanyaan'])} pertanyaan', style: t.bodySmall),
+                        Text(
+                          '${_n(x['pertanyaan'])} pertanyaan',
+                          style: t.bodySmall,
+                        ),
                       ],
                     ),
                   ),
