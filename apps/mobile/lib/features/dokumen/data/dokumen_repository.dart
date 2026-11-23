@@ -87,6 +87,40 @@ class DokumenRepository {
   Future<Map<String, dynamic>> bersihkan() async =>
       (await _api.post('/me/dokumen/penyimpanan/bersihkan')).data as Map<String, dynamic>;
 
+  /// Folder salinan berkas yang dibaca di ponsel, agar berkas aslinya bisa dibuka lagi dari chat.
+  static Future<Directory> folderSalinan() async {
+    final d = Directory('${(await getApplicationSupportDirectory()).path}/lampiran_chat');
+    if (!d.existsSync()) d.createSync(recursive: true);
+    return d;
+  }
+
+  /// Menyalin berkas ke folder salinan; mengembalikan jalur salinan (null bila gagal).
+  static Future<String?> simpanSalinan(String path, String nama) async {
+    try {
+      final d = await folderSalinan();
+      final aman = nama.replaceAll(RegExp(r'[^\w.\- ]'), '_');
+      final tujuan = '${d.path}/${DateTime.now().microsecondsSinceEpoch}-$aman';
+      await File(path).copy(tujuan);
+      return tujuan;
+    } on Object {
+      return null;
+    }
+  }
+
+  /// Membuang salinan yang lebih dari 30 hari (sama dengan masa lampiran chat di server).
+  static Future<void> bersihkanSalinanLama() async {
+    try {
+      final d = await folderSalinan();
+      for (final e in d.listSync()) {
+        if (e is File && DateTime.now().difference(e.lastModifiedSync()) > const Duration(days: 30)) {
+          e.deleteSync();
+        }
+      }
+    } on Object {
+      // diabaikan
+    }
+  }
+
   Future<int> jumlahTertunda() async => (await _bacaAntrean()).length;
 
   bool _mengirimTertunda = false;
@@ -99,6 +133,7 @@ class DokumenRepository {
     }
     _mengirimTertunda = true;
     try {
+      unawaited(bersihkanSalinanLama());
       final a = await _bacaAntrean();
       await _bersihkanYatim(a);
       if (a.isEmpty) return;

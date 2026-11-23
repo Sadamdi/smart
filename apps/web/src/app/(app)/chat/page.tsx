@@ -4,6 +4,7 @@ import { BarChart3, Download, MessageCircle, Paperclip, Pencil, Plus, RotateCcw,
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { GelembungChat } from "@/components/GelembungChat";
+import { PratinjauLampiran } from "@/components/PratinjauLampiran";
 import { TeksMarkdown } from "@/components/TeksMarkdown";
 import { GalatState, MemuatState, pesanGalat } from "@/components/state";
 import { JudulHalaman, Kartu, Masukan, Tombol } from "@/components/ui";
@@ -371,10 +372,7 @@ export default function ChatbotAI() {
                 {pisahLampiran(c.pesan).nama.length > 0 && (
                   <span className="mb-1 flex flex-wrap gap-1.5">
                     {pisahLampiran(c.pesan).nama.map((n) => (
-                      <span key={n} className="inline-flex max-w-full items-center gap-1.5 rounded-[10px] bg-white/20 px-2 py-1 text-xs font-semibold">
-                        <Paperclip className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                        <span className="truncate">{n}</span>
-                      </span>
+                      <PratinjauLampiran key={n} nama={n} />
                     ))}
                   </span>
                 )}
