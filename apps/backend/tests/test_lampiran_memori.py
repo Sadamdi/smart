@@ -155,6 +155,7 @@ def test_riwayat_chat_statistik_ekspor_impor_dan_hapus_satu(klien_db, monkeypatc
     assert st["jumlah_sesi"] >= 1 and st["token_masuk"] >= 1 and st["token_keluar"] >= 1
     assert st["dijawab_server"] == 2 and st["dijawab_ponsel"] == 0
     assert len(st["per_hari"]) == 7 and st["per_hari"][-1]["jumlah"] == 2
+    assert st["per_sesi"] and st["per_sesi"][0]["pertanyaan"] >= 1 and st["per_sesi"][0]["token_keluar"] >= 1
     cadangan = klien_db.get(f"{B}/chat/ekspor", headers=h).json()["data"]
     assert sorted(c["pesan"] for c in cadangan) == ["dua", "satu"]  # waktu sama dalam satu transaksi uji
     riwayat = klien_db.get(f"{B}/chat/riwayat", headers=h).json()["data"]

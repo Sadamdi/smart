@@ -179,4 +179,12 @@ export type StatistikChat = {
   terakhir: string | null;
   rata_panjang_jawaban: number;
   beasiswa_teratas: { id: string; nama: string; jumlah: number }[];
+  jumlah_sesi?: number;
+  token_masuk?: number;
+  token_keluar?: number;
+  dijawab_server?: number;
+  dijawab_ponsel?: number;
+  per_hari?: { tanggal: string; jumlah: number }[];
+  topik?: { kata: string; jumlah: number }[];
+  per_sesi?: { judul: string; pertanyaan: number; token_masuk: number; token_keluar: number }[];
 };

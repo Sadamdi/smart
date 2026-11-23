@@ -5,9 +5,10 @@ import '../../../core/theme/app_theme.dart';
 /// Lembar statistik chatbot: angka pemakaian, grafik 7 hari, asal jawaban, topik, dan beasiswa yang sering dirujuk.
 /// Data sama untuk server dan ponsel (di ponsel dihitung dari riwayat lokal), jadi tampil juga saat luring.
 Future<void> tampilkanStatistikChat(
-  BuildContext context,
-  Map<String, dynamic> d,
-) {
+  BuildContext context, {
+  required Map<String, dynamic> awal,
+  required Future<Map<String, dynamic>> Function() muat,
+}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -16,8 +17,47 @@ Future<void> tampilkanStatistikChat(
       expand: false,
       initialChildSize: 0.85,
       maxChildSize: 0.95,
-      builder: (_, kontrol) => _IsiStatistik(d, kontrol),
+      builder: (_, kontrol) => _PemuatStatistik(awal, muat, kontrol),
     ),
+  );
+}
+
+/// Lembar terbuka seketika dengan data ponsel; data server menggantikannya diam-diam bila tiba (gagal: data ponsel tetap).
+class _PemuatStatistik extends StatefulWidget {
+  const _PemuatStatistik(this.awal, this.muat, this.kontrol);
+
+  final Map<String, dynamic> awal;
+  final Future<Map<String, dynamic>> Function() muat;
+  final ScrollController kontrol;
+
+  @override
+  State<_PemuatStatistik> createState() => _PemuatStatistikState();
+}
+
+class _PemuatStatistikState extends State<_PemuatStatistik> {
+  late Map<String, dynamic> _d = widget.awal;
+  bool _memuat = true;
+
+  @override
+  void initState() {
+    super.initState();
+    widget
+        .muat()
+        .then((d) {
+          if (mounted) setState(() => _d = d);
+        })
+        .catchError((Object _) {})
+        .whenComplete(() {
+          if (mounted) setState(() => _memuat = false);
+        });
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      if (_memuat) const LinearProgressIndicator(minHeight: 2),
+      Expanded(child: _IsiStatistik(_d, widget.kontrol)),
+    ],
   );
 }
 
@@ -49,6 +89,9 @@ class _IsiStatistik extends StatelessWidget {
       (a, x) => _n(x['jumlah']) > a ? _n(x['jumlah']) : a,
     );
     final topik = [for (final x in (d['topik'] as List? ?? const [])) x as Map];
+    final sesiStat = [
+      for (final x in (d['per_sesi'] as List? ?? const [])) x as Map,
+    ];
     final rujukan = [
       for (final x in (d['beasiswa_teratas'] as List? ?? const [])) x as Map,
     ];
@@ -148,7 +191,7 @@ class _IsiStatistik extends StatelessWidget {
                           duration: const Duration(milliseconds: 600),
                           curve: Curves.easeOutCubic,
                           builder: (_, v, _) => Container(
-                            height: 6 + 64 * v,
+                            height: 6 + 50 * v,
                             decoration: BoxDecoration(
                               color: _n(x['jumlah']) == 0
                                   ? Warna.container4
@@ -204,6 +247,44 @@ class _IsiStatistik extends StatelessWidget {
                 Chip(label: Text('${x['kata']}  ${x['jumlah']}')),
             ],
           ),
+        ],
+        if (sesiStat.isNotEmpty) ...[
+          judul('Pemakaian per percakapan'),
+          for (final x in sesiStat)
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Warna.kartu,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Warna.container4),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${x['judul']}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: t.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text('${_n(x['pertanyaan'])} pertanyaan', style: t.bodySmall),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'masuk ${_ribu(_n(x['token_masuk']))}  ·  keluar ${_ribu(_n(x['token_keluar']))}',
+                    style: t.labelSmall,
+                  ),
+                ],
+              ),
+            ),
         ],
         if (rujukan.isNotEmpty) ...[
           judul('Paling sering dirujuk'),

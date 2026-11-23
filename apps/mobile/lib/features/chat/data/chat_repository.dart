@@ -186,6 +186,8 @@ class ChatRepository {
     final lokal = _lokal;
     final ai = Get.find<PengelolaModelAi>();
     final jawaban = StringBuffer();
+    _batalSaran = true;
+    await _saranModel;
     final konteks = '${_riwayatUntukModel(sesiId)}${lokal.konteksChat(pesan)}';
     await for (final t in ai.jawabAlir(pesan, konteks)) {
       jawaban.write(t);
@@ -413,21 +415,67 @@ class ChatRepository {
 
   Future<void> hapusRiwayat() => _api.delete('/chat/riwayat');
 
-  /// Saran pertanyaan lanjutan dari model di server; kosong bila luring, sesi belum tersalin, atau layanan gagal.
+  /// Saran dari basis data di ponsel (beasiswa paling cocok dan tenggat terdekat); selalu tersedia, juga saat luring.
+  List<String> saranData() => _lokal.saranData();
+
+  bool _batalSaran = false;
+  Future<void>? _saranModel;
+
+  /// Saran pertanyaan lanjutan. Online: model di server. Luring atau server gagal: model AI di ponsel bila sudah
+  /// diunduh. Kosong bila tak satu pun tersedia; klien lalu memakai saran dari basis data dan aturan lokal.
   Future<List<String>> saran(String? sesiId) async {
-    if (_lokal.aktif.value || (sesiId?.startsWith('lokal-') ?? false)) {
-      return const [];
+    final lokalSaja = _lokal.aktif.value || (sesiId?.startsWith('lokal-') ?? false);
+    if (!lokalSaja) {
+      try {
+        final r = await _api.get(
+          '/chat/saran',
+          query: {'sesi_id': ?sesiId},
+        );
+        final d = [for (final x in (r.data as List? ?? const [])) '$x'];
+        if (d.isNotEmpty) return d;
+      } catch (_) {
+        // jatuh ke model di ponsel
+      }
     }
-    try {
-      final r = await _api.get(
-        '/chat/saran',
-        query: {'sesi_id': ?sesiId},
-      );
-      return [for (final x in (r.data as List? ?? const [])) '$x'];
-    } catch (_) {
-      return const [];
-    }
+    return _saranDariPonsel(sesiId);
   }
+
+  Future<List<String>> _saranDariPonsel(String? sesiId) async {
+    if (sesiId == null || !_modelSiap) return const [];
+    final riwayat = _riwayatUntukModel(sesiId);
+    if (riwayat.isEmpty) return const [];
+    final hasil = <String>[];
+    _batalSaran = false;
+    final kerja = () async {
+      try {
+        final b = StringBuffer();
+        await for (final t in Get.find<PengelolaModelAi>()
+            .jawabAlir(
+              'Tulis 4 pertanyaan lanjutan singkat (maksimal 8 kata, satu per baris, tanpa nomor) yang mungkin ingin saya tanyakan berikutnya.',
+              riwayat,
+            )
+            .timeout(const Duration(seconds: 25))) {
+          b.write(t);
+          if (_batalSaran || b.length > 260) break;
+        }
+        for (final baris in b.toString().split('\n')) {
+          final k = baris
+              .replaceFirst(RegExp(r'^[\s\-*•0-9.)]+'), '')
+              .replaceAll(RegExp(r'''["'*]'''), '')
+              .trim();
+          if (k.length >= 4 && k.length <= 80 && !hasil.contains(k)) hasil.add(k);
+        }
+      } catch (_) {
+        // model sibuk atau gagal: klien memakai saran lain
+      }
+    }();
+    _saranModel = kerja;
+    await kerja;
+    return _batalSaran ? const [] : hasil.take(4).toList();
+  }
+
+  /// Statistik dari riwayat di ponsel: seketika, tanpa jaringan. Dipakai sebagai tampilan awal sebelum data server tiba.
+  Map<String, dynamic> statistikLokal() => _lokal.chat.statistik();
 
   Future<Map<String, dynamic>> statistik() async =>
       (await _api.get('/chat/statistik')).data as Map<String, dynamic>;

@@ -3,7 +3,11 @@ import '../data/chat_repository.dart';
 /// Saran pertanyaan lanjutan yang disusun di ponsel (tanpa jaringan, tanpa model) dari konteks percakapan:
 /// beasiswa yang baru dirujuk, topik pertanyaan dan jawaban terakhir, serta ada tidaknya lampiran.
 /// Pertanyaan yang sudah pernah diajukan di sesi ini tidak disarankan lagi.
-List<String> saranBerikut(List<PesanChat> riwayat, {bool lampiran = false}) {
+List<String> saranBerikut(
+  List<PesanChat> riwayat, {
+  bool lampiran = false,
+  List<String> data = const [],
+}) {
   const awal = [
     'Beasiswa apa yang cocok untuk saya?',
     'Tenggat terdekat minggu ini',
@@ -15,7 +19,10 @@ List<String> saranBerikut(List<PesanChat> riwayat, {bool lampiran = false}) {
     'Beasiswa apa yang paling cocok dengan dokumen ini?',
     'Apa yang perlu saya perbaiki?',
   ];
-  if (riwayat.isEmpty) return lampiran ? awalLampiran : awal;
+  if (riwayat.isEmpty) {
+    if (lampiran) return awalLampiran;
+    return [...data.take(2), ...awal].take(4).toList();
+  }
 
   final terakhir = riwayat.last;
   final konteks = '${terakhir.pesan} ${terakhir.jawaban ?? ''}'.toLowerCase();
@@ -54,6 +61,7 @@ List<String> saranBerikut(List<PesanChat> riwayat, {bool lampiran = false}) {
     calon.add('Beasiswa dari daerah saya');
   }
   if (lampiran) calon.add('Apa yang perlu saya perbaiki dari dokumen ini?');
+  calon.addAll(data);
   calon.addAll(const [
     'Bandingkan dua beasiswa teratas untuk saya',
     'Apa langkah saya berikutnya?',

@@ -200,9 +200,11 @@ class _ChatPageState extends State<ChatPage> {
             ),
           );
         case 'statistik':
-          final d = await _c.statistik();
-          if (!mounted) return;
-          await tampilkanStatistikChat(context, d);
+          await tampilkanStatistikChat(
+            context,
+            awal: _c.statistikLokal(),
+            muat: _c.statistik,
+          );
       }
     } catch (e) {
       _info(pesanGalat(e));
@@ -411,6 +413,7 @@ class _ChatPageState extends State<ChatPage> {
                     : saranBerikut(
                         riwayat.value ?? const [],
                         lampiran: _c.lampiran.isNotEmpty,
+                        data: _c.saranData,
                       ))
                   Padding(
                     padding: const EdgeInsets.only(right: 8),

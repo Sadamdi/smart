@@ -359,6 +359,28 @@ def _statistik_rinci(baris: list[Percakapan], jumlah_sesi: int) -> dict:
     }
 
 
+def _per_sesi(baris: list[Percakapan], judul: dict[uuid.UUID, str], batas: int = 5) -> list[dict]:
+    """Pemakaian per percakapan (sesi): jumlah pertanyaan dan token perkiraan, dari yang terbanyak token."""
+    total: dict[uuid.UUID, list[int]] = {}
+    for c in baris:
+        if c.sesi_id is None:
+            continue
+        t = total.setdefault(c.sesi_id, [0, 0, 0])
+        t[0] += 1
+        t[1] += len(c.pesan or "")
+        t[2] += len(c.jawaban or "")
+    urut = sorted(total.items(), key=lambda x: -(x[1][1] + x[1][2]))[:batas]
+    return [
+        {
+            "judul": judul.get(i, "Percakapan"),
+            "pertanyaan": t[0],
+            "token_masuk": round(t[1] / 4),
+            "token_keluar": round(t[2] / 4),
+        }
+        for i, t in urut
+    ]
+
+
 def statistik(sesi: Session, p: Pengguna) -> dict:
     """Isi dan pemakaian chatbot: jumlah pertanyaan, 7 hari terakhir, rentang waktu, dan beasiswa teratas."""
     baris = list(sesi.scalars(select(Percakapan).where(Percakapan.pengguna_id == p.id).order_by(Percakapan.waktu)))
@@ -382,6 +404,7 @@ def statistik(sesi: Session, p: Pengguna) -> dict:
         "rata_panjang_jawaban": round(sum(len(c.jawaban or "") for c in baris) / len(baris)) if baris else 0,
         "sisa_batas_harian": None,
         **_statistik_rinci(baris, jumlah_sesi),
+        "per_sesi": _per_sesi(baris, {x.id: x.judul for x in daftar_sesi(sesi, p)}),
         "beasiswa_teratas": [{"id": i, "nama": nama.get(i, "(sudah tidak terbit)"), "jumlah": n} for i, n in teratas],
     }
 

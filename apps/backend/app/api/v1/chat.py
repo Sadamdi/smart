@@ -143,6 +143,7 @@ class StatistikChatOut(BaseModel):
     dijawab_ponsel: int = 0
     per_hari: list[dict] = []
     topik: list[dict] = []
+    per_sesi: list[dict] = []
     beasiswa_teratas: list[dict]
 
 

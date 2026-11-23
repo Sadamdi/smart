@@ -106,6 +106,9 @@ class ChatController extends GetxController {
 
   /// Saran lanjutan dari model (server); kosong berarti klien memakai saran lokal.
   final saranModel = <String>[].obs;
+
+  /// Saran dari basis data di ponsel (beasiswa paling cocok, tenggat terdekat); ikut tampil saat luring.
+  final saranData = <String>[].obs;
   int _tandaSaran = 0;
 
   Future<void> _muatSaran() async {
@@ -121,9 +124,9 @@ class ChatController extends GetxController {
     // Saran model diperbarui setiap kali riwayat sesi selesai dimuat; saran lama dibuang agar tak salah konteks.
     _pendengarRiwayat = ever(riwayat.state, (s) {
       saranModel.clear();
-      if (s.hasValue && !mengirim.value && (s.value?.isNotEmpty ?? false)) {
-        _muatSaran();
-      }
+      if (!s.hasValue) return;
+      saranData.assignAll(_repo.saranData());
+      if (!mengirim.value && (s.value?.isNotEmpty ?? false)) _muatSaran();
     });
     _pendengarSinkron = ever(_repo.versiSinkron, (_) async {
       final lama = sesiId.value;
@@ -351,6 +354,8 @@ class ChatController extends GetxController {
   }
 
   Future<Map<String, dynamic>> statistik() => _repo.statistik();
+
+  Map<String, dynamic> statistikLokal() => _repo.statistikLokal();
 
   /// Menyimpan cadangan riwayat sebagai berkas JSON ke lokasi pilihan pengguna.
   Future<String> cadangkan() async {
