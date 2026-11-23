@@ -12,6 +12,13 @@ import { useAksi, useRiwayatChat, useSaranChat, useSesiChat, useStatistikChat, u
 import type { Chat, SesiChat } from "@/lib/types";
 
 const PESAN_MAKS = 2000;
+/** Penanda lampiran di akhir pesan: [Lampiran: a.pdf; b.docx]. */
+function pisahLampiran(pesan: string): { teks: string; nama: string[] } {
+  const m = /\n?\[Lampiran: ([^\]]+)\]\s*$/.exec(pesan);
+  if (!m) return { teks: pesan, nama: [] };
+  return { teks: pesan.slice(0, m.index).trimEnd(), nama: m[1].split(";").map((x) => x.trim()).filter(Boolean) };
+}
+
 const SARAN = ["Beasiswa apa yang tenggatnya paling dekat?", "Berkas apa yang harus saya siapkan?", "Beasiswa S2 apa yang sesuai dengan IPK saya?"];
 
 export default function ChatbotAI() {
@@ -360,7 +367,19 @@ export default function ChatbotAI() {
           ) : null}
           {daftar.map((c) => (
             <div key={c.id} className="space-y-2">
-              <GelembungChat dari="pengguna">{c.pesan}</GelembungChat>
+              <GelembungChat dari="pengguna">
+                {pisahLampiran(c.pesan).nama.length > 0 && (
+                  <span className="mb-1 flex flex-wrap gap-1.5">
+                    {pisahLampiran(c.pesan).nama.map((n) => (
+                      <span key={n} className="inline-flex max-w-full items-center gap-1.5 rounded-[10px] bg-white/20 px-2 py-1 text-xs font-semibold">
+                        <Paperclip className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                        <span className="truncate">{n}</span>
+                      </span>
+                    ))}
+                  </span>
+                )}
+                {pisahLampiran(c.pesan).teks}
+              </GelembungChat>
               <button type="button" aria-label="Hapus percakapan ini" onClick={() => hapusSatu.mutate(c.id)} className="ml-auto block text-xs text-muted underline">
                 Hapus
               </button>

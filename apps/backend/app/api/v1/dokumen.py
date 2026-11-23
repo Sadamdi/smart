@@ -17,6 +17,7 @@ from app.db import get_session
 from app.models import Pengguna
 from app.schemas.common import Amplop, Kosong
 from app.services import dokumen as layanan
+from app.services import pembersihan
 
 router = APIRouter(prefix="/me/dokumen", tags=["dokumen"])
 
@@ -35,6 +36,7 @@ class DokumenOut(BaseModel):
     hasil_baca: dict | None = None
     tanggal_unggah: datetime
     ada_berkas: bool = False
+    asal: str = "profil"
 
     @model_validator(mode="before")
     @classmethod
@@ -48,6 +50,7 @@ class DokumenOut(BaseModel):
                 "hasil_baca": d.hasil_baca,
                 "tanggal_unggah": d.tanggal_unggah,
                 "ada_berkas": bool(d.lokasi_penyimpanan) and Path(d.lokasi_penyimpanan).exists(),
+                "asal": d.asal,
             }
         return d
 
@@ -69,17 +72,42 @@ async def unggah(
     settings: SettingsDep,
     jenis: Annotated[Literal["cv", "sertifikat", "pengalaman_organisasi"], Form()],
     berkas: Annotated[UploadFile, File()],
+    asal: Annotated[Literal["profil", "chat"], Form()] = "profil",
 ) -> Amplop[DokumenOut]:
     isi = await berkas.read(settings.upload_maks_byte + 1)
     if not berkas.filename:
         raise ValidationFailed("Nama berkas kosong")
-    d = layanan.simpan(sesi, p, jenis, berkas.filename, isi, settings)
+    d = layanan.simpan(sesi, p, jenis, berkas.filename, isi, settings, asal)
     sesi.commit()
     return Amplop(data=DokumenOut.model_validate(d))
 
 
+class PenyimpananOut(BaseModel):
+    terpakai_byte: int
+    maks_byte: int
+    persen: int
+    dokumen_profil: int
+    dokumen_chat: int
+
+
+@router.get("/penyimpanan", summary="Pemakaian ruang dokumen", response_model=Amplop[PenyimpananOut])
+def penyimpanan(sesi: SesiDep, p: SaatIni, settings: SettingsDep) -> Amplop[PenyimpananOut]:
+    return Amplop(data=PenyimpananOut(**pembersihan.ringkasan_penyimpanan(sesi, settings, p)))
+
+
+@router.post(
+    "/penyimpanan/bersihkan", summary="Bersihkan lampiran chat dan memori yang tak terpakai", response_model=Amplop[dict]
+)
+def bersihkan(sesi: SesiDep, p: SaatIni, settings: SettingsDep) -> Amplop[dict]:
+    hasil = pembersihan.bersihkan_pengguna(sesi, settings, p, paksa_penuh=True)
+    sesi.commit()
+    return Amplop(data=hasil)
+
+
 @router.get("", summary="Daftar dokumen dan status baca", response_model=Amplop[list[DokumenOut]])
-def daftar(sesi: SesiDep, p: SaatIni) -> Amplop[list[DokumenOut]]:
+def daftar(sesi: SesiDep, p: SaatIni, settings: SettingsDep) -> Amplop[list[DokumenOut]]:
+    if pembersihan.bersihkan_dokumen(sesi, settings, p):  # pembersihan otomatis: lampiran chat yang lama tak dipakai
+        sesi.commit()
     return Amplop(data=[DokumenOut.model_validate(d) for d in layanan.daftar(sesi, p)])
 
 

@@ -7,19 +7,36 @@ import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart' hide Response;
 
+import '../../../core/api_client.dart';
 import '../../../core/async_state.dart';
 import '../../../core/dependensi.dart';
 import '../../../core/lokal/chat_lokal.dart' show judulBawaan;
 import '../../../core/lokal/mesin_lokal.dart';
+import '../../../core/lokal/ekstrak_dokumen.dart';
+import '../../../core/lokal/ekstrak_teks.dart';
 import '../../dokumen/data/dokumen_repository.dart';
 import '../data/chat_repository.dart';
+import 'lampiran_ui.dart';
 
 /// Dokumen yang dilampirkan pada pertanyaan berikutnya (sudah diunggah dan dibaca server).
 class LampiranChat {
-  const LampiranChat({required this.id, required this.nama});
+  const LampiranChat({
+    required this.id,
+    required this.nama,
+    this.teks,
+    this.catatan,
+    this.ukuran,
+  });
 
   final String id;
   final String nama;
+  final int? ukuran;
+
+  /// Teks hasil bacaan di ponsel (tanpa server). Kosong bila dokumen dibaca server.
+  final String? teks;
+  final String? catatan;
+
+  bool get lokal => teks != null;
 }
 
 class ChatController extends GetxController {
@@ -50,12 +67,26 @@ class ChatController extends GetxController {
   final lampiran = <LampiranChat>[].obs;
   final mengunggah = false.obs;
 
+  /// Nama berkas yang sedang dibaca atau diunggah (untuk kartu "Membaca...").
+  final mengunggahNama = RxnString();
+
+  /// Lampiran pertanyaan yang sedang dikirim; tampil di gelembung sebelum riwayat dimuat ulang.
+  final lampiranSementara = <({String nama, String? teks})>[].obs;
+
   static const lampiranMaks = 3;
 
-  /// Jenis berkas yang dibaca asisten (di server): dokumen dan gambar. Audio dan video belum didukung.
-  static const jenisDidukung = ['pdf', 'docx', 'txt', 'png', 'jpg', 'jpeg'];
+  /// Jenis yang dibaca server; selain ini (dan semua jenis saat luring) dibaca di ponsel.
+  static const jenisServer = ['pdf', 'docx', 'txt', 'png', 'jpg', 'jpeg'];
+
+  /// Semua jenis yang bisa dilampirkan: yang dibaca server ditambah yang dibaca di ponsel.
+  static const jenisDidukung = [
+    'pdf', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'md', 'csv', 'tsv', 'json', //
+    'xml', 'html', 'htm', 'rtf', 'pptx', 'xlsx', 'odt', 'ods', 'odp', 'epub',
+    'webp', 'bmp', 'yaml', 'yml', 'log',
+  ];
   static const keteranganJenis =
-      'PDF, Word (.docx), teks (.txt), dan gambar PNG atau JPG. Audio dan video belum didukung.';
+      'PDF, Word, PowerPoint, Excel, OpenDocument, EPUB, teks (TXT, MD, CSV, JSON, HTML, RTF), dan gambar. '
+      'Format lama .doc, .xls, .ppt dan audio atau video belum didukung.';
 
   /// Jenis dokumen dari nama berkas: CV atau sertifikat (termasuk penghargaan dan piagam).
   static String jenisDari(String nama) {
@@ -66,28 +97,74 @@ class ChatController extends GetxController {
     return 'sertifikat';
   }
 
-  /// Memilih berkas (PDF, Word, teks, gambar), mengunggahnya ke server, lalu menampilkannya sebagai lampiran.
+  /// Memilih berkas lalu melampirkannya. Online dan jenis yang dikenali server: diunggah dan dibaca server.
+  /// Luring, jaringan putus, atau jenis lain: dibaca di ponsel (teks disisipkan ke konteks model ponsel), dan
+  /// berkas yang dikenali server diantrekan untuk diunggah saat ada jaringan.
   Future<void> lampirkan() async {
-    if (mengunggah.value || lampiran.length >= lampiranMaks) return;
+    if (mengunggah.value) return;
+    if (lampiran.length >= lampiranMaks) {
+      galat.value = 'Maksimal $lampiranMaks berkas per pertanyaan. Lepas salah satu dulu.';
+      return;
+    }
     final hasil = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: jenisDidukung,
     );
     final berkas = hasil.isEmpty ? null : hasil.first;
     if (berkas?.path == null) return;
+    final byte = File(berkas!.path!).lengthSync();
+    if (byte > lampiranMaksByte) {
+      galat.value =
+          '${berkas.name} berukuran ${ukuranTeks(byte)}. Maksimal ${ukuranTeks(lampiranMaksByte)} per berkas.';
+      return;
+    }
     mengunggah.value = true;
+    mengunggahNama.value = berkas.name;
     galat.value = null;
     try {
-      final d = await Get.find<DokumenRepository>().unggah(
-        jenis: jenisDari(berkas!.name),
-        path: berkas.path!,
-        nama: berkas.name,
+      final ext = ekstensiDari(berkas.name);
+      final luring = Get.find<MesinLokal>().aktif.value;
+      if (!luring && jenisServer.contains(ext)) {
+        try {
+          final d = await Get.find<DokumenRepository>().unggah(
+            jenis: jenisDari(berkas.name),
+            path: berkas.path!,
+            nama: berkas.name,
+            asal: 'chat',
+          );
+          lampiran.add(
+            LampiranChat(id: d.id, nama: d.namaBerkas, ukuran: byte, catatan: 'Di server'),
+          );
+          return;
+        } on ApiException catch (e) {
+          if (!e.galatJaringan) rethrow; // jaringan putus: dibaca di ponsel
+        }
+      }
+      final h = await EkstrakDokumen.baca(berkas.path!, berkas.name);
+      lampiran.add(
+        LampiranChat(
+          id: 'lokal-${DateTime.now().microsecondsSinceEpoch}',
+          nama: berkas.name,
+          teks: h.teks,
+          ukuran: byte,
+          catatan: h.catatan == null ? 'Di ponsel' : 'Di ponsel. ${h.catatan}',
+        ),
       );
-      lampiran.add(LampiranChat(id: d.id, nama: d.namaBerkas));
+      if (jenisServer.contains(ext)) {
+        await Get.find<DokumenRepository>().antrekan(
+          jenis: jenisDari(berkas.name),
+          path: berkas.path!,
+          nama: berkas.name,
+          asal: 'chat',
+        );
+      }
+    } on EkstrakGagal catch (e) {
+      galat.value = e.pesan;
     } catch (e) {
       galat.value = pesanGalat(e);
     } finally {
       mengunggah.value = false;
+      mengunggahNama.value = null;
     }
   }
 
@@ -250,7 +327,14 @@ class ChatController extends GetxController {
     jawabanSementara.value = '';
     _penampung.clear();
     _batal = CancelToken();
-    final ids = [for (final l in lampiran) l.id];
+    final ids = [for (final l in lampiran) if (!l.lokal) l.id];
+    final teksLampiran = [
+      for (final l in lampiran)
+        if (l.lokal) (nama: l.nama, teks: l.teks!),
+    ];
+    lampiranSementara.assignAll([
+      for (final l in lampiran) (nama: l.nama, teks: l.teks),
+    ]);
     lampiran.clear();
     if (ids.isNotEmpty && Get.find<MesinLokal>().aiLokalAktif) {
       catatan.value = 'Pertanyaan berlampiran dijawab server karena dokumennya dibaca di sana.';
@@ -268,7 +352,13 @@ class ChatController extends GetxController {
     }
     final selesai = Completer<void>();
     _langganan = _repo
-        .kirimAlir(teks, sesiId: sesiId.value, batal: _batal, dokumenIds: ids)
+        .kirimAlir(
+          teks,
+          sesiId: sesiId.value,
+          batal: _batal,
+          dokumenIds: ids,
+          teksLampiran: teksLampiran,
+        )
         .listen(
           (k) {
             if (k is TokenChat) {
@@ -306,6 +396,7 @@ class ChatController extends GetxController {
   void _bersihkanAliran() {
     mengirim.value = false;
     pesanSementara.value = null;
+    lampiranSementara.clear();
     jawabanSementara.value = '';
     _penampung.clear();
   }

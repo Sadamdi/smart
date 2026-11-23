@@ -6,6 +6,7 @@ setiap butir. Teks yang dikirim ke layanan AI untuk ekstraksi sudah disamarkan (
 
 import json
 import uuid
+from datetime import UTC, datetime
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
@@ -65,7 +66,11 @@ def ringkas(sesi: Session, p: Pengguna, batas: int = 30) -> list[str]:
     """Butir memori yang dipakai chatbot: kosong bila saklar utama mati; butir nonaktif dilewati."""
     if not p.memori_aktif:
         return []
-    return [f"{m.jenis}: {m.isi}" for m in daftar(sesi, p) if m.aktif][:batas]
+    pilih = [m for m in daftar(sesi, p) if m.aktif][:batas]
+    sekarang = datetime.now(UTC)
+    for m in pilih:
+        m.terakhir_dipakai = sekarang  # dasar pembersihan butir yang lama tak terpakai
+    return [f"{m.jenis}: {m.isi}" for m in pilih]
 
 
 def ubah(sesi: Session, p: Pengguna, memori_id: uuid.UUID, isi: str | None, aktif: bool | None) -> MemoriPengguna:

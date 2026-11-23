@@ -173,6 +173,7 @@ def beri_judul(sesi: Session, s: SesiChat, pesan: str, jawaban: str | None, sett
     pengguna. Mengembalikan True bila judul berubah."""
     if not s.judul_otomatis or s.judul != JUDUL_BAWAAN:
         return False
+    pesan = re.sub(r"\n\[Lampiran: [^\]]*\]\s*$", "", pesan)  # penanda lampiran bukan bagian topik
     judul = ""
     if llm.tersedia(settings):
         try:
@@ -270,11 +271,14 @@ def siapkan(
         d = sesi.scalar(select(DokumenPengguna).where(DokumenPengguna.id == did, DokumenPengguna.pengguna_id == p.id))
         if d is None:
             raise ValidationFailed("Dokumen lampiran tidak ditemukan")
+        d.terakhir_dipakai = datetime.now(UTC)  # dipakai: tidak ikut dibersihkan sebagai lampiran lama
         teks = layanan_dokumen.teks_penuh(settings, d) or (d.hasil_baca or {}).get("ringkasan_teks", "")
         if teks:
             dokumen.append((d.nama_berkas, teks))
     data, rujukan, sumber = susun_data(sesi, p, pesan, hari_ini, dokumen, settings)
-    return pesan, f"DATA:\n{data}\n\n{_riwayat_prompt(sesi, p, sesi_id)}PERTANYAAN:\n{pesan}", rujukan, sumber
+    # Nama lampiran ikut tersimpan di pesan (penanda di akhir teks) agar klien bisa menampilkan berkas yang tertanam.
+    pesan_simpan = f"{pesan}\n[Lampiran: {'; '.join(n.replace(';', ',') for n, _ in dokumen)}]" if dokumen else pesan
+    return pesan_simpan, f"DATA:\n{data}\n\n{_riwayat_prompt(sesi, p, sesi_id)}PERTANYAAN:\n{pesan}", rujukan, sumber
 
 
 def simpan(
