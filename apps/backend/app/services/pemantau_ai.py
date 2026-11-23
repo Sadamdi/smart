@@ -243,14 +243,46 @@ def _cuplikan(teks: str, nama: str, lebar: int = 2500) -> str:
     return teks[max(0, i - lebar // 4) : i + lebar]
 
 
+_KATA_NAMA_UMUM = {"beasiswa", "program", "bantuan", "untuk", "dan", "yang", "tahun", "akademik", "mahasiswa", "scholarship"}
+
+
+def tautan_detail(teks: str, nama: str, dasar: str) -> str | None:
+    """Di laman daftar atau beranda, mencari tautan yang teks jangkarnya cocok dengan nama beasiswa (detailnya).
+    Teks laman menulis tautan sebagai 'jangkar [url]'. Mengembalikan None bila tak ada yang cukup cocok."""
+    kata = {k for k in re.findall(r"[a-z0-9]{3,}", nama.lower()) if k not in _KATA_NAMA_UMUM}
+    if len(kata) < 2:
+        return None
+    terbaik, skor_terbaik = None, 0.0
+    for m in re.finditer(r"([^\n\[\]]{4,200}?)\s*\[(https?://[^\]\s]+)\]", teks):
+        url = m.group(2)
+        if url.rstrip("/") == dasar.rstrip("/") or _media_sosial(url):
+            continue
+        skor = len(kata & set(re.findall(r"[a-z0-9]{3,}", m.group(1).lower()))) / len(kata)
+        if skor > skor_terbaik:
+            terbaik, skor_terbaik = url, skor
+    return terbaik if skor_terbaik >= 0.6 else None
+
+
 def validasi_beasiswa(sesi: Session, settings: Settings, b: Beasiswa, hari_ini: date, teks: str | None = None) -> str:
     """Memvalidasi satu beasiswa dengan AI. Hasilnya 'terbit', 'kedaluwarsa', 'ditolak', atau 'menunggu'.
 
     Melempar UpstreamUnavailable bila layanan AI mati (beasiswa tidak ditandai sudah diproses, jadi dicoba lagi nanti).
     """
+    tautan_baru: str | None = None
     if teks is None:
         try:
-            teks = _cuplikan(laman.ambil_teks(b.tautan_resmi, maks=POTONGAN * POTONGAN_MAKS), b.nama)
+            penuh = laman.ambil_teks(b.tautan_resmi, maks=POTONGAN * POTONGAN_MAKS)
+            teks = _cuplikan(penuh, b.nama)
+            if b.nama.lower()[:40] not in penuh.lower():
+                # Tautan hanya beranda atau laman daftar: ikuti tautan yang jangkarnya cocok dengan nama beasiswa.
+                detail = tautan_detail(penuh, b.nama, b.tautan_resmi)
+                if detail:
+                    try:
+                        isi = laman.ambil_teks(detail, maks=POTONGAN * POTONGAN_MAKS)
+                    except laman.LamanGagal:
+                        isi = ""
+                    if len(isi) >= 80:
+                        teks, tautan_baru = _cuplikan(isi, b.nama), detail
         except laman.LamanGagal as exc:
             if exc.permanen:  # laman menolak robot: keluar dari daftar dan tidak dicoba lagi
                 b.status = "ditolak"
@@ -266,10 +298,23 @@ def validasi_beasiswa(sesi: Session, settings: Settings, b: Beasiswa, hari_ini: 
     )
     try:
         data = _json_dari(jawaban)
-    except ValidationFailed as exc:
-        return _selesai(b, "menunggu", f"Validasi AI: {exc.message}. Perlu diperiksa admin.")
+    except ValidationFailed:
+        # Satu percobaan ulang: AI kadang menambah teks atau memotong JSON.
+        jawaban = llm.tanya(
+            settings,
+            SISTEM,
+            PROMPT_DETAIL.format(nama=b.nama, url=b.tautan_resmi, jenis=sorted(_JENIS_SYARAT), teks=teks)
+            + "\n\nPENTING: balas hanya satu objek JSON yang valid dan lengkap, tanpa teks atau penjelasan lain.",
+            timeout=90,
+        )
+        try:
+            data = _json_dari(jawaban)
+        except ValidationFailed as exc:
+            return _selesai(b, "menunggu", f"Validasi AI: {exc.message}. Perlu diperiksa admin.")
     if data.get("ini_beasiswa") is not True:
         return _selesai(b, "menunggu", "Validasi AI: laman tidak menjelaskan beasiswa ini. Perlu diperiksa admin.")
+    if tautan_baru:
+        b.tautan_resmi = tautan_baru  # tautan detail yang terbukti memuat beasiswanya menggantikan beranda atau laman daftar
 
     if (
         (b.alasan_ditandai or "").startswith("Dari peta situs")

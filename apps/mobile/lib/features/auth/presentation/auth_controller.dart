@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../../../core/api_client.dart';
 import '../../../core/dependensi.dart';
+import '../../chat/data/chat_repository.dart';
 import '../data/auth_repository.dart';
 import '../domain/pengguna.dart';
 
@@ -82,7 +83,22 @@ class AuthController extends GetxController {
     state.value = AuthState(StatusAuth.masuk, p);
   }
 
+  /// Menyalin perubahan yang masih tertunda (profil, chat buatan ponsel) ke server sebelum data lokal dihapus.
+  /// Gagal atau lewat 10 detik (tanpa jaringan): keluar tetap berjalan.
+  Future<void> _sinkronSebelumKeluar() async {
+    try {
+      await Future.wait([
+        if (Get.isRegistered<ChatRepository>())
+          Get.find<ChatRepository>().sinkronkan(),
+        if (Get.isRegistered<ApiClient>()) Get.find<ApiClient>().sinkronkan(),
+      ]).timeout(const Duration(seconds: 10));
+    } on Object {
+      // tanpa jaringan: lanjut keluar
+    }
+  }
+
   Future<void> keluar() async {
+    await _sinkronSebelumKeluar();
     await _repo.keluar();
     state.value = const AuthState(StatusAuth.keluar);
     bersihkanDataSesi();

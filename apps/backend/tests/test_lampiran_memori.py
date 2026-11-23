@@ -152,6 +152,10 @@ def test_riwayat_chat_statistik_ekspor_impor_dan_hapus_satu(klien_db, monkeypatc
         assert klien_db.post(f"{B}/chat", headers=h, json={"pesan": t}).status_code == 200
     st = klien_db.get(f"{B}/chat/statistik", headers=h).json()["data"]
     assert st["jumlah"] == 2 and st["tujuh_hari"] == 2 and st["terakhir"] is not None
+    assert st["jumlah_sesi"] >= 1 and st["token_masuk"] >= 1 and st["token_keluar"] >= 1
+    assert st["dijawab_server"] == 2 and st["dijawab_ponsel"] == 0
+    assert len(st["per_hari"]) == 7 and st["per_hari"][-1]["jumlah"] == 2
+    assert st["per_sesi"] and st["per_sesi"][0]["pertanyaan"] >= 1 and st["per_sesi"][0]["token_keluar"] >= 1
     cadangan = klien_db.get(f"{B}/chat/ekspor", headers=h).json()["data"]
     assert sorted(c["pesan"] for c in cadangan) == ["dua", "satu"]  # waktu sama dalam satu transaksi uji
     riwayat = klien_db.get(f"{B}/chat/riwayat", headers=h).json()["data"]
@@ -165,6 +169,101 @@ def test_riwayat_chat_statistik_ekspor_impor_dan_hapus_satu(klien_db, monkeypatc
     )  # tidak ganda
     assert len(klien_db.get(f"{B}/chat/riwayat", headers=h).json()["data"]) == 2
     assert klien_db.delete(f"{B}/chat/riwayat/{uuid.uuid4()}", headers=h).status_code == 404
+
+
+def test_memori_dipadatkan_pecah_dua_dan_butir_manual_dijaga(klien_db, sesi, monkeypatch):
+    from sqlalchemy import select
+
+    from app.models import Pengguna
+    from app.services import llm, memori
+
+    _akun(klien_db)
+    p = sesi.scalar(select(Pengguna).order_by(Pengguna.dibuat_pada.desc()))
+    assert memori.padatkan(sesi, p, Settings()) == 0  # tanpa AI: tidak berubah
+    for i in range(memori.AMBANG_PADAT):
+        assert memori.tambah(sesi, p, "minat", f"Minat nomor {i}", "chat")
+    assert memori.tambah(sesi, p, "lainnya", "Ditulis sendiri", "manual")
+    panggilan = []
+
+    def palsu(settings, sistem, prompt, **kw):
+        panggilan.append(prompt)
+        return f'{{"butir": [{{"jenis": "minat", "isi": "Ringkasan {len(panggilan)}"}}]}}'
+
+    monkeypatch.setattr(llm, "tersedia", lambda s: True)
+    monkeypatch.setattr(llm, "tanya", palsu)
+    assert memori.padatkan(sesi, p, Settings()) == memori.AMBANG_PADAT - 2
+    assert len(panggilan) == 2  # dibelah dua, tiap belahan dipadatkan sendiri
+    isi = sorted(m.isi for m in memori.daftar(sesi, p))
+    assert isi == ["Ditulis sendiri", "Ringkasan 1", "Ringkasan 2"]  # butir manual tidak disentuh, hasil digabung
+    assert memori.padatkan(sesi, p, Settings()) == 0  # di bawah ambang
+
+
+def test_chat_ponsel_disimpan_ke_server_dan_dipelajari_memorinya(klien_db, monkeypatch):
+    h = _akun(klien_db)
+    monkeypatch.setattr("app.services.llm.tersedia", lambda s: True)
+    monkeypatch.setattr(
+        "app.services.llm.tanya",
+        lambda s, sis, pr, **k: '{"fakta": [{"jenis": "minat", "isi": "Mencari beasiswa S2 ke Jepang"}]}',
+    )
+    badan = {
+        "pesan": "Saya sedang mencari beasiswa S2 ke Jepang untuk teknik informatika",
+        "jawaban": "Dijawab model di ponsel",
+        "waktu": "2026-11-22T10:00:00Z",
+    }
+    r = klien_db.post(f"{B}/chat/catat-lokal", headers=h, json=badan).json()["data"]
+    assert (r["disimpan"], r["memori_baru"]) == (1, 1) and r["sesi_id"]
+    r2 = klien_db.post(f"{B}/chat/catat-lokal", headers=h, json=badan).json()["data"]
+    assert (r2["disimpan"], r2["memori_baru"]) == (0, 0)  # aman diulang: tidak ganda
+    riwayat = klien_db.get(f"{B}/chat/riwayat", headers=h).json()["data"]
+    assert len(riwayat) == 1 and riwayat[0]["jawaban"] == "Dijawab model di ponsel"
+    butir = klien_db.get(f"{B}/me/memori", headers=h).json()["data"]
+    assert [(b["isi"], b["sumber"]) for b in butir] == [("Mencari beasiswa S2 ke Jepang", "chat")]
+
+
+def test_sesi_chat_judul_otomatis_terpisah_riwayat_dan_konteks(klien_db, monkeypatch):
+    h = _akun(klien_db)
+    prompt_terakhir: dict = {}
+
+    def palsu(settings, sistem, prompt, **kw):
+        if "memberi judul" in sistem:
+            return '"Beasiswa S2 ke Jepang."'
+        prompt_terakhir["p"] = prompt
+        return "jawaban"
+
+    monkeypatch.setattr("app.services.llm.tersedia", lambda s: True)
+    monkeypatch.setattr("app.services.llm.tanya", palsu)
+    a = klien_db.post(f"{B}/chat/sesi", headers=h, json={}).json()["data"]
+    b = klien_db.post(f"{B}/chat/sesi", headers=h, json={"judul": "Sesi kedua"}).json()["data"]
+    assert a["judul"] == "Percakapan baru" and b["judul"] == "Sesi kedua"
+    # pesan pertama sesi a: judul dibuat AI dari topik (tanda kutip dan titik dibersihkan)
+    assert (
+        klien_db.post(f"{B}/chat", headers=h, json={"pesan": "Cari beasiswa S2 ke Jepang", "sesi_id": a["id"]}).status_code
+        == 200
+    )
+    # sesi berjudul buatan pengguna tidak ditimpa
+    klien_db.post(f"{B}/chat", headers=h, json={"pesan": "Syarat IPK berapa", "sesi_id": b["id"]})
+    sesi_list = {s["id"]: s for s in klien_db.get(f"{B}/chat/sesi", headers=h).json()["data"]}
+    assert sesi_list[a["id"]]["judul"] == "Beasiswa S2 ke Jepang" and sesi_list[a["id"]]["jumlah"] == 1
+    assert sesi_list[b["id"]]["judul"] == "Sesi kedua"
+    # riwayat terpisah per sesi, dan pesan kedua membawa konteks sesinya saja
+    assert [
+        c["pesan"] for c in klien_db.get(f"{B}/chat/riwayat", headers=h, params={"sesi_id": a["id"]}).json()["data"]
+    ] == ["Cari beasiswa S2 ke Jepang"]
+    klien_db.post(f"{B}/chat", headers=h, json={"pesan": "Bagaimana syaratnya?", "sesi_id": a["id"]})
+    assert "Cari beasiswa S2 ke Jepang" in prompt_terakhir["p"] and "Syarat IPK berapa" not in prompt_terakhir["p"]
+    # ubah judul dan hapus sesi
+    r = klien_db.patch(f"{B}/chat/sesi/{a['id']}", headers=h, json={"judul": "Jepang"}).json()["data"]
+    assert r["judul"] == "Jepang"
+    assert klien_db.delete(f"{B}/chat/sesi/{a['id']}", headers=h).status_code == 200
+    assert klien_db.get(f"{B}/chat/riwayat", headers=h, params={"sesi_id": a["id"]}).json()["data"] == []
+    assert klien_db.patch(f"{B}/chat/sesi/{a['id']}", headers=h, json={"judul": "x"}).status_code == 404
+    # sesi dari ponsel luring: klien_id membuat pembuatan sesi idempoten
+    s1 = klien_db.post(f"{B}/chat/sesi", headers=h, json={"judul": "Dari ponsel", "klien_id": "lokal-1"}).json()["data"]
+    s2 = klien_db.post(f"{B}/chat/sesi", headers=h, json={"judul": "Dari ponsel", "klien_id": "lokal-1"}).json()["data"]
+    assert s1["id"] == s2["id"]
+    # klien lama tanpa sesi_id: pesan masuk ke sesi terbaru
+    c = klien_db.post(f"{B}/chat", headers=h, json={"pesan": "halo lagi"}).json()["data"]
+    assert c["sesi_id"] is not None
 
 
 def test_memori_dari_percakapan(monkeypatch):
@@ -186,3 +285,22 @@ def test_memori_dari_percakapan(monkeypatch):
     assert hasil == [("organisasi", "Ketua BEM")]  # jenis tak dikenal dibuang
     monkeypatch.setattr(llm, "tersedia", lambda s: False)
     assert memori.ekstrak_dari_percakapan(s, "Saya ketua BEM dan juara lomba debat nasional 2025", None) == []
+
+
+def test_saran_lanjutan_dari_model(klien_db, monkeypatch):
+    h = _akun(klien_db)
+    app.dependency_overrides[get_settings] = lambda: Settings(
+        **{**SETTINGS_UJI.model_dump(), "ai_base_url": "http://x", "ai_api_key": "k", "ai_model": "m"}
+    )
+    monkeypatch.setattr("app.services.llm.tanya", lambda *a, **k: "jawaban")
+    klien_db.post(f"{B}/chat", headers=h, json={"pesan": "Syarat IPK Chevening?"})
+    monkeypatch.setattr(
+        "app.services.llm.tanya",
+        lambda *a, **k: "1. Apa saja berkas Chevening?\n- Kapan tenggat Chevening?\n\n'Apa saja berkas Chevening?'\nx",
+    )
+    r = klien_db.get(f"{B}/chat/saran", headers=h)
+    assert r.status_code == 200, r.text
+    assert r.json()["data"] == ["Apa saja berkas Chevening?", "Kapan tenggat Chevening?"]
+    monkeypatch.setattr("app.services.llm.tanya", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("mati")))
+    assert klien_db.get(f"{B}/chat/saran", headers=h).json()["data"] == []
+    app.dependency_overrides[get_settings] = lambda: SETTINGS_UJI

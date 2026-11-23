@@ -237,14 +237,32 @@ class Notifikasi(IdMixin, WaktuMixin, Base):
     dibaca: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
 
 
+class SesiChat(IdMixin, WaktuMixin, Base):
+    """Satu percakapan bernama (seperti utas di ChatGPT). Judul dibuat AI dari topik setelah tanya jawab pertama selama
+    pengguna belum mengubahnya sendiri. [klien_id] memetakan sesi yang dibuat di ponsel saat luring agar sinkron idempoten."""
+
+    __tablename__ = "sesi_chat"
+    __table_args__ = (
+        Index("ix_sesi_chat_pengguna_id", "pengguna_id"),
+        Index("uq_sesi_chat_klien", "pengguna_id", "klien_id", unique=True, postgresql_where=text("klien_id is not null")),
+    )
+
+    pengguna_id: Mapped[uuid.UUID] = _fk("pengguna")
+    judul: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'Percakapan baru'"))
+    judul_otomatis: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+    klien_id: Mapped[str | None] = mapped_column(Text)
+
+
 class Percakapan(IdMixin, WaktuMixin, Base):
     __tablename__ = "percakapan"
     __table_args__ = (
         CheckConstraint("char_length(pesan) <= 2000", name="pesan_maks"),
         Index("ix_percakapan_pengguna_id", "pengguna_id"),
+        Index("ix_percakapan_sesi_id", "sesi_id"),
     )
 
     pengguna_id: Mapped[uuid.UUID] = _fk("pengguna")
+    sesi_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("sesi_chat.id", ondelete="CASCADE"))
     pesan: Mapped[str] = mapped_column(Text, nullable=False)
     jawaban: Mapped[str | None] = mapped_column(Text)
     rujukan_beasiswa_id: Mapped[list[uuid.UUID] | None] = mapped_column(ARRAY(UUID(as_uuid=True)))
@@ -321,6 +339,7 @@ TABEL_SMART = [
     "rekomendasi",
     "interaksi",
     "notifikasi",
+    "sesi_chat",
     "percakapan",
     "memori_pengguna",
     "tugas_pribadi",

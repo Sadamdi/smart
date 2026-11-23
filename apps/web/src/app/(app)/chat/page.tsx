@@ -1,6 +1,6 @@
 "use client";
 import { useQueryClient } from "@tanstack/react-query";
-import { BarChart3, Download, MessageCircle, Paperclip, RotateCcw, SendHorizonal, Square, Trash2, Upload, X } from "lucide-react";
+import { BarChart3, Download, MessageCircle, Paperclip, Pencil, Plus, RotateCcw, SendHorizonal, Square, Trash2, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { GelembungChat } from "@/components/GelembungChat";
@@ -8,8 +8,8 @@ import { TeksMarkdown } from "@/components/TeksMarkdown";
 import { GalatState, MemuatState, pesanGalat } from "@/components/state";
 import { JudulHalaman, Kartu, Masukan, Tombol } from "@/components/ui";
 import { ApiError, alirSse, api, kirim } from "@/lib/api";
-import { useAksi, useRiwayatChat, useStatistikChat, useStatusChat } from "@/lib/hooks";
-import type { Chat } from "@/lib/types";
+import { useAksi, useRiwayatChat, useSaranChat, useSesiChat, useStatistikChat, useStatusChat } from "@/lib/hooks";
+import type { Chat, SesiChat } from "@/lib/types";
 
 const PESAN_MAKS = 2000;
 const SARAN = ["Beasiswa apa yang tenggatnya paling dekat?", "Berkas apa yang harus saya siapkan?", "Beasiswa S2 apa yang sesuai dengan IPK saya?"];
@@ -17,9 +17,17 @@ const SARAN = ["Beasiswa apa yang tenggatnya paling dekat?", "Berkas apa yang ha
 export default function ChatbotAI() {
   const qc = useQueryClient();
   const status = useStatusChat();
-  const riwayat = useRiwayatChat();
+  const sesi = useSesiChat();
+  /** Pilihan pengguna: undefined = belum memilih (sesi terbaru dibuka), null = percakapan baru, selain itu id sesi. */
+  const [pilihan, setPilihan] = useState<string | null | undefined>(undefined);
   const [pesan, setPesan] = useState("");
   const [menunggu, setMenunggu] = useState<string | null>(null);
+  const daftarSesi: SesiChat[] = sesi.data ?? [];
+  // Sesi yang dibuka diturunkan dari pilihan dan daftar (tanpa efek): sesi yang sudah dihapus tidak boleh tetap menjadi
+  // tujuan pesan. Daftar dianggap basi selama masih dimuat ulang.
+  const sesiHilang = pilihan != null && !menunggu && sesi.isSuccess && !sesi.isFetching && !daftarSesi.some((x) => x.id === pilihan);
+  const sesiId: string | null = pilihan === undefined ? (daftarSesi[0]?.id ?? null) : sesiHilang ? null : pilihan;
+  const riwayat = useRiwayatChat(sesiId);
   const [galat, setGalat] = useState<unknown>(null);
   const [sementara, setSementara] = useState("");
   const batal = useRef<AbortController | null>(null);
@@ -79,6 +87,35 @@ export default function ChatbotAI() {
     }
   }
   const daftar = [...(riwayat.data ?? [])].sort((a, b) => a.waktu.localeCompare(b.waktu));
+  const sesiAktif = daftarSesi.find((x) => x.id === sesiId);
+
+  function pilihSesi(id: string) {
+    if (menunggu) return;
+    setPilihan(id);
+    setGalat(null);
+    setLampiran([]);
+  }
+
+  function sesiBaru() {
+    if (menunggu) return;
+    setPilihan(null);
+    setGalat(null);
+    setLampiran([]);
+  }
+
+  async function gantiNama(s: SesiChat) {
+    const baru = window.prompt("Nama percakapan", s.judul)?.trim();
+    if (!baru) return;
+    await kirim(`/chat/sesi/${s.id}`, "PATCH", { judul: baru });
+    void qc.invalidateQueries({ queryKey: ["chat", "sesi"] });
+  }
+
+  async function hapusSesi(s: SesiChat) {
+    if (menunggu || !window.confirm(`Hapus percakapan "${s.judul}" beserta isinya?`)) return;
+    await kirim(`/chat/sesi/${s.id}`, "DELETE");
+    if (s.id === sesiId) setPilihan(null);
+    void qc.invalidateQueries({ queryKey: ["chat"] });
+  }
 
   useEffect(() => {
     dasar.current?.scrollIntoView?.({ block: "end" });
@@ -98,7 +135,14 @@ export default function ChatbotAI() {
     let teks = "";
     let rangka = 0;
     try {
-      for await (const k of alirSse("/chat/stream", { pesan: isi, dokumen_ids: lampiran.map((l) => l.id) }, kontrol.signal)) {
+      let tujuan = sesiId;
+      if (tujuan === null) {
+        // Percakapan baru: sesinya dibuat dulu; judulnya diberi AI dari topik setelah jawaban pertama.
+        tujuan = (await kirim<SesiChat>("/chat/sesi", "POST", {})).data.id;
+        setPilihan(tujuan);
+        await qc.invalidateQueries({ queryKey: ["chat", "sesi"] });
+      }
+      for await (const k of alirSse("/chat/stream", { pesan: isi, sesi_id: tujuan, dokumen_ids: lampiran.map((l) => l.id) }, kontrol.signal)) {
         const j = JSON.parse(k.data) as Record<string, unknown>;
         if (k.peristiwa === "token") {
           teks += String(j.t ?? "");
@@ -112,7 +156,10 @@ export default function ChatbotAI() {
           setLampiran([]);
           void qc.invalidateQueries({ queryKey: ["chat", "statistik"] });
           void qc.invalidateQueries({ queryKey: ["memori"] });
-          qc.setQueryData<Chat[]>(["chat", "riwayat"], (lama) => [...(lama ?? []), j as unknown as Chat]);
+          qc.setQueryData<Chat[]>(["chat", "riwayat", tujuan], (lama) => [...(lama ?? []), j as unknown as Chat]);
+          void qc.invalidateQueries({ queryKey: ["chat", "sesi"] });
+        } else if (k.peristiwa === "judul") {
+          void qc.invalidateQueries({ queryKey: ["chat", "sesi"] });
         } else if (k.peristiwa === "galat") {
           throw new ApiError("AI", String(j.pesan ?? "Layanan AI sedang tidak tersedia"), 503);
         }
@@ -134,6 +181,8 @@ export default function ChatbotAI() {
   }
 
   const tersedia = status.data?.tersedia;
+  const saranModel = useSaranChat(sesiId, daftar.length > 0 && !menunggu && tersedia !== false);
+  const saranLanjutan = (saranModel.data ?? []).slice(0, 4);
 
   return (
     <div className="halaman-masuk">
@@ -181,12 +230,69 @@ export default function ChatbotAI() {
       )}
       {lihatStat && statistik.data && (
         <Kartu className="mb-4 text-sm">
-          <p className="font-bold text-navy">Isi chatbot</p>
-          <p className="mt-1">
-            {statistik.data.jumlah} pertanyaan, {statistik.data.tujuh_hari} dalam 7 hari terakhir, rata-rata jawaban {statistik.data.rata_panjang_jawaban} karakter.
-          </p>
+          <p className="font-bold text-navy">Statistik chatbot</p>
+          <p className="mt-1 text-xs text-muted">Token adalah perkiraan (karakter dibagi 4), bukan tagihan.</p>
+          <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              ["Pertanyaan", statistik.data.jumlah],
+              ["Percakapan", statistik.data.jumlah_sesi ?? 0],
+              ["Token masuk", statistik.data.token_masuk ?? 0],
+              ["Token keluar", statistik.data.token_keluar ?? 0],
+            ].map(([l, v]) => (
+              <div key={l} className="rounded-[14px] border border-c4 bg-card px-3 py-2">
+                <dd className="text-lg font-bold text-navy">{v}</dd>
+                <dt className="text-xs text-muted">{l}</dt>
+              </div>
+            ))}
+          </dl>
+          {(statistik.data.per_hari ?? []).length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs font-bold text-navy">7 hari terakhir</p>
+              <div className="mt-2 flex h-24 items-end gap-2" role="img" aria-label="Grafik pertanyaan per hari">
+                {(statistik.data.per_hari ?? []).map((h) => {
+                  const maks = Math.max(1, ...(statistik.data?.per_hari ?? []).map((x) => x.jumlah));
+                  return (
+                    <div key={h.tanggal} className="flex flex-1 flex-col items-center justify-end gap-1">
+                      <span className="text-[10px] text-ink">{h.jumlah}</span>
+                      <span
+                        className={`w-full rounded-md transition-[height] duration-500 ${h.jumlah ? "bg-primary" : "bg-c4"}`}
+                        style={{ height: `${6 + (h.jumlah / maks) * 52}px` }}
+                      />
+                      <span className="text-[10px] text-muted">{h.tanggal.slice(-2)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {(statistik.data.topik ?? []).length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(statistik.data.topik ?? []).map((t) => (
+                <span key={t.kata} className="rounded-full border border-c4 bg-c1 px-3 py-1 text-xs font-semibold text-primary">
+                  {t.kata} {t.jumlah}
+                </span>
+              ))}
+            </div>
+          )}
+          {(statistik.data.per_sesi ?? []).length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs font-bold text-navy">Pemakaian per percakapan</p>
+              <ul className="mt-2 space-y-1">
+                {(statistik.data.per_sesi ?? []).map((x) => (
+                  <li key={x.judul + x.pertanyaan} className="flex items-center justify-between gap-3 rounded-[12px] border border-c4 bg-card px-3 py-2">
+                    <span className="min-w-0 truncate font-semibold text-navy">
+                      {x.judul} <span className="font-normal text-muted">({x.pertanyaan} pertanyaan)</span>
+                    </span>
+                    <span className="shrink-0 text-xs text-ink">
+                      masuk {x.token_masuk}, keluar {x.token_keluar}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {statistik.data.beasiswa_teratas.length > 0 && (
-            <p className="mt-1">Paling sering dirujuk: {statistik.data.beasiswa_teratas.map((b) => `${b.nama} (${b.jumlah})`).join(", ")}</p>
+            <p className="mt-3">Paling sering dirujuk: {statistik.data.beasiswa_teratas.map((b) => `${b.nama} (${b.jumlah})`).join(", ")}</p>
           )}
         </Kartu>
       )}
@@ -201,9 +307,32 @@ export default function ChatbotAI() {
           Chatbot belum dapat menjawab saat ini. Anda tetap dapat menelusuri beasiswa, melihat rekomendasi, dan mengisi profil secara manual.
         </p>
       )}
+      <div className="grid gap-4 md:grid-cols-[15rem_minmax(0,1fr)]">
+      <aside aria-label="Daftar percakapan" className="h-fit rounded-kartu border border-c4/60 bg-card p-3 shadow-kartu">
+        <Tombol type="button" onClick={sesiBaru} disabled={!!menunggu} className="w-full">
+          <Plus className="h-4 w-4" aria-hidden /> Percakapan baru
+        </Tombol>
+        <ul className="mt-3 max-h-[50vh] space-y-1 overflow-y-auto">
+          {daftarSesi.length === 0 && <li className="px-2 py-1 text-xs text-muted">Belum ada percakapan.</li>}
+          {daftarSesi.map((s) => (
+            <li key={s.id} className={`group flex items-center gap-1 rounded-[12px] ${s.id === sesiId ? "bg-c2" : "hover:bg-c2/60"}`}>
+              <button type="button" onClick={() => pilihSesi(s.id)} aria-current={s.id === sesiId ? "true" : undefined} className="min-h-11 flex-1 truncate px-3 py-2 text-left text-sm font-medium text-navy">
+                {s.judul}
+              </button>
+              <button type="button" aria-label={`Ganti nama ${s.judul}`} onClick={() => void gantiNama(s)} className="p-1.5 text-muted hover:text-ink">
+                <Pencil className="h-3.5 w-3.5" aria-hidden />
+              </button>
+              <button type="button" aria-label={`Hapus ${s.judul}`} onClick={() => void hapusSesi(s)} className="p-1.5 text-muted hover:text-danger">
+                <Trash2 className="h-3.5 w-3.5" aria-hidden />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </aside>
       <Kartu className="flex min-h-[420px] flex-col overflow-hidden !p-0">
+        <p className="border-b border-c4/60 px-4 py-2 text-sm font-bold text-navy sm:px-6">{sesiAktif?.judul ?? "Percakapan baru"}</p>
         <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-6" style={{ maxHeight: "60vh" }} aria-live="polite">
-          {riwayat.isPending ? (
+          {sesiId !== null && riwayat.isPending ? (
             <MemuatState baris={2} />
           ) : riwayat.isError ? (
             <GalatState galat={riwayat.error} onCoba={() => riwayat.refetch()} />
@@ -282,13 +411,27 @@ export default function ChatbotAI() {
             ))}
           </ul>
         )}
+        {saranLanjutan.length > 0 && !menunggu && (
+          <div className="flex gap-2 overflow-x-auto px-4 pt-3" aria-label="Saran pertanyaan lanjutan">
+            {saranLanjutan.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => setPesan(q)}
+                className="min-h-11 shrink-0 rounded-full border border-c4 bg-card px-4 py-2 text-sm font-medium text-navy transition-colors hover:bg-c2"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
         <form onSubmit={kirimPesan} className="flex gap-2 border-t border-c4/60 p-4">
           <input
             ref={berkasRef}
             type="file"
             hidden
             aria-label="Lampiran"
-            accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+            accept=".pdf,.docx,.txt,.png,.jpg,.jpeg"
             onChange={(e) => {
               void lampirkan(e.target.files?.[0]);
               e.target.value = "";
@@ -309,7 +452,8 @@ export default function ChatbotAI() {
           )}
         </form>
       </Kartu>
-      <p className="mt-3 text-xs text-muted">Nama, surel, telepon, dan nomor identitas disamarkan sebelum dikirim ke layanan AI. Lampiran masuk ke Memori AI (atur di menu Memori AI). Jawaban chatbot bukan jaminan diterima pada beasiswa mana pun.</p>
+      </div>
+      <p className="mt-3 text-xs text-muted">Nama, surel, telepon, dan nomor identitas disamarkan sebelum dikirim ke layanan AI. Berkas yang bisa dilampirkan: PDF, Word (.docx), teks, dan gambar PNG atau JPG; audio dan video belum didukung. Asisten mencatat sendiri hal penting dari percakapan ke Memori Pintar (atur di menu Memori Pintar). Jawaban chatbot bukan jaminan diterima pada beasiswa mana pun.</p>
     </div>
   );
 }

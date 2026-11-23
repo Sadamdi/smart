@@ -206,7 +206,12 @@ class Terowongan {
         'c': tersegel.c,
       },
       cancelToken: batal,
-      options: Options(contentType: Headers.jsonContentType),
+      // Unggahan dibaca AI di server (gambar bisa puluhan detik), jadi batas waktunya lebih longgar dari permintaan biasa.
+      options: Options(
+        contentType: Headers.jsonContentType,
+        sendTimeout: biner == null ? null : const Duration(minutes: 3),
+        receiveTimeout: biner == null ? null : const Duration(minutes: 3),
+      ),
     );
     _selaraskanJam(res);
     final d = res.data;

@@ -13,6 +13,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 
 import '../api_client.dart';
+import 'chat_lokal.dart';
 import 'kelayakan.dart';
 import 'peluang.dart';
 import 'wilayah.dart';
@@ -67,7 +68,16 @@ class MesinLokal {
   List<HasilLokal>? _hasil;
   DateTime? _hari;
   double _kekuatan = 0;
-  List<Map<String, dynamic>> _riwayatChat = [];
+
+  /// Sesi, pesan, dan salinan Memori Pintar di ponsel (lihat chat_lokal.dart).
+  late final ChatLokal chat = ChatLokal(
+    tulis: _tulis,
+    antre: _antre,
+    batalAntre: (cocok) {
+      _antrean.removeWhere(cocok);
+      _simpanAntrean();
+    },
+  );
 
   /// Mode luring dipilih pengguna: semua pembacaan dan penulisan dilayani lokal.
   final aktif = ValueNotifier<bool>(false);
@@ -130,10 +140,11 @@ class MesinLokal {
     if (t is List) _tersimpan = {for (final x in t) '$x'};
     final d = await _baca('berkas.json');
     if (d is List) _berkas = {for (final x in d) '$x'};
-    final rc = await _baca('riwayat_chat.json');
-    if (rc is List) {
-      _riwayatChat = [for (final x in rc) Map<String, dynamic>.from(x as Map)];
-    }
+    chat.muat(
+      pesan: await _baca('riwayat_chat.json'),
+      sesi: await _baca('sesi_chat.json'),
+      memori: await _baca('memori.json'),
+    );
     final a = await _baca('antrean.json');
     if (a is List) {
       _antrean = [for (final x in a) Map<String, dynamic>.from(x as Map)];
@@ -197,6 +208,7 @@ class MesinLokal {
     _berkas = {};
     _antrean = [];
     _hasil = null;
+    chat.kosongkan();
     try {
       final d = await _dir();
       if (d.existsSync()) d.deleteSync(recursive: true);
@@ -291,6 +303,24 @@ class MesinLokal {
     );
   }
 
+  /// Saran pertanyaan dari basis data di ponsel (tanpa jaringan, tanpa model): beasiswa paling cocok dan tenggat terdekat.
+  List<String> saranData() {
+    if (!siap) return const [];
+    String pendek(String n) => n.length > 32 ? '${n.substring(0, 30)}…' : n;
+    final hasil = hitung();
+    if (hasil.isEmpty) return const [];
+    final cocok = [...hasil]..sort((a, b) => (b.m.skor ?? 0).compareTo(a.m.skor ?? 0));
+    final sekarang = DateTime.now();
+    final dekat = hasil.where((x) => x.tenggat?.isAfter(sekarang) ?? false).toList()
+      ..sort((a, b) => a.tenggat!.compareTo(b.tenggat!));
+    return [
+      'Syarat lengkap ${pendek('${cocok.first.b['nama']}')}',
+      if (dekat.isNotEmpty)
+        'Kapan tenggat ${pendek('${dekat.first.b['nama']}')}?',
+      if (cocok.length > 1) 'Bandingkan ${pendek('${cocok[0].b['nama']}')} dan ${pendek('${cocok[1].b['nama']}')}',
+    ];
+  }
+
   List<HasilLokal> hitung([DateTime? sekarang]) {
     final hari0 = sekarang ?? DateTime.now();
     final hari = DateTime(hari0.year, hari0.month, hari0.day);
@@ -353,6 +383,8 @@ class MesinLokal {
   // ---------- pembacaan ----------
 
   Respons? layaniGet(String jalur, Map<String, dynamic>? query) {
+    final c = chat.layaniGet(jalur, query);
+    if (c != null) return c;
     if (!siap) return null;
     final q = query ?? const <String, dynamic>{};
     switch (jalur) {
@@ -411,15 +443,6 @@ class MesinLokal {
         ], null);
       case '/chat/status':
         return Respons({'tersedia': true}, null);
-      case '/chat/riwayat':
-        return Respons(_riwayatChat, null);
-      case '/chat/ekspor':
-        return Respons([
-          for (final x in _riwayatChat)
-            {'pesan': x['pesan'], 'jawaban': x['jawaban'], 'waktu': x['waktu']},
-        ], null);
-      case '/chat/statistik':
-        return Respons(_statistikChat(), null);
       case '/me/kalender':
         return _kalender(q);
     }
@@ -567,6 +590,8 @@ class MesinLokal {
   // ---------- penulisan ----------
 
   Respons? layaniTulis(String metode, String jalur, Object? body) {
+    final c = chat.layaniTulis(metode, jalur, body);
+    if (c != null) return c;
     if (!siap) return null;
     if (metode == 'PUT' &&
         jalur == '/me/profil' &&
@@ -597,88 +622,17 @@ class MesinLokal {
       return layaniGet('/rekomendasi', const {});
     }
     if (metode == 'POST' && jalur == '/chat' && body is Map) {
-      if (adaModelAi() && !aktif.value) return null; // luring: jangan menghubungi server
-      final j = _jawabChat('${body['pesan'] ?? ''}');
-      catatChat(j);
-      return Respons(j, null);
-    }
-    if (metode == 'DELETE' && jalur == '/chat/riwayat') {
-      hapusChatLokal();
-      _antre(metode, jalur, body);
-      return Respons({}, null);
-    }
-    if (metode == 'POST' && jalur == '/chat/impor' && body is Map) {
-      final butir = (body['butir'] as List? ?? const []).whereType<Map>();
-      final ada = {for (final x in _riwayatChat) '${x['pesan']}|${x['waktu']}'};
-      var n = 0;
-      for (final x in butir) {
-        if (ada.contains('${x['pesan']}|${x['waktu']}')) continue;
-        n++;
-        catatChat({
-          'id': 'lokal-impor-${DateTime.now().microsecondsSinceEpoch}-$n',
-          'pesan': x['pesan'],
-          'jawaban': x['jawaban'],
-          'waktu': x['waktu'] ?? DateTime.now().toIso8601String(),
-          'rujukan': const [],
-          'sumber': 'ponsel',
-        });
+      if (adaModelAi() && !aktif.value) {
+        return null; // jaringan putus tetapi model siap: biarkan jalur model menjawab
       }
-      _antre(metode, jalur, body);
-      return Respons({'dipulihkan': n}, null);
+      final j = _jawabChat('${body['pesan'] ?? ''}');
+      chat.catatChat({...j, 'sesi_id': body['sesi_id'], 'lokal': true});
+      return Respons(j, null);
     }
     return null;
   }
 
-  /// Mengosongkan riwayat chat di ponsel (dipanggil juga saat penghapusan di server berhasil agar tidak muncul lagi).
-  void hapusChatLokal() {
-    _riwayatChat = [];
-    _tulis('riwayat_chat.json', _riwayatChat);
-  }
-
-  Map<String, dynamic> _statistikChat() {
-    final sekarang = DateTime.now();
-    final minggu = _riwayatChat
-        .where(
-          (x) =>
-              (DateTime.tryParse('${x['waktu']}') ?? sekarang)
-                  .isAfter(sekarang.subtract(const Duration(days: 7))),
-        )
-        .length;
-    final hitung = <String, int>{};
-    for (final x in _riwayatChat) {
-      for (final r in (x['rujukan'] as List? ?? const [])) {
-        final n = '${(r as Map)['nama']}';
-        hitung[n] = (hitung[n] ?? 0) + 1;
-      }
-    }
-    final top = hitung.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    final panjang = _riwayatChat.isEmpty
-        ? 0
-        : _riwayatChat
-                  .map((x) => '${x['jawaban'] ?? ''}'.length)
-                  .reduce((a, b) => a + b) ~/
-              _riwayatChat.length;
-    return {
-      'jumlah': _riwayatChat.length,
-      'tujuh_hari': minggu,
-      'rata_panjang_jawaban': panjang,
-      'beasiswa_teratas': [
-        for (final e in top.take(5)) {'nama': e.key, 'jumlah': e.value},
-      ],
-    };
-  }
-
   // ---------- chatbot lokal ----------
-
-  /// Menyimpan percakapan luring (50 terakhir) agar riwayat tampil walau tanpa server.
-  void catatChat(Map<String, dynamic> pesan) {
-    _riwayatChat = [..._riwayatChat, pesan];
-    if (_riwayatChat.length > 50) {
-      _riwayatChat = _riwayatChat.sublist(_riwayatChat.length - 50);
-    }
-    _tulis('riwayat_chat.json', _riwayatChat);
-  }
 
   /// Tautan laman resmi beasiswa yang namanya sama dengan [nama], dari paket lokal.
   String? tautanResmi(String nama) {
@@ -735,6 +689,10 @@ class MesinLokal {
     final buf = StringBuffer(
       'Profil: jenjang ${p['jenjang'] ?? '-'}, semester ${p['semester'] ?? '-'}, IPK ${p['ipk'] ?? '-'}, kota ${p['kota_domisili'] ?? '-'}.\n',
     );
+    final memori = chat.ringkasMemori();
+    if (memori.isNotEmpty) {
+      buf.writeln('Memori tentang pengguna:\n- ${memori.join('\n- ')}');
+    }
     final disebut = semua
         .where((x) {
           final kata = ('${x.b['nama']}')
