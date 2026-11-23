@@ -196,6 +196,8 @@ def status_bar(f):
 def app_bar(f, judul=None):
     logo(f, 20, 44, 32)
     text(f, 62, 50, "SMART", 18, "Bold", NAVY, spacing=1)
+    rect(f, 282, 46, 40, 40, C2, 20, name="tombol profil")
+    ikon(f, "profil", 290, 54, NAVY)
     rect(f, 330, 46, 40, 40, C2, 20, name="tombol lonceng")
     ikon(f, "lonceng", 338, 54, NAVY)
 
@@ -474,23 +476,31 @@ def layar_dokumen(x):
 def layar_chat(x):
     f = frame(x, 0, 390, 844, "M10 Chatbot", SURFACE)
     status_bar(f)
-    text(f, 20, 54, "Asisten AI", 18, "Bold", NAVY)
-    rect(f, 196, 48, 120, 36, C3, 18, name="pilihan sumber AI")
-    text(f, 212, 57, "Otomatis", 13, "Bold", PRIMARY)
-    rect(f, 328, 46, 40, 40, C2, 20, name="menu titik tiga")
-    text(f, 340, 52, "...", 18, "Bold", NAVY)
-    rect(f, 20, 596, 190, 32, C2, 16, name="chip lampiran")
-    text(f, 34, 604, "cv-nabila.pdf  x", 12, "Medium", NAVY)
-    rect(f, 20, 120, 270, 78, KARTU, 18, stroke=C4, name="gelembung bot")
-    text(f, 34, 132, "Halo! Tanyakan syarat, tenggat, atau berkas beasiswa. Jawaban saya berdasarkan data di SMART.", 13, "Regular", INK, width=244, line="145%")
-    rect(f, 160, 216, 210, 48, PRIMARY, 18, name="gelembung saya")
-    text(f, 174, 230, "Beasiswa apa yang tenggatnya dekat?", 13, "Regular", WHITE, width=184)
-    rect(f, 20, 282, 300, 130, KARTU, 18, stroke=C4, name="gelembung bot 2")
-    text(f, 34, 294, "Ada 2 beasiswa dengan tenggat kurang dari 7 hari: Beasiswa Unggulan (3 hari) dan Beasiswa Riset (6 hari).", 13, "Regular", INK, width=274, line="145%")
-    text(f, 34, 380, "Sumber: laman resmi penyelenggara", 11, "Medium", MUTED)
+    app_bar(f)
+    # baris sesi: percakapan yang dibuka (ketuk untuk memilih), sumber jawaban AI, percakapan baru, menu
+    rect(f, 20, 96, 160, 36, KARTU, 18, stroke=C4, name="pilihan percakapan")
+    ikon(f, "chat", 30, 103, PRIMARY, 20)
+    text(f, 56, 105, "Beasiswa Jepang", 12, "Bold", NAVY, width=100)
+    text(f, 160, 104, "v", 11, "Bold", MUTED)
+    rect(f, 188, 96, 104, 36, C3, 18, name="pilihan sumber AI")
+    text(f, 188, 105, "Otomatis", 13, "Bold", PRIMARY, width=104, align="center")
+    rect(f, 298, 94, 36, 40, C2, 18, name="tombol percakapan baru")
+    text(f, 298, 100, "+", 20, "Bold", NAVY, width=36, align="center")
+    rect(f, 338, 94, 32, 40, C2, 16, name="menu titik tiga")
+    text(f, 338, 100, "...", 18, "Bold", NAVY, width=32, align="center")
+    d = 34
+    rect(f, 20, 556, 190, 32, C2, 16, name="chip lampiran")
+    text(f, 34, 564, "cv-nabila.pdf  x", 12, "Medium", NAVY)
+    rect(f, 20, 120 + d, 270, 78, KARTU, 18, stroke=C4, name="gelembung bot")
+    text(f, 34, 132 + d, "Halo! Tanyakan syarat, tenggat, atau berkas beasiswa. Jawaban saya berdasarkan data di SMART.", 13, "Regular", INK, width=244, line="145%")
+    rect(f, 160, 216 + d, 210, 48, PRIMARY, 18, name="gelembung saya")
+    text(f, 174, 230 + d, "Beasiswa apa yang tenggatnya dekat?", 13, "Regular", WHITE, width=184)
+    rect(f, 20, 282 + d, 300, 130, KARTU, 18, stroke=C4, name="gelembung bot 2")
+    text(f, 34, 294 + d, "Ada 2 beasiswa dengan tenggat kurang dari 7 hari: Beasiswa Unggulan (3 hari) dan Beasiswa Riset (6 hari).", 13, "Regular", INK, width=274, line="145%")
+    text(f, 34, 380 + d, "Sumber: laman resmi penyelenggara", 11, "Medium", MUTED)
     cx = 20
     for l in ["Syarat IPK", "Berkas apa saja?", "Nilai CV saya"]:
-        cx = chip(f, cx, 556, l)
+        cx = chip(f, cx, 596, l)
     rect(f, 20, 650, 40, 40, C2, 20, name="tombol lampirkan")
     path(f, "M17 6L8 15L11 19L20 10", 28, 658, 24, 24, stroke=NAVY, name="ikon klip")
     rect(f, 66, 696, 254, 52, KARTU, 26, stroke=OUTLINE, name="kolom pesan")
@@ -500,13 +510,39 @@ def layar_chat(x):
     return f
 
 
-def layar_memori(x):
-    f = frame(x, 0, 390, 844, "M14 Memori AI", SURFACE)
+def layar_sesi(x):
+    """Daftar percakapan (sesi) seperti ChatGPT: pilih, mulai baru, ganti nama, hapus. Judul dibuat AI dari topik."""
+    f = frame(x, 0, 390, 844, "M15 Daftar Percakapan", SURFACE)
     status_bar(f)
     rect(f, 12, 44, 40, 40, C2, 20, name="tombol kembali")
     ikon(f, "panah", 20, 52, NAVY)
-    text(f, 20, 100, "Memori AI", 26, "Bold", NAVY)
-    text(f, 20, 136, "Hal yang dipelajari asisten dari dokumen dan percakapan. Disimpan terenkripsi, hanya kamu yang dapat melihatnya.", 13, "Regular", INK, width=350, line="145%")
+    text(f, 64, 54, "Percakapan", 18, "Bold", NAVY)
+    rect(f, 282, 46, 88, 36, C3, 18, name="tombol baru")
+    text(f, 282, 55, "+ Baru", 13, "Bold", PRIMARY, width=88, align="center")
+    data = [
+        ("Beasiswa S2 Jepang", "6 pesan  ·  baru saja", True, False),
+        ("Syarat IPK beasiswa LPDP", "4 pesan  ·  2 jam lalu", False, False),
+        ("Berkas wajib KIP Kuliah", "2 pesan  ·  kemarin", False, False),
+        ("Analisis CV saya", "8 pesan  ·  3 hari lalu  ·  belum tersalin ke server", False, True),
+    ]
+    for i, (judul_, info, aktif, lokal) in enumerate(data):
+        yy = 112 + i * 84
+        rect(f, 20, yy, 350, 72, KARTU, 16, stroke=PRIMARY if aktif else C4, name="percakapan " + judul_)
+        ikon(f, "dokumen" if lokal else "chat", 36, yy + 24, PRIMARY if aktif else MUTED, 24)
+        text(f, 72, yy + 14, judul_, 14, "Bold", NAVY, width=240)
+        text(f, 72, yy + 38, info, 11, "Regular", MUTED, width=250)
+        text(f, 340, yy + 20, "...", 18, "Bold", MUTED)
+    text(f, 20, 460, "Judul dibuat otomatis oleh AI dari topik percakapan. Ketuk titik tiga untuk mengganti nama atau menghapus.", 12, "Regular", MUTED, width=350, line="145%")
+    return f
+
+
+def layar_memori(x):
+    f = frame(x, 0, 390, 844, "M14 Memori Pintar", SURFACE)
+    status_bar(f)
+    rect(f, 12, 44, 40, 40, C2, 20, name="tombol kembali")
+    ikon(f, "panah", 20, 52, NAVY)
+    text(f, 20, 100, "Memori Pintar", 26, "Bold", NAVY)
+    text(f, 20, 136, "Asisten mencatat sendiri hal penting dari percakapan dan dokumenmu, merapikannya bila menumpuk, dan menyalinnya ke ponsel. Hanya kamu yang melihatnya.", 13, "Regular", INK, width=350, line="145%")
     rect(f, 20, 196, 350, 120, KARTU, 18, stroke=C4, name="kartu saklar utama")
     text(f, 34, 210, "Pakai memori saat menjawab", 14, "Bold", NAVY)
     text(f, 34, 232, "Hidup: lebih personal dan pintar, tetapi sedikit lebih lambat dan berat.", 12, "Regular", INK, width=250, line="140%")
@@ -516,7 +552,7 @@ def layar_memori(x):
     for i, (j, t_, on) in enumerate([("keahlian", "Python, analisis data", True), ("organisasi", "Ketua BEM Fakultas 2025", True), ("prestasi", "Juara 2 Hackathon Nasional", True), ("minat", "Kecerdasan buatan", True), ("kepribadian", "Suka memimpin tim kecil", False)]):
         yy = 336 + i * 74
         rect(f, 20, yy, 350, 64, KARTU, 14, stroke=C4, name="butir memori " + j, op=None if on else 0.5)
-        text(f, 34, yy + 10, j.upper(), 10, "Bold", MUTED)
+        text(f, 34, yy + 10, j.upper() + ("  ·  OTOMATIS" if i != 1 else "  ·  DITULIS SENDIRI"), 10, "Bold", MUTED)
         text(f, 34, yy + 28, t_, 14, "Regular", INK, width=230)
         rect(f, 290, yy + 18, 44, 26, PRIMARY if on else C4, 13, name="saklar butir")
         oval(f, 312 if on else 294, yy + 21, 20, 20, WHITE, name="knob")
@@ -561,7 +597,7 @@ def sidebar(f, aktif, tinggi=800, admin=False):
     logo(f, 20, 18, 32)
     text(f, 60, 20, "SMART", 18, "Bold", NAVY, spacing=1)
     text(f, 60, 40, "Pantau beasiswa", 10, "Medium", MUTED)
-    menu = [("beranda", "Dashboard"), ("rekomendasi", "Rekomendasi Beasiswa"), ("jelajah", "Jelajah Beasiswa"), ("simpan", "Beasiswa Tersimpan"), ("kalender", "Kalender dan Checklist"), ("dokumen", "Dokumen Saya"), ("chat", "Chatbot AI"), ("memori", "Memori AI"), ("profil", "Profil Saya")]
+    menu = [("beranda", "Dashboard"), ("rekomendasi", "Rekomendasi Beasiswa"), ("jelajah", "Jelajah Beasiswa"), ("simpan", "Beasiswa Tersimpan"), ("kalender", "Kalender dan Checklist"), ("dokumen", "Dokumen Saya"), ("chat", "Chatbot AI"), ("memori", "Memori Pintar"), ("profil", "Profil Saya")]
     if admin:
         menu = [("beranda", "Dashboard Admin"), ("rekomendasi", "Antrean Validasi"), ("jelajah", "Kelola Sumber"), ("simpan", "Laporan Sistem")]
     for i, (j, l) in enumerate(menu):
@@ -803,18 +839,25 @@ def web_chat(y):
     rect(f, 370, 748, 538, 52, KARTU, 26, stroke=OUTLINE, name="kolom pesan")
     text(f, 392, 764, "Tulis pertanyaanmu", 14, "Regular", OUTLINE)
     rect(f, 920, 748, 58, 52, PRIMARY, 26, name="tombol kirim")
-    kartu(f, 1022, 176, 226, 250, "panel sumber")
-    text(f, 1040, 194, "Sumber jawaban", 15, "Bold", NAVY)
+    kartu(f, 1022, 176, 226, 250, "panel percakapan")
+    rect(f, 1036, 190, 198, 38, PRIMARY, 12, name="tombol percakapan baru")
+    text(f, 1036, 200, "+ Percakapan baru", 13, "Bold", WHITE, width=198, align="center")
+    for i, (t_, on) in enumerate([("Beasiswa S2 Jepang", True), ("Syarat IPK LPDP", False), ("Berkas KIP Kuliah", False), ("Analisis CV saya", False)]):
+        rect(f, 1036, 238 + i * 44, 198, 38, C2 if on else KARTU, 12, name="percakapan " + t_)
+        text(f, 1048, 248 + i * 44, t_, 13, "Bold" if on else "Medium", NAVY, width=150)
+        text(f, 1212, 247 + i * 44, "...", 14, "Bold", MUTED)
+    kartu(f, 1022, 444, 226, 190, "panel sumber")
+    text(f, 1040, 462, "Sumber jawaban", 15, "Bold", NAVY)
     for i, s in enumerate(["Beasiswa Unggulan", "KIP Kuliah"]):
-        rect(f, 1040, 232 + i * 62, 190, 50, C1, 10, name="sumber " + s)
-        text(f, 1052, 240 + i * 62, s, 13, "Bold", NAVY)
-        text(f, 1052, 260 + i * 62, "Lihat laman resmi", 12, "SemiBold", PRIMARY)
+        rect(f, 1040, 498 + i * 62, 190, 50, C1, 10, name="sumber " + s)
+        text(f, 1052, 506 + i * 62, s, 13, "Bold", NAVY)
+        text(f, 1052, 526 + i * 62, "Lihat laman resmi", 12, "SemiBold", PRIMARY)
     return f
 
 
 def web_memori(y):
-    f = halaman(y, "W13 Memori AI Web", "Memori AI")
-    text(f, 298, 92, "Memori AI", 28, "Bold", NAVY)
+    f = halaman(y, "W13 Memori Pintar Web", "Memori Pintar")
+    text(f, 298, 92, "Memori Pintar", 28, "Bold", NAVY)
     text(f, 298, 132, "Hal yang dipelajari asisten dari dokumen dan percakapan Anda. Disimpan terenkripsi di server.", 14, "Regular", INK)
     kartu(f, 298, 176, 700, 110, "kartu saklar utama")
     text(f, 322, 194, "Pakai memori saat menjawab", 15, "Bold", NAVY)
@@ -986,7 +1029,7 @@ def bagian_identitas():
 
 def main():
     ids = {}
-    mobile = [layar_splash, layar_masuk, layar_beranda, layar_jelajah, layar_rekomendasi, layar_detail, layar_kalender, layar_profil, layar_dokumen, layar_chat, layar_pengaturan, layar_tersimpan, layar_keadaan, layar_memori]
+    mobile = [layar_splash, layar_masuk, layar_beranda, layar_jelajah, layar_rekomendasi, layar_detail, layar_kalender, layar_profil, layar_dokumen, layar_chat, layar_pengaturan, layar_tersimpan, layar_keadaan, layar_memori, layar_sesi]
     web = [web_dashboard, web_jelajah, web_rekomendasi, web_detail, web_kalender, web_profil, web_dokumen, web_chat, web_masuk, web_tersimpan, web_admin, web_keadaan, web_memori]
     for baris, gelap in enumerate([False, True]):
         tema(gelap)

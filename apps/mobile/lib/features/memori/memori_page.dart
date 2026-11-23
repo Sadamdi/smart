@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../core/api_client.dart';
 import '../../core/dependensi.dart';
+import '../../core/lokal/mesin_lokal.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/tombol_bulat.dart';
 
@@ -24,6 +25,7 @@ class ButirMemori {
   /// Asal butir: dibuat otomatis oleh AI dari percakapan atau dokumen, atau ditulis sendiri.
   String get asal => switch (sumber) {
     'chat' => 'otomatis dari percakapan',
+    'padat' => 'dipadatkan otomatis',
     'manual' => 'ditulis sendiri',
     null => 'ditulis sendiri',
     _ => 'otomatis dari dokumen',
@@ -63,6 +65,11 @@ class _MemoriPageState extends State<MemoriPage> {
     try {
       final r = await _api.get('/me/memori');
       final s = await _api.get('/me/memori/statistik');
+      // Salinan di ponsel: dipakai model di ponsel dan agar halaman ini tetap terbaca saat internet mati.
+      Get.find<MesinLokal>().chat.catatMemori(
+        r.data as List,
+        aktif: (s.data as Map)['memori_aktif'] as bool?,
+      );
       if (!mounted) return;
       setState(() {
         _daftar = [
@@ -269,11 +276,11 @@ class _MemoriPageState extends State<MemoriPage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
           children: [
-            Text('Memori AI', style: t.headlineMedium),
+            Text('Memori Pintar', style: t.headlineMedium),
             const SizedBox(height: 6),
             Text(
               'Hal-hal yang dipelajari asisten dari dokumen yang kamu unggah (CV, sertifikat, penghargaan) dan percakapan. '
-              'Dipakai untuk menilai kecocokan dan kekurangan profilmu. Disimpan terenkripsi di server dan hanya kamu yang bisa melihatnya.',
+              'Asisten mencatat sendiri hal penting yang kamu ceritakan (siapa kamu, beasiswa yang dicari, prestasi) dan merapikannya bila menumpuk, jadi semua percakapan saling mengenal. Dipakai untuk menilai kecocokan dan kekurangan profilmu. Disimpan terenkripsi di server, disalin ke ponsel agar model di ponsel ikut mengenalmu, dan hanya kamu yang bisa melihatnya.',
               style: t.bodySmall,
             ),
             const SizedBox(height: 12),

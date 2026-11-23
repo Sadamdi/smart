@@ -142,8 +142,10 @@ export type Notifikasi = {
   pesan: string;
   beasiswa_id: string;
 };
+export type SesiChat = { id: string; judul: string; dibuat_pada: string; diubah_pada: string; jumlah: number };
 export type Chat = {
   id: string;
+  sesi_id?: string | null;
   pesan: string;
   jawaban?: string | null;
   waktu: string;

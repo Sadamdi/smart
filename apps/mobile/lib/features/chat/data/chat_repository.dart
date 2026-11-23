@@ -1,9 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
+
+import 'package:flutter/foundation.dart' show debugPrint;
 
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' hide Response;
 
 import '../../../core/api_client.dart';
+import '../../../core/lokal/chat_lokal.dart';
 import '../../../core/lokal/mesin_lokal.dart';
 import '../../../core/lokal/model_ai.dart';
 
@@ -41,7 +45,36 @@ class PesanChat {
   );
 }
 
-/// Peristiwa jawaban chatbot yang mengalir: potongan teks, selesai, atau galat (dilempar sebagai exception).
+/// Satu sesi (utas) percakapan, seperti daftar percakapan di ChatGPT.
+class SesiChat {
+  const SesiChat({
+    required this.id,
+    required this.judul,
+    required this.diubah,
+    this.jumlah = 0,
+    this.lokal = false,
+  });
+
+  final String id;
+  final String judul;
+  final DateTime diubah;
+  final int jumlah;
+
+  /// Dibuat di ponsel dan belum tersalin ke server.
+  final bool lokal;
+
+  factory SesiChat.fromJson(Map<String, dynamic> j) => SesiChat(
+    id: j['id'] as String,
+    judul: (j['judul'] as String?) ?? judulBawaan,
+    diubah:
+        DateTime.tryParse('${j['diubah_pada']}') ??
+        DateTime.fromMillisecondsSinceEpoch(0),
+    jumlah: (j['jumlah'] as num?)?.toInt() ?? 0,
+    lokal: j['lokal'] == true,
+  );
+}
+
+/// Peristiwa jawaban chatbot yang mengalir: potongan teks, selesai, judul sesi, atau galat (dilempar sebagai exception).
 sealed class KejadianChat {}
 
 class TokenChat extends KejadianChat {
@@ -56,33 +89,105 @@ class SelesaiChat extends KejadianChat {
   final PesanChat pesan;
 }
 
+/// Server memberi judul pada sesi dari topik percakapannya.
+class JudulChat extends KejadianChat {
+  JudulChat(this.sesiId, this.judul);
+
+  final String sesiId;
+  final String judul;
+}
+
+/// Sesi buatan ponsel baru mendapat id dari server (aktif diganti ke id ini).
+class SesiBergantiChat extends KejadianChat {
+  SesiBergantiChat(this.sesiLama, this.sesiBaru);
+
+  final String sesiLama;
+  final String sesiBaru;
+}
+
 class ChatRepository {
   ChatRepository(this._api);
 
   final ApiClient _api;
+
+  MesinLokal get _lokal => Get.find<MesinLokal>();
 
   Future<bool> tersedia() async {
     final r = await _api.get('/chat/status');
     return (r.data as Map<String, dynamic>)['tersedia'] as bool? ?? false;
   }
 
-  Future<List<PesanChat>> riwayat() async {
-    final r = await _api.get('/chat/riwayat');
+  // ---------- sesi ----------
+
+  /// Daftar sesi: dari server bila ada jaringan (disalin ke ponsel), selain itu dari salinan di ponsel.
+  /// Sesi dan pesan buatan ponsel ikut disalin ke server di latar belakang.
+  Future<List<SesiChat>> daftarSesi() async {
+    final r = await _api.get('/chat/sesi');
+    _lokal.chat.cerminSesi(r.data as List);
+    unawaited(sinkronkan());
+    return [for (final x in _lokal.chat.daftarSesi()) SesiChat.fromJson(x)];
+  }
+
+  /// Membuat sesi baru; di server bila ada jaringan, atau di ponsel (disalin ke server nanti).
+  Future<SesiChat> buatSesi() async {
+    final r = await _api.post('/chat/sesi', body: <String, dynamic>{});
+    final j = Map<String, dynamic>.from(r.data as Map);
+    if (j['lokal'] != true) _lokal.chat.terimaSesi(j);
+    return SesiChat.fromJson(j);
+  }
+
+  Future<void> ubahJudulSesi(String id, String judul) async {
+    if (id.startsWith('lokal-')) {
+      _lokal.chat.ubahJudul(id, judul);
+      return;
+    }
+    await _api.patch('/chat/sesi/$id', body: {'judul': judul});
+    _lokal.chat.ubahJudul(id, judul);
+  }
+
+  Future<void> hapusSesi(String id) async {
+    if (!id.startsWith('lokal-')) await _api.delete('/chat/sesi/$id');
+    _lokal.chat.hapusSesi(id);
+  }
+
+  // ---------- pesan ----------
+
+  /// Isi satu sesi: salinan dari server digabung dengan jawaban model ponsel yang belum tersalin, sehingga jawaban
+  /// tidak hilang saat riwayat dimuat ulang.
+  Future<List<PesanChat>> riwayat(String? sesiId) async {
+    if (sesiId == null) return const [];
+    if (!sesiId.startsWith('lokal-')) {
+      final r = await _api.get('/chat/riwayat', query: {'sesi_id': sesiId});
+      _lokal.chat.cerminRiwayat(sesiId, r.data as List);
+    }
     return [
-      for (final x in r.data as List)
-        PesanChat.fromJson(x as Map<String, dynamic>),
+      for (final m in _lokal.chat.pesanSesi(sesiId)) PesanChat.fromJson(m),
     ];
   }
 
-  bool get _modelSiap =>
-      Get.find<MesinLokal>().siap && Get.find<PengelolaModelAi>().dipakai;
+  bool get _modelSiap => _lokal.siap && Get.find<PengelolaModelAi>().dipakai;
+
+  /// Riwayat sesi untuk model ponsel: beberapa tanya jawab terakhir agar jawabannya nyambung.
+  String _riwayatUntukModel(String? sesiId) {
+    if (sesiId == null) return '';
+    final p = _lokal.chat.pesanSesi(sesiId);
+    final akhir = p.length > 3 ? p.sublist(p.length - 3) : p;
+    if (akhir.isEmpty) return '';
+    String potong(Object? x, int n) {
+      final t = '${x ?? ''}';
+      return t.length > n ? '${t.substring(0, n)}...' : t;
+    }
+
+    return 'Percakapan sebelumnya:\n${[for (final m in akhir) 'Pengguna: ${potong(m['pesan'], 300)}\nAsisten: ${potong(m['jawaban'], 400)}'].join('\n')}\n';
+  }
 
   /// Jawaban model AI di ponsel sebagai aliran token; di akhir disimpan ke riwayat lokal dan dikirim [SelesaiChat].
-  Stream<KejadianChat> _alirModel(String pesan) async* {
-    final lokal = Get.find<MesinLokal>();
+  Stream<KejadianChat> _alirModel(String pesan, String? sesiId) async* {
+    final lokal = _lokal;
     final ai = Get.find<PengelolaModelAi>();
     final jawaban = StringBuffer();
-    await for (final t in ai.jawabAlir(pesan, lokal.konteksChat(pesan))) {
+    final konteks = '${_riwayatUntukModel(sesiId)}${lokal.konteksChat(pesan)}';
+    await for (final t in ai.jawabAlir(pesan, konteks)) {
       jawaban.write(t);
       yield TokenChat(t);
     }
@@ -95,13 +200,15 @@ class ChatRepository {
     final akhir =
         '$isi\n\n(Dijawab model AI di ponsel. Estimasi hanya perkiraan, bukan jaminan diterima.)';
     final id = 'lokal-${DateTime.now().microsecondsSinceEpoch}';
-    lokal.catatChat({
+    lokal.chat.catatChat({
       'id': id,
+      'sesi_id': sesiId,
       'pesan': pesan,
       'jawaban': akhir,
       'waktu': DateTime.now().toIso8601String(),
       'rujukan': rujukan,
       'sumber': 'ponsel',
+      'lokal': true,
     });
     yield SelesaiChat(
       PesanChat(
@@ -114,16 +221,39 @@ class ChatRepository {
         ],
       ),
     );
+    unawaited(sinkronkan());
+  }
+
+  /// Memastikan sesi [sesiId] dikenal server (sesi buatan ponsel disalin dulu). Mengembalikan id yang dipakai.
+  Future<String> _sesiServer(String sesiId) async {
+    if (!sesiId.startsWith('lokal-')) return sesiId;
+    final s = _lokal.chat.daftarSesi().firstWhere(
+      (x) => x['id'] == sesiId,
+      orElse: () => <String, dynamic>{},
+    );
+    final otomatis = (s['judul_otomatis'] ?? true) == true;
+    final r = await _api.post(
+      '/chat/sesi',
+      body: {'judul': otomatis ? null : s['judul'], 'klien_id': sesiId},
+    );
+    final baru = '${(r.data as Map)['id']}';
+    if (baru.startsWith('lokal-')) {
+      throw ApiException('JARINGAN', 'Tidak ada jaringan.', 0);
+    }
+    _lokal.chat.gantiIdSesi(sesiId, baru);
+    penggantianSesi[sesiId] = baru;
+    return baru;
   }
 
   /// Mengirim pesan dan mengalirkan jawaban per potongan. Membatalkan langganan (atau [batal]) menghentikan jawaban.
   /// Urutan: model AI di ponsel (mode luring atau dipilih pengguna), lalu server, lalu model ponsel bila jaringan putus.
   Stream<KejadianChat> kirimAlir(
     String pesan, {
+    String? sesiId,
     CancelToken? batal,
     List<String> dokumenIds = const [],
   }) async* {
-    final lokal = Get.find<MesinLokal>();
+    final lokal = _lokal;
     final pakaiModel = lokal.aktif.value || lokal.aiLokalAktif;
     if (dokumenIds.isNotEmpty && lokal.aktif.value) {
       throw ApiException(
@@ -135,7 +265,7 @@ class ChatRepository {
     // Pertanyaan berlampiran dijawab server (dokumen dibaca di sana); model ponsel hanya bila jaringan putus.
     if (pakaiModel && _modelSiap && dokumenIds.isEmpty) {
       try {
-        yield* _alirModel(pesan);
+        yield* _alirModel(pesan, sesiId);
         return;
       } on Object {
         if (!lokal.aktif.value) {
@@ -147,19 +277,33 @@ class ChatRepository {
     }
     if (lokal.aktif.value) {
       // tanpa model: jawaban berbasis data lokal (aturan)
-      final r = await _api.post('/chat', body: {'pesan': pesan});
+      final r = await _api.post(
+        '/chat',
+        body: {'pesan': pesan, 'sesi_id': sesiId},
+      );
       yield SelesaiChat(PesanChat.fromJson(r.data as Map<String, dynamic>));
       return;
     }
     try {
+      var sid = sesiId;
+      if (sid != null && sid.startsWith('lokal-')) {
+        sid = await _sesiServer(sid);
+        yield SesiBergantiChat(sesiId!, sid);
+      }
       await for (final (ev, data) in _api.alirSse('/chat/stream', {
         'pesan': pesan,
+        'sesi_id': ?sid,
+        if (dokumenIds.isNotEmpty) 'dokumen_ids': dokumenIds,
       }, batal: batal)) {
         final j = jsonDecode(data) as Map<String, dynamic>;
         if (ev == 'token') {
           yield TokenChat(j['t'] as String);
         } else if (ev == 'selesai') {
           yield SelesaiChat(PesanChat.fromJson(j));
+        } else if (ev == 'judul') {
+          final id = '${j['sesi_id']}';
+          _lokal.chat.ubahJudul(id, '${j['judul']}', otomatis: true);
+          yield JudulChat(id, '${j['judul']}');
         } else if (ev == 'galat') {
           throw ApiException('AI', '${j['pesan']}', 503);
         }
@@ -167,7 +311,7 @@ class ChatRepository {
     } on ApiException catch (e) {
       // Otomatis: jaringan putus berarti model di ponsel. Mode Server murni tidak berpindah.
       if (e.galatJaringan && _modelSiap && lokal.modeAi.value != 'server') {
-        yield* _alirModel(pesan);
+        yield* _alirModel(pesan, sesiId);
         return;
       }
       if (e.galatJaringan && lokal.modeAi.value != 'server') {
@@ -182,12 +326,89 @@ class ChatRepository {
   }
 
   /// Versi sekali jadi (tanpa aliran), dipertahankan untuk pemanggil lama.
-  Future<PesanChat> kirim(String pesan) async {
+  Future<PesanChat> kirim(String pesan, {String? sesiId}) async {
     PesanChat? akhir;
-    await for (final k in kirimAlir(pesan)) {
+    await for (final k in kirimAlir(pesan, sesiId: sesiId)) {
       if (k is SelesaiChat) akhir = k.pesan;
     }
     return akhir ?? (throw StateError('Tidak ada jawaban'));
+  }
+
+  // ---------- sinkron ke server ----------
+
+  bool _sinkron = false;
+
+  /// Naik setiap kali sinkron mengubah sesi atau judul; pendengar memuat ulang daftar dan riwayatnya.
+  final versiSinkron = 0.obs;
+
+  /// Id sesi ponsel yang sudah diganti id server (lama ke baru), agar layar yang masih memegang id lama berpindah.
+  final penggantianSesi = <String, String>{};
+
+  /// Menyalin sesi dan jawaban buatan ponsel ke server (sekali jalan pada satu waktu). Server menyimpan riwayatnya,
+  /// memberi judul dari topik, dan mempelajari memori dari pesan pengguna. Tidak berbuat apa pun di mode luring.
+  Future<void> sinkronkan() async {
+    final lokal = _lokal;
+    if (_sinkron || lokal.aktif.value) return;
+    _sinkron = true;
+    var berubah = false;
+    try {
+      // Satu sesi atau pesan yang gagal tidak boleh menghentikan sisanya; dicoba lagi pada sinkron berikutnya.
+      for (final s in lokal.chat.daftarSesi()) {
+        final id = '${s['id']}';
+        if (!id.startsWith('lokal-')) continue;
+        final tertunda = lokal.chat
+            .pesanSesi(id)
+            .any((m) => m['lokal'] == true);
+        if (!tertunda) continue; // sesi kosong tidak perlu disalin
+        try {
+          await _sesiServer(id);
+          berubah = true;
+        } on Object catch (e) {
+          debugPrint('sinkron sesi $id gagal: $e');
+        }
+      }
+      for (final m in lokal.chat.belumSinkron()) {
+        final sid = '${m['sesi_id']}';
+        if (sid.startsWith('lokal-')) continue;
+        try {
+          final waktu = DateTime.tryParse('${m['waktu']}')?.toUtc();
+          final r = await _api.post(
+            '/chat/catat-lokal',
+            body: {
+              'pesan': m['pesan'],
+              'jawaban': m['jawaban'],
+              'waktu': waktu?.toIso8601String(),
+              'sesi_id': sid,
+            },
+          );
+          lokal.chat.tandaiSinkron('${m['id']}');
+          berubah = true;
+          final d = r.data;
+          if (d is Map && d['judul'] != null) {
+            lokal.chat.ubahJudul(sid, '${d['judul']}', otomatis: true);
+          }
+        } on Object catch (e) {
+          debugPrint('sinkron pesan ${m['id']} gagal: $e');
+        }
+      }
+      await segarkanMemori();
+    } on Object {
+      // jaringan putus atau server menolak: dicoba lagi pada kesempatan berikutnya
+    } finally {
+      _sinkron = false;
+      if (berubah) versiSinkron.value++;
+    }
+  }
+
+  /// Menyalin Memori Pintar dari server ke ponsel agar model di ponsel juga mengenal pengguna.
+  Future<void> segarkanMemori() async {
+    if (_lokal.aktif.value) return;
+    final daftar = await _api.get('/me/memori');
+    final stat = await _api.get('/me/memori/statistik');
+    _lokal.chat.catatMemori(
+      daftar.data as List,
+      aktif: (stat.data as Map)['memori_aktif'] as bool?,
+    );
   }
 
   Future<void> hapusRiwayat() => _api.delete('/chat/riwayat');

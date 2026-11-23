@@ -191,26 +191,37 @@ def catat_dari_dokumen(
     return sum(1 for jenis, isi in fakta if tambah(sesi, p, jenis, isi, sumber))
 
 
-_PENANDA_DIRI = ("saya", "aku", "gue", "ku ", "pengalaman", "prestasi", "juara", "ketua", "magang", "relawan", "minat")
+_PENANDA_DIRI = (
+    "saya", "aku", "gue", "ku ", "pengalaman", "prestasi", "juara", "ketua", "magang", "relawan", "minat",
+    "cari", "mencari", "ingin", "mau", "tertarik", "berencana", "target", "rencana", "kuliah", "lulus", "tinggal",
+)  # fmt: skip
 
 
-def ekstrak_dari_percakapan(settings: Settings, pesan: str, nama: str | None) -> list[tuple[str, str]]:
+def ekstrak_dari_percakapan(
+    settings: Settings, pesan: str, nama: str | None, sudah_ada: list[str] | None = None
+) -> list[tuple[str, str]]:
     """Fakta tentang pengguna yang ia sebut sendiri di percakapan (hanya dari kalimat pengguna, bukan jawaban AI).
 
     Dilewati bila pesan terlalu pendek atau tidak berisi pernyataan tentang diri sendiri, agar tidak memanggil AI
-    tiap pertanyaan. Gagal berarti kosong.
+    tiap pertanyaan. [sudah_ada] (memori saat ini) dikirim agar AI tidak mengulang dan hanya mencatat info baru,
+    termasuk tujuan (beasiswa yang dicari, negara, jenjang) dan perubahan keadaan. Gagal berarti kosong.
     """
     t = pesan.strip()
     if not llm.tersedia(settings) or len(t) < 25 or not any(k in t.lower() for k in _PENANDA_DIRI):
         return []
+    ada = ""
+    if sudah_ada:
+        ada = "\n\nMemori yang sudah ada (jangan diulang):\n- " + "\n- ".join(x[:160] for x in sudah_ada[:25])
     try:
         jawab = llm.tanya(
             settings,
             _SISTEM_EKSTRAK,
             'Dari pesan pengguna berikut keluarkan JSON {"fakta": [{"jenis": "keahlian|prestasi|organisasi|sertifikat|'
             'pengalaman|minat|kepribadian|lainnya", "isi": "teks singkat"}]}. Hanya hal yang pengguna nyatakan tentang '
-            "dirinya sendiri dan layak diingat untuk menilai beasiswa. Pertanyaan biasa tanpa pernyataan diri berarti "
-            "daftar kosong. Maksimal 3 butir.\n\n" + samarkan(t[:1500], nama),
+            "dirinya sendiri dan layak diingat lintas percakapan untuk menilai beasiswa: siapa dia, latar belakang, "
+            "prestasi, minat, serta tujuan (jenis beasiswa, negara, jenjang yang dicari; gunakan jenis minat untuk "
+            "tujuan). Catat hanya info baru atau yang berubah dari memori yang sudah ada. Pertanyaan biasa tanpa "
+            "pernyataan diri berarti daftar kosong. Maksimal 3 butir.\n\n" + samarkan(t[:1500], nama) + ada,
             timeout=30,
         )
         data = json.loads(jawab[jawab.find("{") : jawab.rfind("}") + 1])
@@ -228,8 +239,70 @@ def catat_dari_percakapan(sesi: Session, p: Pengguna, pesan: str, settings: Sett
     if not p.memori_aktif:
         return 0
     try:
-        return sum(
-            1 for jenis, isi in ekstrak_dari_percakapan(settings, pesan, p.nama) if tambah(sesi, p, jenis, isi, "chat")
+        baru = sum(
+            1
+            for jenis, isi in ekstrak_dari_percakapan(settings, pesan, p.nama, ringkas(sesi, p, 25))
+            if tambah(sesi, p, jenis, isi, "chat")
         )
+        if baru:
+            padatkan(sesi, p, settings)
+        return baru
     except Exception:  # memori adalah tambahan; jangan pernah menggagalkan jawaban
         return 0
+
+
+# Pemadatan: bila butir otomatis menumpuk, memori dipecah dua (lama dan baru), tiap bagian dipadatkan AI, lalu digabung.
+AMBANG_PADAT = 40
+SUMBER_PADAT = "padat"
+
+
+def _padatkan_bagian(settings: Settings, bagian: list[MemoriPengguna], nama: str | None) -> list[tuple[str, str]]:
+    """Meringkas satu bagian memori menjadi lebih sedikit butir tanpa menambah fakta. Gagal atau tidak lebih ringkas
+    berarti kosong (bagian dibiarkan)."""
+    teks = "\n".join(f"- {m.jenis}: {m.isi}" for m in bagian)
+    try:
+        jawab = llm.tanya(
+            settings,
+            _SISTEM_EKSTRAK,
+            'Gabungkan daftar memori tentang seorang pengguna berikut menjadi lebih ringkas. Keluarkan JSON {"butir": '
+            '[{"jenis": "keahlian|prestasi|organisasi|sertifikat|pengalaman|minat|kepribadian|lainnya", "isi": "teks"}]}. '
+            "Gabungkan butir yang sama atau mirip, pertahankan fakta penting (nama, tahun, tingkat, tujuan), jika ada "
+            "yang bertentangan pakai yang terbaru (urutan paling bawah), dan JANGAN menambah fakta baru.\n\n"
+            + samarkan(teks[:9000], nama),
+            timeout=60,
+        )
+        data = json.loads(jawab[jawab.find("{") : jawab.rfind("}") + 1])
+    except (UpstreamUnavailable, ValueError):
+        return []
+    hasil: list[tuple[str, str]] = []
+    for x in data.get("butir", []) if isinstance(data, dict) else []:
+        if isinstance(x, dict) and isinstance(x.get("isi"), str) and x.get("jenis") in JENIS and x["isi"].strip():
+            hasil.append((x["jenis"], x["isi"].strip()))
+    return hasil if 0 < len(hasil) < len(bagian) else []
+
+
+def padatkan(sesi: Session, p: Pengguna, settings: Settings) -> int:
+    """Memadatkan butir otomatis (bukan yang ditulis sendiri oleh pengguna) bila jumlahnya mencapai [AMBANG_PADAT].
+
+    Butir diurutkan dari yang terlama, dibelah dua, tiap belahan dipadatkan terpisah, lalu hasilnya digabung. Belahan
+    yang gagal dipadatkan dibiarkan utuh. Mengembalikan jumlah butir yang berkurang.
+    """
+    if not llm.tersedia(settings):
+        return 0
+    otomatis = sorted((m for m in daftar(sesi, p) if m.sumber not in (None, "manual")), key=lambda m: m.dibuat_pada)
+    if len(otomatis) < AMBANG_PADAT:
+        return 0
+    tengah = len(otomatis) // 2
+    sebelum = len(otomatis)
+    for bagian in (otomatis[:tengah], otomatis[tengah:]):
+        hasil = _padatkan_bagian(settings, bagian, p.nama)
+        if not hasil:
+            continue
+        for m in bagian:
+            sesi.delete(m)
+        sesi.flush()
+        for jenis, isi in hasil:
+            tambah(sesi, p, jenis, isi, SUMBER_PADAT)
+    sesi.flush()
+    sesudah = sum(1 for m in daftar(sesi, p) if m.sumber not in (None, "manual"))
+    return max(0, sebelum - sesudah)

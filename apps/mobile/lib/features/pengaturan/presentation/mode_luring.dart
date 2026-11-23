@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api_client.dart';
 import '../../../core/dependensi.dart';
 import '../../../core/lokal/mesin_lokal.dart';
+import '../../../core/lokal/model_ai.dart';
 import '../../../core/theme/app_theme.dart';
 
 /// Pengaturan mode luring: semua perhitungan rekomendasi dan simpan beasiswa berjalan di perangkat, dan perubahan
@@ -46,6 +47,7 @@ class _KartuModeLuringState extends State<KartuModeLuring> {
         }
       }
       await _m.aturAktif(true);
+      Get.find<PengelolaModelAi>().siapkanDiLatarBelakang();
     } else {
       await _m.aturAktif(false);
       final ok = await _api.sinkronkan();

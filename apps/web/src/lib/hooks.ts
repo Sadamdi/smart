@@ -1,7 +1,7 @@
 "use client";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, kirim } from "./api";
-import type {
+import type { SesiChat,
   ButirMemori,
   StatistikMemori,
   StatistikChat,
@@ -94,7 +94,14 @@ export function useJelajah(filter: { q: string; jenjang: string; negara: string;
 }
 
 export const useStatusChat = () => useQuery({ queryKey: ["chat", "status"], queryFn: () => ambil<{ tersedia: boolean }>("/chat/status") });
-export const useRiwayatChat = () => useQuery({ queryKey: ["chat", "riwayat"], queryFn: () => ambil<Chat[]>("/chat/riwayat") });
+/** Isi satu sesi chat; tanpa sesi (percakapan baru) tidak ada yang dimuat. */
+export const useRiwayatChat = (sesiId: string | null) =>
+  useQuery({
+    queryKey: ["chat", "riwayat", sesiId],
+    queryFn: () => ambil<Chat[]>(`/chat/riwayat?sesi_id=${sesiId}`),
+    enabled: sesiId !== null,
+  });
+export const useSesiChat = () => useQuery({ queryKey: ["chat", "sesi"], queryFn: () => ambil<SesiChat[]>("/chat/sesi") });
 
 // Admin
 export const useAntrean = () => useQuery({ queryKey: ["admin", "antrean"], queryFn: () => ambil<AntreanItem[]>("/admin/antrean-validasi") });

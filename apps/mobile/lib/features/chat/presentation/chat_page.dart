@@ -8,6 +8,9 @@ import '../../../core/lokal/model_ai.dart';
 import '../../../core/dependensi.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
+import '../../../core/widgets/smart_app_bar.dart';
+import '../data/chat_repository.dart';
+import 'statistik_chat.dart';
 import '../../../core/widgets/teks_markdown.dart';
 import '../../../core/widgets/state_widgets.dart';
 import 'chat_controller.dart';
@@ -29,6 +32,7 @@ class _ChatPageState extends State<ChatPage> {
     _c.buka();
     // Model AI luring dimuat di latar belakang hanya bila mode luring aktif atau jaringan putus, bukan saat aplikasi dibuka.
     if (Get.find<MesinLokal>().aktif.value ||
+        Get.find<MesinLokal>().aiLokalAktif ||
         Get.find<CacheLokal>().luring.value) {
       Get.find<PengelolaModelAi>().siapkanDiLatarBelakang();
     }
@@ -174,6 +178,10 @@ class _ChatPageState extends State<ChatPage> {
       switch (k) {
         case 'memori':
           context.push('/memori');
+        case 'ganti_nama':
+          await _gantiNama();
+        case 'hapus_sesi':
+          await _hapusSesiIni();
         case 'cadang':
           _info(await _c.cadangkan());
         case 'pulih':
@@ -193,31 +201,135 @@ class _ChatPageState extends State<ChatPage> {
         case 'statistik':
           final d = await _c.statistik();
           if (!mounted) return;
-          final top = [
-            for (final b in (d['beasiswa_teratas'] as List? ?? []))
-              '${(b as Map)['nama']} (${b['jumlah']})',
-          ];
-          final isi =
-              '${d['jumlah']} pertanyaan, ${d['tujuh_hari']} dalam 7 hari terakhir.\n'
-              'Rata-rata jawaban ${d['rata_panjang_jawaban']} karakter.'
-              '${top.isEmpty ? '' : '\n\nPaling sering dirujuk:\n${top.join('\n')}'}';
-          await showDialog<void>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Isi chatbot'),
-              content: Text(isi),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Tutup'),
-                ),
-              ],
-            ),
-          );
+          await tampilkanStatistikChat(context, d);
       }
     } catch (e) {
       _info(pesanGalat(e));
     }
+  }
+
+  Future<void> _gantiNama() async {
+    if (_c.sesiId.value == null) {
+      _info('Kirim pesan dulu agar percakapan ini punya nama.');
+      return;
+    }
+    final c = TextEditingController(text: _c.sesiJudul.value);
+    final baru = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Ganti nama percakapan'),
+        content: TextField(
+          controller: c,
+          autofocus: true,
+          maxLength: 60,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (v) => Navigator.pop(ctx, v),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, c.text),
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+    if (baru == null || baru.trim().isEmpty) return;
+    await _c.ubahJudul(baru);
+  }
+
+  Future<void> _hapusSesiIni() async {
+    final id = _c.sesiId.value;
+    if (id == null) return;
+    final s = (_c.daftarSesi.value ?? const <SesiChat>[]).firstWhere(
+      (x) => x.id == id,
+      orElse: () =>
+          SesiChat(id: id, judul: _c.sesiJudul.value, diubah: DateTime.now()),
+    );
+    await _c.hapusSesi(s);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Percakapan dihapus'),
+        action: SnackBarAction(
+          label: 'Urungkan',
+          onPressed: () async => _info(await _c.urungkanHapus()),
+        ),
+      ),
+    );
+  }
+
+  /// Baris di bawah kepala halaman: percakapan yang dibuka (ketuk untuk memilih), sumber jawaban AI, baru, dan menu.
+  Widget _barisSesi(TextTheme t) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 4, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () => context.push('/chat/sesi'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 9,
+                ),
+                decoration: BoxDecoration(
+                  color: Warna.kartu,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Warna.container4),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _c.sesiJudul.value,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: t.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const Icon(Icons.expand_more_rounded, size: 18),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          const _PilihanAi(),
+          IconButton(
+            tooltip: 'Percakapan baru',
+            onPressed: _c.mengirim.value ? null : _c.sesiBaru,
+            icon: const Icon(Icons.add_comment_outlined),
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'Menu chat',
+            onSelected: _menu,
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'ganti_nama',
+                child: Text('Ganti nama percakapan'),
+              ),
+              PopupMenuItem(
+                value: 'hapus_sesi',
+                child: Text('Hapus percakapan ini'),
+              ),
+              PopupMenuDivider(),
+              PopupMenuItem(value: 'statistik', child: Text('Statistik chat')),
+              PopupMenuItem(value: 'memori', child: Text('Memori Pintar')),
+              PopupMenuItem(value: 'cadang', child: Text('Cadangkan riwayat')),
+              PopupMenuItem(value: 'pulih', child: Text('Pulihkan riwayat')),
+              PopupMenuItem(value: 'hapus', child: Text('Hapus semua riwayat')),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -231,26 +343,10 @@ class _ChatPageState extends State<ChatPage> {
     final galat = _c.galat.value;
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text('Asisten AI', style: t.titleLarge?.copyWith(fontSize: 18)),
-        actions: [
-          const _PilihanAi(),
-          PopupMenuButton<String>(
-            tooltip: 'Menu chat',
-            onSelected: _menu,
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'statistik', child: Text('Statistik chat')),
-              PopupMenuItem(value: 'memori', child: Text('Memori AI')),
-              PopupMenuItem(value: 'cadang', child: Text('Cadangkan riwayat')),
-              PopupMenuItem(value: 'pulih', child: Text('Pulihkan riwayat')),
-              PopupMenuItem(value: 'hapus', child: Text('Hapus riwayat')),
-            ],
-          ),
-        ],
-      ),
+      appBar: const SmartAppBar(),
       body: Column(
         children: [
+          _barisSesi(t),
           if (!tersedia)
             Container(
               width: double.infinity,
@@ -297,6 +393,11 @@ class _ChatPageState extends State<ChatPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(galat, style: TextStyle(color: Warna.error)),
+            ),
+          if (_c.catatan.value != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(_c.catatan.value!, style: t.bodySmall),
             ),
           SizedBox(
             height: 42,
@@ -353,7 +454,8 @@ class _ChatPageState extends State<ChatPage> {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: 'Lampirkan CV atau dokumen',
+                    tooltip:
+                        'Lampirkan berkas (${ChatController.keteranganJenis})',
                     onPressed:
                         kirim ||
                             _c.lampiran.length >= ChatController.lampiranMaks
@@ -522,6 +624,8 @@ class _PilihanAi extends StatelessWidget {
                     : null,
                 onTap: () {
                   mesin.aturModeAi(k);
+                  // Model dimuat sekarang agar jawaban pertama tidak menunggu.
+                  if (k == 'ponsel') ai.siapkanDiLatarBelakang();
                   Navigator.pop(ctx);
                 },
               );

@@ -9,6 +9,8 @@ import 'package:get/get.dart' hide Response;
 
 import '../../../core/async_state.dart';
 import '../../../core/dependensi.dart';
+import '../../../core/lokal/chat_lokal.dart' show judulBawaan;
+import '../../../core/lokal/mesin_lokal.dart';
 import '../../dokumen/data/dokumen_repository.dart';
 import '../data/chat_repository.dart';
 
@@ -24,7 +26,17 @@ class ChatController extends GetxController {
   ChatRepository get _repo => Get.find<ChatRepository>();
 
   late final tersedia = Muatan<bool>(_repo.tersedia);
-  late final riwayat = Muatan<List<PesanChat>>(_repo.riwayat);
+
+  /// Sesi (utas) yang sedang dibuka; kosong berarti percakapan baru yang belum disimpan.
+  final sesiId = RxnString();
+  final sesiJudul = judulBawaan.obs;
+  late final daftarSesi = Muatan<List<SesiChat>>(_repo.daftarSesi);
+  late final riwayat = Muatan<List<PesanChat>>(
+    () => _repo.riwayat(sesiId.value),
+  );
+
+  /// Catatan singkat untuk pengguna (mis. lampiran memaksa jawaban dari server).
+  final catatan = RxnString();
 
   /// Sedang menerima jawaban (aliran), dan galat pengirimannya.
   final mengirim = false.obs;
@@ -40,6 +52,11 @@ class ChatController extends GetxController {
 
   static const lampiranMaks = 3;
 
+  /// Jenis berkas yang dibaca asisten (di server): dokumen dan gambar. Audio dan video belum didukung.
+  static const jenisDidukung = ['pdf', 'docx', 'txt', 'png', 'jpg', 'jpeg'];
+  static const keteranganJenis =
+      'PDF, Word (.docx), teks (.txt), dan gambar PNG atau JPG. Audio dan video belum didukung.';
+
   /// Jenis dokumen dari nama berkas: CV atau sertifikat (termasuk penghargaan dan piagam).
   static String jenisDari(String nama) {
     final n = nama.toLowerCase();
@@ -54,7 +71,7 @@ class ChatController extends GetxController {
     if (mengunggah.value || lampiran.length >= lampiranMaks) return;
     final hasil = await FilePicker.pickFiles(
       type: FileType.custom,
-      allowedExtensions: const ['pdf', 'docx', 'txt', 'png', 'jpg', 'jpeg'],
+      allowedExtensions: jenisDidukung,
     );
     final berkas = hasil.isEmpty ? null : hasil.first;
     if (berkas?.path == null) return;
@@ -84,7 +101,113 @@ class ChatController extends GetxController {
   /// Chatbot dianggap tersedia sampai terbukti sebaliknya.
   bool get bisaMenjawab => tersedia.value ?? true;
 
-  Future<void> buka() => Future.wait([tersedia.muat(), riwayat.muat()]);
+  Worker? _pendengarSinkron;
+
+  @override
+  void onInit() {
+    super.onInit();
+    // Setelah sesi ponsel tersalin ke server (id dan judul berubah), daftar dan layar ikut diperbarui.
+    _pendengarSinkron = ever(_repo.versiSinkron, (_) async {
+      final lama = sesiId.value;
+      if (lama != null && _repo.penggantianSesi[lama] != null) {
+        sesiId.value = _repo.penggantianSesi[lama];
+      }
+      await daftarSesi.muat();
+      _selaraskanJudul();
+      if (!mengirim.value && sesiId.value != lama) await riwayat.muat();
+    });
+  }
+
+  @override
+  void onClose() {
+    _pendengarSinkron?.dispose();
+    super.onClose();
+  }
+
+  Future<void> buka() async {
+    await Future.wait([tersedia.muat(), daftarSesi.muat()]);
+    // Buka sesi terbaru bila belum ada yang dipilih.
+    if (sesiId.value == null) {
+      final d = daftarSesi.value ?? const <SesiChat>[];
+      if (d.isNotEmpty) _setAktif(d.first);
+    } else {
+      _selaraskanJudul();
+    }
+    await riwayat.muat();
+  }
+
+  void _setAktif(SesiChat s) {
+    sesiId.value = s.id;
+    sesiJudul.value = s.judul;
+  }
+
+  void _selaraskanJudul() {
+    for (final s in daftarSesi.value ?? const <SesiChat>[]) {
+      if (s.id == sesiId.value) sesiJudul.value = s.judul;
+    }
+  }
+
+  /// Membuka sesi lain dari daftar.
+  Future<void> pilihSesi(SesiChat s) async {
+    await batalkan();
+    galat.value = null;
+    catatan.value = null;
+    lampiran.clear();
+    _setAktif(s);
+    await riwayat.muat();
+  }
+
+  /// Memulai percakapan baru; sesinya baru dibuat saat pesan pertama dikirim.
+  Future<void> sesiBaru() async {
+    await batalkan();
+    galat.value = null;
+    catatan.value = null;
+    lampiran.clear();
+    sesiId.value = null;
+    sesiJudul.value = judulBawaan;
+    await riwayat.muat();
+  }
+
+  Future<void> ubahJudul(String judul) async {
+    final id = sesiId.value;
+    if (id == null || judul.trim().isEmpty) return;
+    await _repo.ubahJudulSesi(id, judul.trim());
+    sesiJudul.value = judul.trim();
+    await daftarSesi.muat();
+  }
+
+  /// Mengganti nama sesi mana pun dari daftar.
+  Future<void> ubahJudulSesi(SesiChat s, String judul) async {
+    if (judul.trim().isEmpty) return;
+    await _repo.ubahJudulSesi(s.id, judul.trim());
+    if (s.id == sesiId.value) sesiJudul.value = judul.trim();
+    await daftarSesi.muat();
+  }
+
+  /// Menghapus satu sesi; bila itu yang sedang dibuka, pindah ke sesi terbaru lainnya.
+  Future<void> hapusSesi(SesiChat s) async {
+    final aktifDihapus = s.id == sesiId.value;
+    if (aktifDihapus) await batalkan();
+    try {
+      cadanganHapus.value = (await _repo.ekspor())
+          .where((x) => (x as Map)['sesi'] == s.judul)
+          .toList();
+    } catch (_) {
+      cadanganHapus.value = null;
+    }
+    await _repo.hapusSesi(s.id);
+    await daftarSesi.muat();
+    if (aktifDihapus) {
+      final d = daftarSesi.value ?? const <SesiChat>[];
+      if (d.isEmpty) {
+        sesiId.value = null;
+        sesiJudul.value = judulBawaan;
+      } else {
+        _setAktif(d.first);
+      }
+      await riwayat.muat();
+    }
+  }
 
   /// Menyalin potongan yang terkumpul ke layar paling sering 12 kali per detik agar tidak berat saat model cepat.
   void _jadwalkanSiram() {
@@ -100,20 +223,39 @@ class ChatController extends GetxController {
     if (teks.isEmpty || mengirim.value) return false;
     mengirim.value = true;
     galat.value = null;
+    catatan.value = null;
     pesanSementara.value = teks;
     jawabanSementara.value = '';
     _penampung.clear();
     _batal = CancelToken();
     final ids = [for (final l in lampiran) l.id];
     lampiran.clear();
+    if (ids.isNotEmpty && Get.find<MesinLokal>().aiLokalAktif) {
+      catatan.value = 'Pertanyaan berlampiran dijawab server karena dokumennya dibaca di sana.';
+    }
+    // Percakapan baru: sesinya dibuat dulu (di server bila ada jaringan, selain itu di ponsel).
+    if (sesiId.value == null) {
+      try {
+        final s = await _repo.buatSesi();
+        _setAktif(s);
+      } catch (e) {
+        galat.value = pesanGalat(e);
+        _bersihkanAliran();
+        return false;
+      }
+    }
     final selesai = Completer<void>();
     _langganan = _repo
-        .kirimAlir(teks, batal: _batal, dokumenIds: ids)
+        .kirimAlir(teks, sesiId: sesiId.value, batal: _batal, dokumenIds: ids)
         .listen(
           (k) {
             if (k is TokenChat) {
               _penampung.write(k.t);
               _jadwalkanSiram();
+            } else if (k is SesiBergantiChat) {
+              if (sesiId.value == k.sesiLama) sesiId.value = k.sesiBaru;
+            } else if (k is JudulChat) {
+              if (sesiId.value == k.sesiId) sesiJudul.value = k.judul;
             }
           },
           onError: (Object e) {
@@ -133,6 +275,7 @@ class ChatController extends GetxController {
         _langganan = null;
         if (!dibatalkan && galat.value == null) await riwayat.muat();
         _bersihkanAliran();
+        unawaited(daftarSesi.muat().then((_) => _selaraskanJudul()));
       }),
     );
     return true;
@@ -168,7 +311,10 @@ class ChatController extends GetxController {
       cadanganHapus.value = null;
     }
     await _repo.hapusRiwayat();
+    sesiId.value = null;
+    sesiJudul.value = judulBawaan;
     await riwayat.muat();
+    await daftarSesi.muat();
   }
 
   Future<String> urungkanHapus() async {
@@ -176,6 +322,11 @@ class ChatController extends GetxController {
     if (c == null || c.isEmpty) return 'Tidak ada yang dipulihkan';
     final n = await _repo.impor(c);
     cadanganHapus.value = null;
+    await daftarSesi.muat();
+    if (sesiId.value == null) {
+      final d = daftarSesi.value ?? const <SesiChat>[];
+      if (d.isNotEmpty) _setAktif(d.first);
+    }
     await riwayat.muat();
     return '$n percakapan dipulihkan';
   }
@@ -206,6 +357,11 @@ class ChatController extends GetxController {
       final butir = jsonDecode(await File(berkas!.path!).readAsString());
       if (butir is! List) return 'Berkas cadangan tidak valid';
       final n = await _repo.impor(butir);
+      await daftarSesi.muat();
+      if (sesiId.value == null) {
+        final d = daftarSesi.value ?? const <SesiChat>[];
+        if (d.isNotEmpty) _setAktif(d.first);
+      }
       await riwayat.muat();
       return '$n percakapan dipulihkan';
     } catch (_) {
@@ -217,6 +373,10 @@ class ChatController extends GetxController {
     unawaited(batalkan());
     tersedia.reset();
     riwayat.reset();
+    daftarSesi.reset();
+    sesiId.value = null;
+    sesiJudul.value = judulBawaan;
     galat.value = null;
+    catatan.value = null;
   }
 }

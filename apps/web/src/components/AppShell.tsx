@@ -45,7 +45,7 @@ const MENU_MAHASISWA: Menu[] = [
   { href: "/kalender", label: "Kalender dan Checklist", ikon: CalendarCheck },
   { href: "/dokumen", label: "Dokumen Saya", ikon: FileText },
   { href: "/chat", label: "Chatbot AI", ikon: MessageCircle },
-  { href: "/memori", label: "Memori AI", ikon: Brain },
+  { href: "/memori", label: "Memori Pintar", ikon: Brain },
   { href: "/profil", label: "Profil Saya", ikon: User },
 ];
 
