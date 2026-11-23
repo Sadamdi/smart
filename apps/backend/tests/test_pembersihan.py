@@ -3,11 +3,18 @@
 import uuid
 from datetime import UTC, datetime, timedelta
 
-from app.core.config import Settings
+import pytest
+
+from app.core.config import Settings, get_settings
 from app.models import DokumenPengguna, MemoriPengguna, Pengguna
 from app.services import pembersihan
 from tests.conftest import SETTINGS_UJI
 from tests.test_integrasi_db import sesi  # noqa: F401 (fixture)
+
+_S = get_settings()
+pytestmark = pytest.mark.skipif(
+    not _S.database_url or _S.app_env == "prod", reason="butuh DATABASE_URL pengembangan atau uji"
+)
 
 
 def _pengguna(sesi) -> Pengguna:
