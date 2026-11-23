@@ -10,6 +10,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/smart_app_bar.dart';
 import '../data/chat_repository.dart';
+import 'saran_chat.dart';
 import 'statistik_chat.dart';
 import '../../../core/widgets/teks_markdown.dart';
 import '../../../core/widgets/state_widgets.dart';
@@ -405,8 +406,10 @@ class _ChatPageState extends State<ChatPage> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
-                for (final q
-                    in _c.lampiran.isNotEmpty ? _Saran.lampiran : _Saran.daftar)
+                for (final q in saranBerikut(
+                  riwayat.value ?? const [],
+                  lampiran: _c.lampiran.isNotEmpty,
+                ))
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChipFilter(
@@ -511,21 +514,6 @@ class _ChatPageState extends State<ChatPage> {
       ),
     );
   }
-}
-
-class _Saran {
-  static const lampiran = [
-    'Analisis CV saya, apa kekurangannya?',
-    'Beasiswa apa yang paling cocok dengan dokumen ini?',
-    'Apa yang perlu saya perbaiki?',
-  ];
-
-  static const daftar = [
-    'Syarat IPK',
-    'Berkas apa saja?',
-    'Tenggat minggu ini',
-    'Cocok untuk saya?',
-  ];
 }
 
 /// Penanda asal jawaban: server, model AI di ponsel, atau data lokal.
