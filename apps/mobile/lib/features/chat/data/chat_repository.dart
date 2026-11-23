@@ -231,6 +231,9 @@ class ChatRepository {
     final dokumen = StringBuffer();
     if (lampiran.isNotEmpty) {
       final jatah = 5000 ~/ lampiran.length;
+      dokumen.writeln(
+        'Pengguna melampirkan dokumen di bawah ini. Bila pertanyaannya singkat atau tidak jelas (misalnya "ringkas" atau "apa isinya"), yang dimaksud adalah dokumen lampiran itu: jawab langsung berdasarkan isinya, jangan bertanya balik.\n',
+      );
       for (final l in lampiran) {
         dokumen.writeln(
           'DOKUMEN LAMPIRAN "${l.nama}" (milik pengguna, dibaca di ponsel):\n${potongRelevan(l.teks, pesan, batas: jatah)}\n',

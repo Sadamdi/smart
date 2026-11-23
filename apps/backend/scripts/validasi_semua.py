@@ -21,6 +21,10 @@ ULANG = (
     "terlalu sedikit",
     "Tenggat paling cepat",
     "status 403",
+    "status 500",
+    "tidak menjelaskan beasiswa ini",
+    "tidak cukup menjelaskan",
+    "tautan hanya beranda",
 )
 
 
