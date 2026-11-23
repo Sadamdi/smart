@@ -133,3 +133,13 @@ export const aksiTugas = {
 export const useMemori = () => useQuery({ queryKey: ["memori", "daftar"], queryFn: () => ambil<ButirMemori[]>("/me/memori") });
 export const useStatistikMemori = () => useQuery({ queryKey: ["memori", "statistik"], queryFn: () => ambil<StatistikMemori>("/me/memori/statistik") });
 export const useStatistikChat = () => useQuery({ queryKey: ["chat", "statistik"], queryFn: () => ambil<StatistikChat>("/chat/statistik") });
+
+/** Saran pertanyaan lanjutan dari model di server; kosong bila model gagal (halaman memakai saran bawaan). */
+export const useSaranChat = (sesiId: string | null, aktif: boolean) =>
+  useQuery({
+    queryKey: ["chat", "saran", sesiId],
+    queryFn: () => ambil<string[]>(`/chat/saran?sesi_id=${sesiId}`),
+    enabled: aktif && sesiId !== null,
+    staleTime: 60_000,
+    retry: false,
+  });

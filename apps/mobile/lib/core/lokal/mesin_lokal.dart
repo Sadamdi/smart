@@ -303,6 +303,24 @@ class MesinLokal {
     );
   }
 
+  /// Saran pertanyaan dari basis data di ponsel (tanpa jaringan, tanpa model): beasiswa paling cocok dan tenggat terdekat.
+  List<String> saranData() {
+    if (!siap) return const [];
+    String pendek(String n) => n.length > 32 ? '${n.substring(0, 30)}…' : n;
+    final hasil = hitung();
+    if (hasil.isEmpty) return const [];
+    final cocok = [...hasil]..sort((a, b) => (b.m.skor ?? 0).compareTo(a.m.skor ?? 0));
+    final sekarang = DateTime.now();
+    final dekat = hasil.where((x) => x.tenggat?.isAfter(sekarang) ?? false).toList()
+      ..sort((a, b) => a.tenggat!.compareTo(b.tenggat!));
+    return [
+      'Syarat lengkap ${pendek('${cocok.first.b['nama']}')}',
+      if (dekat.isNotEmpty)
+        'Kapan tenggat ${pendek('${dekat.first.b['nama']}')}?',
+      if (cocok.length > 1) 'Bandingkan ${pendek('${cocok[0].b['nama']}')} dan ${pendek('${cocok[1].b['nama']}')}',
+    ];
+  }
+
   List<HasilLokal> hitung([DateTime? sekarang]) {
     final hari0 = sekarang ?? DateTime.now();
     final hari = DateTime(hari0.year, hari0.month, hari0.day);

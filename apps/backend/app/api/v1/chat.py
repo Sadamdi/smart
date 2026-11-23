@@ -143,6 +143,7 @@ class StatistikChatOut(BaseModel):
     dijawab_ponsel: int = 0
     per_hari: list[dict] = []
     topik: list[dict] = []
+    per_sesi: list[dict] = []
     beasiswa_teratas: list[dict]
 
 
@@ -212,6 +213,11 @@ def hapus_sesi(sesi_id: uuid.UUID, sesi: SesiDep, p: SaatIni) -> Amplop[Kosong]:
     layanan.hapus_sesi(sesi, p, sesi_id)
     sesi.commit()
     return Amplop(data=Kosong())
+
+
+@router.get("/saran", summary="Saran pertanyaan lanjutan dari model", response_model=Amplop[list[str]])
+def saran(sesi: SesiDep, p: SaatIni, settings: SettingsDep, sesi_id: uuid.UUID | None = None) -> Amplop[list[str]]:
+    return Amplop(data=layanan.saran(sesi, p, sesi_id, settings))
 
 
 @router.get("/statistik", summary="Statistik isi dan pemakaian chatbot", response_model=Amplop[StatistikChatOut])

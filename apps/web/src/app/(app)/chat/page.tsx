@@ -8,7 +8,7 @@ import { TeksMarkdown } from "@/components/TeksMarkdown";
 import { GalatState, MemuatState, pesanGalat } from "@/components/state";
 import { JudulHalaman, Kartu, Masukan, Tombol } from "@/components/ui";
 import { ApiError, alirSse, api, kirim } from "@/lib/api";
-import { useAksi, useRiwayatChat, useSesiChat, useStatistikChat, useStatusChat } from "@/lib/hooks";
+import { useAksi, useRiwayatChat, useSaranChat, useSesiChat, useStatistikChat, useStatusChat } from "@/lib/hooks";
 import type { Chat, SesiChat } from "@/lib/types";
 
 const PESAN_MAKS = 2000;
@@ -181,6 +181,8 @@ export default function ChatbotAI() {
   }
 
   const tersedia = status.data?.tersedia;
+  const saranModel = useSaranChat(sesiId, daftar.length > 0 && !menunggu && tersedia !== false);
+  const saranLanjutan = (saranModel.data ?? []).slice(0, 4);
 
   return (
     <div className="halaman-masuk">
@@ -228,12 +230,69 @@ export default function ChatbotAI() {
       )}
       {lihatStat && statistik.data && (
         <Kartu className="mb-4 text-sm">
-          <p className="font-bold text-navy">Isi chatbot</p>
-          <p className="mt-1">
-            {statistik.data.jumlah} pertanyaan, {statistik.data.tujuh_hari} dalam 7 hari terakhir, rata-rata jawaban {statistik.data.rata_panjang_jawaban} karakter.
-          </p>
+          <p className="font-bold text-navy">Statistik chatbot</p>
+          <p className="mt-1 text-xs text-muted">Token adalah perkiraan (karakter dibagi 4), bukan tagihan.</p>
+          <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              ["Pertanyaan", statistik.data.jumlah],
+              ["Percakapan", statistik.data.jumlah_sesi ?? 0],
+              ["Token masuk", statistik.data.token_masuk ?? 0],
+              ["Token keluar", statistik.data.token_keluar ?? 0],
+            ].map(([l, v]) => (
+              <div key={l} className="rounded-[14px] border border-c4 bg-card px-3 py-2">
+                <dd className="text-lg font-bold text-navy">{v}</dd>
+                <dt className="text-xs text-muted">{l}</dt>
+              </div>
+            ))}
+          </dl>
+          {(statistik.data.per_hari ?? []).length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs font-bold text-navy">7 hari terakhir</p>
+              <div className="mt-2 flex h-24 items-end gap-2" role="img" aria-label="Grafik pertanyaan per hari">
+                {(statistik.data.per_hari ?? []).map((h) => {
+                  const maks = Math.max(1, ...(statistik.data?.per_hari ?? []).map((x) => x.jumlah));
+                  return (
+                    <div key={h.tanggal} className="flex flex-1 flex-col items-center justify-end gap-1">
+                      <span className="text-[10px] text-ink">{h.jumlah}</span>
+                      <span
+                        className={`w-full rounded-md transition-[height] duration-500 ${h.jumlah ? "bg-primary" : "bg-c4"}`}
+                        style={{ height: `${6 + (h.jumlah / maks) * 52}px` }}
+                      />
+                      <span className="text-[10px] text-muted">{h.tanggal.slice(-2)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {(statistik.data.topik ?? []).length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(statistik.data.topik ?? []).map((t) => (
+                <span key={t.kata} className="rounded-full border border-c4 bg-c1 px-3 py-1 text-xs font-semibold text-primary">
+                  {t.kata} {t.jumlah}
+                </span>
+              ))}
+            </div>
+          )}
+          {(statistik.data.per_sesi ?? []).length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs font-bold text-navy">Pemakaian per percakapan</p>
+              <ul className="mt-2 space-y-1">
+                {(statistik.data.per_sesi ?? []).map((x) => (
+                  <li key={x.judul + x.pertanyaan} className="flex items-center justify-between gap-3 rounded-[12px] border border-c4 bg-card px-3 py-2">
+                    <span className="min-w-0 truncate font-semibold text-navy">
+                      {x.judul} <span className="font-normal text-muted">({x.pertanyaan} pertanyaan)</span>
+                    </span>
+                    <span className="shrink-0 text-xs text-ink">
+                      masuk {x.token_masuk}, keluar {x.token_keluar}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {statistik.data.beasiswa_teratas.length > 0 && (
-            <p className="mt-1">Paling sering dirujuk: {statistik.data.beasiswa_teratas.map((b) => `${b.nama} (${b.jumlah})`).join(", ")}</p>
+            <p className="mt-3">Paling sering dirujuk: {statistik.data.beasiswa_teratas.map((b) => `${b.nama} (${b.jumlah})`).join(", ")}</p>
           )}
         </Kartu>
       )}
@@ -351,6 +410,20 @@ export default function ChatbotAI() {
               </li>
             ))}
           </ul>
+        )}
+        {saranLanjutan.length > 0 && !menunggu && (
+          <div className="flex gap-2 overflow-x-auto px-4 pt-3" aria-label="Saran pertanyaan lanjutan">
+            {saranLanjutan.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => setPesan(q)}
+                className="min-h-11 shrink-0 rounded-full border border-c4 bg-card px-4 py-2 text-sm font-medium text-navy transition-colors hover:bg-c2"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
         )}
         <form onSubmit={kirimPesan} className="flex gap-2 border-t border-c4/60 p-4">
           <input

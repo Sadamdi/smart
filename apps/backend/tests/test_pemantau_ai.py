@@ -237,3 +237,20 @@ def test_sumber_403_tidak_dimatikan(monkeypatch):
     with pytest.raises(laman.LamanGagal):
         pemantau_ai.pantau_sumber(_SesiPalsu(), S, s, HARI)
     assert s.aktif is True
+
+
+def test_tautan_detail_dari_laman_daftar():
+    from app.services.pemantau_ai import tautan_detail
+
+    teks = (
+        "Beranda [https://kampus.ac.id/]\n"
+        "Program Beasiswa Tahfidz Al Quran [https://kampus.ac.id/beasiswa/tahfidz-alquran]\n"
+        "Beasiswa Unggulan Kemendikdasmen [https://kampus.ac.id/beasiswa/unggulan]\n"
+        "Instagram kami [https://www.instagram.com/kampus]\n"
+    )
+    assert (
+        tautan_detail(teks, "Program Beasiswa Tahfidz Al Quran", "https://kampus.ac.id/")
+        == "https://kampus.ac.id/beasiswa/tahfidz-alquran"
+    )
+    assert tautan_detail(teks, "Beasiswa Tidak Ada Sama Sekali", "https://kampus.ac.id/") is None
+    assert tautan_detail(teks, "Beasiswa", "https://kampus.ac.id/") is None  # nama terlalu umum

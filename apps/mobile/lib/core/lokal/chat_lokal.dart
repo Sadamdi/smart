@@ -290,6 +290,31 @@ class ChatLokal {
     _simpanSesi();
   }
 
+  /// Pemakaian per percakapan: jumlah pertanyaan dan token perkiraan (karakter / 4), dari yang terbanyak.
+  List<Map<String, dynamic>> _perSesi() {
+    final judul = {for (final s in _sesi) '${s['id']}': '${s['judul'] ?? 'Percakapan'}'};
+    final total = <String, List<int>>{};
+    for (final x in _pesan) {
+      final id = x['sesi_id'];
+      if (id == null) continue;
+      final t = total.putIfAbsent('$id', () => [0, 0, 0]);
+      t[0]++;
+      t[1] += '${x['pesan'] ?? ''}'.length;
+      t[2] += '${x['jawaban'] ?? ''}'.length;
+    }
+    final urut = total.entries.toList()
+      ..sort((a, b) => (b.value[1] + b.value[2]).compareTo(a.value[1] + a.value[2]));
+    return [
+      for (final e in urut.take(5))
+        {
+          'judul': judul[e.key] ?? 'Percakapan',
+          'pertanyaan': e.value[0],
+          'token_masuk': (e.value[1] / 4).round(),
+          'token_keluar': (e.value[2] / 4).round(),
+        },
+    ];
+  }
+
   static const _kataUmum = {
     'yang',
     'dan',
@@ -401,6 +426,7 @@ class ChatLokal {
       'topik': [
         for (final e in topik.take(6)) {'kata': e.key, 'jumlah': e.value},
       ],
+      'per_sesi': _perSesi(),
       'beasiswa_teratas': [
         for (final e in top.take(5)) {'nama': e.key, 'jumlah': e.value},
       ],
