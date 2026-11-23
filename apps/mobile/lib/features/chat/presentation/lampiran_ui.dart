@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:open_filex/open_filex.dart';
@@ -158,10 +160,16 @@ class KartuLampiran extends StatelessWidget {
 
 /// Lampiran yang tertanam di gelembung pesan pengguna; diketuk membuka pratinjau.
 class ChipLampiranPesan extends StatelessWidget {
-  const ChipLampiranPesan({super.key, required this.nama, this.teks});
+  const ChipLampiranPesan({
+    super.key,
+    required this.nama,
+    this.teks,
+    this.path,
+  });
 
   final String nama;
   final String? teks;
+  final String? path;
 
   @override
   Widget build(BuildContext context) {
@@ -171,7 +179,12 @@ class ChipLampiranPesan extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => tampilkanPratinjauLampiran(context, nama: nama, teks: teks),
+        onTap: () => tampilkanPratinjauLampiran(
+          context,
+          nama: nama,
+          teks: teks,
+          path: path,
+        ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(6, 6, 10, 6),
           child: Row(
@@ -221,6 +234,7 @@ Future<void> tampilkanPratinjauLampiran(
   BuildContext context, {
   required String nama,
   String? teks,
+  String? path,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -230,16 +244,19 @@ Future<void> tampilkanPratinjauLampiran(
       expand: false,
       initialChildSize: 0.7,
       maxChildSize: 0.95,
-      builder: (_, kontrol) => _Pratinjau(nama, teks, kontrol),
+      builder: (_, kontrol) => _Pratinjau(nama, teks, path, kontrol),
     ),
   );
 }
 
 class _Pratinjau extends StatefulWidget {
-  const _Pratinjau(this.nama, this.teks, this.kontrol);
+  const _Pratinjau(this.nama, this.teks, this.path, this.kontrol);
 
   final String nama;
   final String? teks;
+
+  /// Salinan berkas asli di ponsel (bila dibaca di ponsel).
+  final String? path;
   final ScrollController kontrol;
 
   @override
@@ -284,7 +301,14 @@ class _PratinjauState extends State<_Pratinjau> {
     }
   }
 
+  bool get _adaSalinan => widget.path != null && File(widget.path!).existsSync();
+
   Future<void> _buka() async {
+    final lokal = widget.path;
+    if (lokal != null && File(lokal).existsSync()) {
+      await OpenFilex.open(lokal);
+      return;
+    }
     final id = _idServer;
     if (id == null) return;
     setState(() => _membuka = true);
@@ -329,7 +353,7 @@ class _PratinjauState extends State<_Pratinjau> {
           ],
         ),
         const SizedBox(height: 14),
-        if (_idServer != null)
+        if (_idServer != null || _adaSalinan)
           Align(
             alignment: Alignment.centerLeft,
             child: OutlinedButton.icon(

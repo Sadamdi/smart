@@ -26,11 +26,15 @@ class LampiranChat {
     this.teks,
     this.catatan,
     this.ukuran,
+    this.pathAsli,
   });
 
   final String id;
   final String nama;
   final int? ukuran;
+
+  /// Salinan berkas asli di ponsel (untuk dibuka lagi); ada bila dibaca di ponsel.
+  final String? pathAsli;
 
   /// Teks hasil bacaan di ponsel (tanpa server). Kosong bila dokumen dibaca server.
   final String? teks;
@@ -71,7 +75,7 @@ class ChatController extends GetxController {
   final mengunggahNama = RxnString();
 
   /// Lampiran pertanyaan yang sedang dikirim; tampil di gelembung sebelum riwayat dimuat ulang.
-  final lampiranSementara = <({String nama, String? teks})>[].obs;
+  final lampiranSementara = <({String nama, String? teks, String? path})>[].obs;
 
   static const lampiranMaks = 3;
 
@@ -141,11 +145,13 @@ class ChatController extends GetxController {
         }
       }
       final h = await EkstrakDokumen.baca(berkas.path!, berkas.name);
+      final salinan = await DokumenRepository.simpanSalinan(berkas.path!, berkas.name);
       lampiran.add(
         LampiranChat(
           id: 'lokal-${DateTime.now().microsecondsSinceEpoch}',
           nama: berkas.name,
           teks: h.teks,
+          pathAsli: salinan,
           ukuran: byte,
           catatan: h.catatan == null ? 'Di ponsel' : 'Di ponsel. ${h.catatan}',
         ),
@@ -168,7 +174,17 @@ class ChatController extends GetxController {
     }
   }
 
-  void lepas(LampiranChat l) => lampiran.remove(l);
+  void lepas(LampiranChat l) {
+    lampiran.remove(l);
+    final p = l.pathAsli; // belum terkirim: salinannya tidak diperlukan
+    if (p != null) {
+      try {
+        File(p).deleteSync();
+      } on Object {
+        // diabaikan
+      }
+    }
+  }
 
   StreamSubscription<KejadianChat>? _langganan;
   CancelToken? _batal;
@@ -330,10 +346,10 @@ class ChatController extends GetxController {
     final ids = [for (final l in lampiran) if (!l.lokal) l.id];
     final teksLampiran = [
       for (final l in lampiran)
-        if (l.lokal) (nama: l.nama, teks: l.teks!),
+        if (l.lokal) (nama: l.nama, teks: l.teks!, path: l.pathAsli),
     ];
     lampiranSementara.assignAll([
-      for (final l in lampiran) (nama: l.nama, teks: l.teks),
+      for (final l in lampiran) (nama: l.nama, teks: l.teks, path: l.pathAsli),
     ]);
     lampiran.clear();
     if (ids.isNotEmpty && Get.find<MesinLokal>().aiLokalAktif) {

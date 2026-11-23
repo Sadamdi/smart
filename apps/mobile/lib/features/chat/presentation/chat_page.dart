@@ -114,7 +114,7 @@ class _ChatPageState extends State<ChatPage> {
     TextStyle? gaya,
     List<({String id, String nama})> rujukan = const [],
     String sumber = 'server',
-    List<({String nama, String? teks})> lampiran = const [],
+    List<({String nama, String? teks, String? path})> lampiran = const [],
   }) {
     return Align(
       alignment: saya ? Alignment.centerRight : Alignment.centerLeft,
@@ -137,7 +137,11 @@ class _ChatPageState extends State<ChatPage> {
               for (final l in lampiran)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 6),
-                  child: ChipLampiranPesan(nama: l.nama, teks: l.teks),
+                  child: ChipLampiranPesan(
+                    nama: l.nama,
+                    teks: l.teks,
+                    path: l.path,
+                  ),
                 ),
               if (teks.trim().isNotEmpty) const SizedBox(height: 2),
             ],
@@ -464,6 +468,7 @@ class _ChatPageState extends State<ChatPage> {
                           context,
                           nama: l.nama,
                           teks: l.teks,
+                          path: l.pathAsli,
                         ),
                       ),
                     ),
