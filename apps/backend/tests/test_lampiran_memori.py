@@ -284,3 +284,22 @@ def test_memori_dari_percakapan(monkeypatch):
     assert hasil == [("organisasi", "Ketua BEM")]  # jenis tak dikenal dibuang
     monkeypatch.setattr(llm, "tersedia", lambda s: False)
     assert memori.ekstrak_dari_percakapan(s, "Saya ketua BEM dan juara lomba debat nasional 2025", None) == []
+
+
+def test_saran_lanjutan_dari_model(klien_db, monkeypatch):
+    h = _akun(klien_db)
+    app.dependency_overrides[get_settings] = lambda: Settings(
+        **{**SETTINGS_UJI.model_dump(), "ai_base_url": "http://x", "ai_api_key": "k", "ai_model": "m"}
+    )
+    monkeypatch.setattr("app.services.llm.tanya", lambda *a, **k: "jawaban")
+    klien_db.post(f"{B}/chat", headers=h, json={"pesan": "Syarat IPK Chevening?"})
+    monkeypatch.setattr(
+        "app.services.llm.tanya",
+        lambda *a, **k: "1. Apa saja berkas Chevening?\n- Kapan tenggat Chevening?\n\n'Apa saja berkas Chevening?'\nx",
+    )
+    r = klien_db.get(f"{B}/chat/saran", headers=h)
+    assert r.status_code == 200, r.text
+    assert r.json()["data"] == ["Apa saja berkas Chevening?", "Kapan tenggat Chevening?"]
+    monkeypatch.setattr("app.services.llm.tanya", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("mati")))
+    assert klien_db.get(f"{B}/chat/saran", headers=h).json()["data"] == []
+    app.dependency_overrides[get_settings] = lambda: SETTINGS_UJI

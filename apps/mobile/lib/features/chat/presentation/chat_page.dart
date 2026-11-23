@@ -406,10 +406,12 @@ class _ChatPageState extends State<ChatPage> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
-                for (final q in saranBerikut(
-                  riwayat.value ?? const [],
-                  lampiran: _c.lampiran.isNotEmpty,
-                ))
+                for (final q in _c.saranModel.isNotEmpty && _c.lampiran.isEmpty
+                    ? _c.saranModel
+                    : saranBerikut(
+                        riwayat.value ?? const [],
+                        lampiran: _c.lampiran.isNotEmpty,
+                      ))
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChipFilter(

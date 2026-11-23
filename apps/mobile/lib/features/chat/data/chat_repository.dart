@@ -413,6 +413,22 @@ class ChatRepository {
 
   Future<void> hapusRiwayat() => _api.delete('/chat/riwayat');
 
+  /// Saran pertanyaan lanjutan dari model di server; kosong bila luring, sesi belum tersalin, atau layanan gagal.
+  Future<List<String>> saran(String? sesiId) async {
+    if (_lokal.aktif.value || (sesiId?.startsWith('lokal-') ?? false)) {
+      return const [];
+    }
+    try {
+      final r = await _api.get(
+        '/chat/saran',
+        query: {'sesi_id': ?sesiId},
+      );
+      return [for (final x in (r.data as List? ?? const [])) '$x'];
+    } catch (_) {
+      return const [];
+    }
+  }
+
   Future<Map<String, dynamic>> statistik() async =>
       (await _api.get('/chat/statistik')).data as Map<String, dynamic>;
 

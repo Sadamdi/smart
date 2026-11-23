@@ -214,6 +214,11 @@ def hapus_sesi(sesi_id: uuid.UUID, sesi: SesiDep, p: SaatIni) -> Amplop[Kosong]:
     return Amplop(data=Kosong())
 
 
+@router.get("/saran", summary="Saran pertanyaan lanjutan dari model", response_model=Amplop[list[str]])
+def saran(sesi: SesiDep, p: SaatIni, settings: SettingsDep, sesi_id: uuid.UUID | None = None) -> Amplop[list[str]]:
+    return Amplop(data=layanan.saran(sesi, p, sesi_id, settings))
+
+
 @router.get("/statistik", summary="Statistik isi dan pemakaian chatbot", response_model=Amplop[StatistikChatOut])
 def statistik(sesi: SesiDep, p: SaatIni) -> Amplop[StatistikChatOut]:
     d = layanan.statistik(sesi, p)

@@ -191,6 +191,35 @@ def beri_judul(sesi: Session, s: SesiChat, pesan: str, jawaban: str | None, sett
     return True
 
 
+def saran(sesi: Session, p: Pengguna, sesi_id: uuid.UUID | None, settings: Settings) -> list[str]:
+    """Empat pertanyaan lanjutan yang disusun model dari konteks sesi dan profil singkat pengguna. Gagal atau tanpa
+    layanan AI mengembalikan daftar kosong; klien lalu memakai saran bawaan."""
+    if not llm.tersedia(settings):
+        return []
+    konteks = _riwayat_prompt(sesi, p, sesi_id)
+    profil = ", ".join(
+        f"{k}: {v}" for k in ("jenjang", "jurusan", "semester") if (v := getattr(p, k, None)) not in (None, "")
+    )
+    try:
+        mentah = llm.tanya(
+            settings,
+            "Kamu menyarankan pertanyaan lanjutan untuk mahasiswa pencari beasiswa. Balas HANYA 4 baris, satu "
+            "pertanyaan per baris, masing-masing paling banyak 8 kata, bahasa Indonesia, sudut pandang pengguna "
+            "('saya'), relevan dengan topik percakapan, tanpa nomor, tanpa tanda kutip, tanpa mengulang pertanyaan "
+            "yang sudah diajukan.",
+            f"{konteks}Profil pengguna: {profil or 'belum diisi'}",
+            timeout=15,
+        )
+    except Exception:  # saran hanyalah pelengkap
+        return []
+    hasil: list[str] = []
+    for baris in mentah.splitlines():
+        t = baris.strip().lstrip("-*•0123456789.) ").strip("\"'")
+        if 4 <= len(t) <= 80 and t not in hasil:
+            hasil.append(t)
+    return hasil[:4]
+
+
 def _riwayat_prompt(sesi: Session, p: Pengguna, sesi_id: uuid.UUID | None) -> str:
     if sesi_id is None:
         return ""
