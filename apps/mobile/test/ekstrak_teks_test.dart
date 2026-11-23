@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_mobile/core/lokal/ekstrak_teks.dart';
+import 'package:smart_mobile/features/chat/data/chat_repository.dart';
 
 Uint8List _zip(Map<String, String> isi) {
   final a = Archive();
@@ -15,6 +16,7 @@ Uint8List _zip(Map<String, String> isi) {
 }
 
 void main() {
+  lampiranTes();
   test('teks biasa, csv, dan json dibaca apa adanya', () {
     expect(teksDariBytes('txt', Uint8List.fromList(utf8.encode('Halo dunia\n\n\n\nBaris'))), 'Halo dunia\n\nBaris');
     expect(teksDariBytes('csv', Uint8List.fromList(utf8.encode('nama,ipk\nAdam,3.55'))), contains('Adam,3.55'));
@@ -103,5 +105,20 @@ void main() {
     expect(p, startsWith('Identitas Nabila Putri'));
     expect(p, contains('IELTS 7.0'));
     expect(potongRelevan('pendek', 'apa saja', batas: 3000), 'pendek');
+  });
+}
+
+void lampiranTes() {
+  group('penanda lampiran', () {
+    test('memisahkan nama berkas dari teks pesan', () {
+      final p = pisahLampiran('Berapa IPK saya?\n[Lampiran: cv a.pdf; nilai, akhir.xlsx]');
+      expect(p.teks, 'Berapa IPK saya?');
+      expect(p.nama, ['cv a.pdf', 'nilai, akhir.xlsx']);
+    });
+    test('pesan biasa tidak berubah', () {
+      final p = pisahLampiran('Halo [bukan lampiran] dunia');
+      expect(p.teks, 'Halo [bukan lampiran] dunia');
+      expect(p.nama, isEmpty);
+    });
   });
 }

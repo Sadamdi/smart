@@ -10,6 +10,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/chips.dart';
 import '../../../core/widgets/smart_app_bar.dart';
 import '../data/chat_repository.dart';
+import 'lampiran_ui.dart';
 import 'saran_chat.dart';
 import 'statistik_chat.dart';
 import '../../../core/widgets/teks_markdown.dart';
@@ -113,6 +114,7 @@ class _ChatPageState extends State<ChatPage> {
     TextStyle? gaya,
     List<({String id, String nama})> rujukan = const [],
     String sumber = 'server',
+    List<({String nama, String? teks})> lampiran = const [],
   }) {
     return Align(
       alignment: saya ? Alignment.centerRight : Alignment.centerLeft,
@@ -131,6 +133,14 @@ class _ChatPageState extends State<ChatPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (saya && lampiran.isNotEmpty) ...[
+              for (final l in lampiran)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: ChipLampiranPesan(nama: l.nama, teks: l.teks),
+                ),
+              if (teks.trim().isNotEmpty) const SizedBox(height: 2),
+            ],
             if (saya)
               Text(
                 teks,
@@ -344,6 +354,7 @@ class _ChatPageState extends State<ChatPage> {
     final riwayat = _c.riwayat.state.value;
     final kirim = _c.mengirim.value;
     final galat = _c.galat.value;
+    final papan = MediaQuery.viewInsetsOf(context).bottom > 0; // papan ketik terbuka: sembunyikan hiasan
 
     return Scaffold(
       appBar: const SmartAppBar(),
@@ -375,7 +386,7 @@ class _ChatPageState extends State<ChatPage> {
                     gaya: t.bodyMedium,
                   ),
                   for (final p in daftar) ...[
-                    _gelembung(p.pesan, saya: true),
+                    _gelembung(p.pesan, saya: true, lampiran: p.lampiran),
                     _gelembung(
                       p.jawaban ?? 'Belum ada jawaban.',
                       saya: false,
@@ -385,7 +396,11 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                   ],
                   if (_c.pesanSementara.value != null) ...[
-                    _gelembung(_c.pesanSementara.value!, saya: true),
+                    _gelembung(
+                      _c.pesanSementara.value!,
+                      saya: true,
+                      lampiran: _c.lampiranSementara.toList(),
+                    ),
                     _gelembungAlir(_c.jawabanSementara.value),
                   ],
                 ],
@@ -402,7 +417,8 @@ class _ChatPageState extends State<ChatPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(_c.catatan.value!, style: t.bodySmall),
             ),
-          SizedBox(
+          if (!papan)
+            SizedBox(
             height: 42,
             child: ListView(
               scrollDirection: Axis.horizontal,
@@ -429,9 +445,9 @@ class _ChatPageState extends State<ChatPage> {
               ],
             ),
           ),
-          if (_c.lampiran.isNotEmpty || _c.mengunggah.value)
+          if (_c.lampiran.isNotEmpty || _c.mengunggah.value) ...[
             SizedBox(
-              height: 40,
+              height: 60,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -439,23 +455,40 @@ class _ChatPageState extends State<ChatPage> {
                   for (final l in _c.lampiran)
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: InputChip(
-                        avatar: const Icon(
-                          Icons.description_outlined,
-                          size: 16,
+                      child: KartuLampiran(
+                        nama: l.nama,
+                        ukuran: l.ukuran,
+                        status: l.catatan,
+                        onHapus: () => _c.lepas(l),
+                        onTap: () => tampilkanPratinjauLampiran(
+                          context,
+                          nama: l.nama,
+                          teks: l.teks,
                         ),
-                        label: Text(l.nama, overflow: TextOverflow.ellipsis),
-                        onDeleted: () => _c.lepas(l),
                       ),
                     ),
                   if (_c.mengunggah.value)
-                    const Padding(
-                      padding: EdgeInsets.only(right: 8),
-                      child: Chip(label: Text('Membaca dokumen')),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: KartuLampiran(
+                        nama: _c.mengunggahNama.value ?? 'Berkas',
+                        membaca: true,
+                      ),
                     ),
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '${_c.lampiran.length}/$lampiranMaksBerkas berkas  ·  maks ${ukuranTeks(lampiranMaksByte)} per berkas',
+                  style: t.bodySmall?.copyWith(fontSize: 11),
+                ),
+              ),
+            ),
+          ],
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -463,7 +496,7 @@ class _ChatPageState extends State<ChatPage> {
                 children: [
                   IconButton(
                     tooltip:
-                        'Lampirkan berkas (${ChatController.keteranganJenis})',
+                        'Lampirkan berkas (maks $lampiranMaksBerkas berkas, ${ukuranTeks(lampiranMaksByte)} per berkas). ${ChatController.keteranganJenis}',
                     onPressed:
                         kirim ||
                             _c.lampiran.length >= ChatController.lampiranMaks
@@ -508,13 +541,18 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.only(bottom: 8),
-            child: Text(
-              'Jawaban chatbot bukan jaminan diterima pada beasiswa mana pun.',
-              style: TextStyle(fontSize: 11),
+          if (!papan)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Jawaban AI bisa keliru dan bukan jaminan diterima beasiswa.',
+                  maxLines: 1,
+                  style: t.bodySmall?.copyWith(fontSize: 11, color: Warna.muted),
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );

@@ -52,8 +52,29 @@ class DokumenRepository {
     final salinan = '$dir/${DateTime.now().microsecondsSinceEpoch}-${nama.replaceAll(RegExp(r'[^\w.\- ]'), '_')}';
     await File(path).copy(salinan);
     final a = await _bacaAntrean();
-    a.add({'jenis': jenis, 'path': salinan, 'nama': nama});
+    a.add({
+      'jenis': jenis,
+      'path': salinan,
+      'nama': nama,
+      'dibuat': DateTime.now().toIso8601String(),
+    });
     await _tulisAntrean(a);
+  }
+
+  /// Membuang berkas di folder antrean yang tidak tercatat lagi (sisa dari kegagalan sebelumnya).
+  Future<void> _bersihkanYatim(List<Map<String, dynamic>> a) async {
+    final dir = (await _berkasAntrean()).parent;
+    final dipakai = {for (final x in a) '${x['path']}'};
+    for (final e in dir.listSync()) {
+      if (e is File && !e.path.endsWith('antrean.json') && !dipakai.contains(e.path) &&
+          DateTime.now().difference(e.lastModifiedSync()) > const Duration(minutes: 10)) {
+        try {
+          e.deleteSync();
+        } on Object {
+          // diabaikan
+        }
+      }
+    }
   }
 
   Future<int> jumlahTertunda() async => (await _bacaAntrean()).length;
@@ -69,12 +90,20 @@ class DokumenRepository {
     _mengirimTertunda = true;
     try {
       final a = await _bacaAntrean();
+      await _bersihkanYatim(a);
       if (a.isEmpty) return;
       final sisa = <Map<String, dynamic>>[];
       var putus = false;
       for (final x in a) {
         final f = File('${x['path']}');
         if (!f.existsSync()) continue;
+        final umur = DateTime.now().difference(
+          DateTime.tryParse('${x['dibuat']}') ?? DateTime.now(),
+        );
+        if (umur > const Duration(days: 14)) {
+          f.deleteSync(); // terlalu lama menunggu: dibuang agar tidak menumpuk
+          continue;
+        }
         if (putus) {
           sisa.add(x);
           continue;
@@ -83,8 +112,14 @@ class DokumenRepository {
           await unggah(jenis: '${x['jenis']}', path: f.path, nama: '${x['nama']}');
           f.deleteSync();
         } on ApiException catch (e) {
-          sisa.add(x);
-          if (e.galatJaringan) putus = true;
+          if (e.galatJaringan) {
+            sisa.add(x);
+            putus = true;
+          } else if (e.status >= 400 && e.status < 500 && e.status != 401 && e.status != 408 && e.status != 429) {
+            f.deleteSync(); // ditolak server (mis. terlalu besar atau jenis tak didukung): tak dicoba lagi
+          } else {
+            sisa.add(x);
+          }
         } on Object {
           sisa.add(x);
         }

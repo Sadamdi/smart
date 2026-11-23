@@ -13,6 +13,21 @@ import '../../../core/lokal/mesin_lokal.dart';
 import '../../../core/lokal/model_ai.dart';
 import '../../dokumen/data/dokumen_repository.dart';
 
+/// Penanda lampiran di akhir teks pesan: `[Lampiran: a.pdf; b.docx]`. Server dan ponsel sama-sama menulisnya.
+final _penandaLampiran = RegExp(r'\n?\[Lampiran: ([^\]]+)\]\s*$');
+
+({String teks, List<String> nama}) pisahLampiran(String pesan) {
+  final m = _penandaLampiran.firstMatch(pesan);
+  if (m == null) return (teks: pesan, nama: const []);
+  return (
+    teks: pesan.substring(0, m.start).trimRight(),
+    nama: [
+      for (final x in m.group(1)!.split(';'))
+        if (x.trim().isNotEmpty) x.trim(),
+    ],
+  );
+}
+
 class PesanChat {
   const PesanChat({
     required this.id,
@@ -20,7 +35,11 @@ class PesanChat {
     this.jawaban,
     this.rujukan = const [],
     this.sumber = 'server',
+    this.lampiran = const [],
   });
+
+  /// Lampiran pertanyaan ini; [teks] ada bila dibaca di ponsel (untuk pratinjau).
+  final List<({String nama, String? teks})> lampiran;
 
   /// Asal jawaban: server (layanan AI), ponsel (model AI di ponsel), atau data lokal (aturan tanpa model).
   final String sumber;
@@ -32,19 +51,27 @@ class PesanChat {
   final String pesan;
   final String? jawaban;
 
-  factory PesanChat.fromJson(Map<String, dynamic> j) => PesanChat(
-    id: j['id'] as String,
-    pesan: j['pesan'] as String,
-    jawaban: j['jawaban'] as String?,
-    sumber: (j['sumber'] as String?) ?? 'server',
-    rujukan: [
-      for (final x in (j['rujukan'] as List? ?? []))
-        (
-          id: (x as Map<String, dynamic>)['id'] as String,
-          nama: x['nama'] as String,
-        ),
-    ],
-  );
+  factory PesanChat.fromJson(Map<String, dynamic> j) {
+    final p = pisahLampiran(j['pesan'] as String);
+    final simpan = <String, String?>{
+      for (final x in (j['lampiran'] as List? ?? const []))
+        '${(x as Map)['nama']}': x['teks'] as String?,
+    };
+    return PesanChat(
+      id: j['id'] as String,
+      pesan: p.teks,
+      lampiran: [for (final n in p.nama) (nama: n, teks: simpan[n])],
+      jawaban: j['jawaban'] as String?,
+      sumber: (j['sumber'] as String?) ?? 'server',
+      rujukan: [
+        for (final x in (j['rujukan'] as List? ?? []))
+          (
+            id: (x as Map<String, dynamic>)['id'] as String,
+            nama: x['nama'] as String,
+          ),
+      ],
+    );
+  }
 }
 
 /// Satu sesi (utas) percakapan, seperti daftar percakapan di ChatGPT.
@@ -221,7 +248,17 @@ class ChatRepository {
     lokal.chat.catatChat({
       'id': id,
       'sesi_id': sesiId,
-      'pesan': lampiran.isEmpty ? pesan : '$pesan\n[Lampiran: ${lampiran.map((l) => l.nama).join(', ')}]',
+      'pesan': lampiran.isEmpty
+          ? pesan
+          : '$pesan\n[Lampiran: ${lampiran.map((l) => l.nama).join('; ')}]',
+      if (lampiran.isNotEmpty)
+        'lampiran': [
+          for (final l in lampiran)
+            {
+              'nama': l.nama,
+              'teks': l.teks.length > 6000 ? l.teks.substring(0, 6000) : l.teks,
+            },
+        ],
       'jawaban': akhir,
       'waktu': DateTime.now().toIso8601String(),
       'rujukan': rujukan,

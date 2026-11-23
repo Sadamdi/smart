@@ -16,6 +16,7 @@ import '../../../core/lokal/ekstrak_dokumen.dart';
 import '../../../core/lokal/ekstrak_teks.dart';
 import '../../dokumen/data/dokumen_repository.dart';
 import '../data/chat_repository.dart';
+import 'lampiran_ui.dart';
 
 /// Dokumen yang dilampirkan pada pertanyaan berikutnya (sudah diunggah dan dibaca server).
 class LampiranChat {
@@ -24,10 +25,12 @@ class LampiranChat {
     required this.nama,
     this.teks,
     this.catatan,
+    this.ukuran,
   });
 
   final String id;
   final String nama;
+  final int? ukuran;
 
   /// Teks hasil bacaan di ponsel (tanpa server). Kosong bila dokumen dibaca server.
   final String? teks;
@@ -64,6 +67,12 @@ class ChatController extends GetxController {
   final lampiran = <LampiranChat>[].obs;
   final mengunggah = false.obs;
 
+  /// Nama berkas yang sedang dibaca atau diunggah (untuk kartu "Membaca...").
+  final mengunggahNama = RxnString();
+
+  /// Lampiran pertanyaan yang sedang dikirim; tampil di gelembung sebelum riwayat dimuat ulang.
+  final lampiranSementara = <({String nama, String? teks})>[].obs;
+
   static const lampiranMaks = 3;
 
   /// Jenis yang dibaca server; selain ini (dan semua jenis saat luring) dibaca di ponsel.
@@ -92,17 +101,28 @@ class ChatController extends GetxController {
   /// Luring, jaringan putus, atau jenis lain: dibaca di ponsel (teks disisipkan ke konteks model ponsel), dan
   /// berkas yang dikenali server diantrekan untuk diunggah saat ada jaringan.
   Future<void> lampirkan() async {
-    if (mengunggah.value || lampiran.length >= lampiranMaks) return;
+    if (mengunggah.value) return;
+    if (lampiran.length >= lampiranMaks) {
+      galat.value = 'Maksimal $lampiranMaks berkas per pertanyaan. Lepas salah satu dulu.';
+      return;
+    }
     final hasil = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: jenisDidukung,
     );
     final berkas = hasil.isEmpty ? null : hasil.first;
     if (berkas?.path == null) return;
+    final byte = File(berkas!.path!).lengthSync();
+    if (byte > lampiranMaksByte) {
+      galat.value =
+          '${berkas.name} berukuran ${ukuranTeks(byte)}. Maksimal ${ukuranTeks(lampiranMaksByte)} per berkas.';
+      return;
+    }
     mengunggah.value = true;
+    mengunggahNama.value = berkas.name;
     galat.value = null;
     try {
-      final ext = ekstensiDari(berkas!.name);
+      final ext = ekstensiDari(berkas.name);
       final luring = Get.find<MesinLokal>().aktif.value;
       if (!luring && jenisServer.contains(ext)) {
         try {
@@ -111,7 +131,9 @@ class ChatController extends GetxController {
             path: berkas.path!,
             nama: berkas.name,
           );
-          lampiran.add(LampiranChat(id: d.id, nama: d.namaBerkas));
+          lampiran.add(
+            LampiranChat(id: d.id, nama: d.namaBerkas, ukuran: byte, catatan: 'Dibaca server'),
+          );
           return;
         } on ApiException catch (e) {
           if (!e.galatJaringan) rethrow; // jaringan putus: dibaca di ponsel
@@ -123,7 +145,8 @@ class ChatController extends GetxController {
           id: 'lokal-${DateTime.now().microsecondsSinceEpoch}',
           nama: berkas.name,
           teks: h.teks,
-          catatan: h.catatan,
+          ukuran: byte,
+          catatan: h.catatan == null ? 'Dibaca di ponsel' : 'Dibaca di ponsel. ${h.catatan}',
         ),
       );
       if (jenisServer.contains(ext)) {
@@ -133,14 +156,13 @@ class ChatController extends GetxController {
           nama: berkas.name,
         );
       }
-      catatan.value =
-          'Dibaca di ponsel.${jenisServer.contains(ext) ? ' Berkas diunggah otomatis saat ada jaringan.' : ''}${h.catatan == null ? '' : ' ${h.catatan}'}';
     } on EkstrakGagal catch (e) {
       galat.value = e.pesan;
     } catch (e) {
       galat.value = pesanGalat(e);
     } finally {
       mengunggah.value = false;
+      mengunggahNama.value = null;
     }
   }
 
@@ -308,6 +330,9 @@ class ChatController extends GetxController {
       for (final l in lampiran)
         if (l.lokal) (nama: l.nama, teks: l.teks!),
     ];
+    lampiranSementara.assignAll([
+      for (final l in lampiran) (nama: l.nama, teks: l.teks),
+    ]);
     lampiran.clear();
     if (ids.isNotEmpty && Get.find<MesinLokal>().aiLokalAktif) {
       catatan.value = 'Pertanyaan berlampiran dijawab server karena dokumennya dibaca di sana.';
@@ -369,6 +394,7 @@ class ChatController extends GetxController {
   void _bersihkanAliran() {
     mengirim.value = false;
     pesanSementara.value = null;
+    lampiranSementara.clear();
     jawabanSementara.value = '';
     _penampung.clear();
   }
