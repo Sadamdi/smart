@@ -40,6 +40,5 @@ apps/**/storage/
 /.mcp.example.json
 /AGENTS.md
 /CLAUDE.md
-/README.md
 apps/backend/data/
 .vercel
